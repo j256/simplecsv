@@ -2,6 +2,8 @@ package com.j256.simplecsv.converter;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
@@ -13,24 +15,36 @@ import com.j256.simplecsv.ParseError;
  */
 public class BigDecimalConverter implements Converter<BigDecimal> {
 
-	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
-		// no op
-	}
+	private DecimalFormat decimalFormat;
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, BigDecimal value, StringBuilder sb) {
-		if (value != null) {
-			sb.append(value);
+	public void configure(String format, long flags, Field field) {
+		if (format != null) {
+			decimalFormat = new DecimalFormat(format);
+			decimalFormat.setParseBigDecimal(true);
 		}
 	}
 
 	@Override
-	public BigDecimal stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+	public void javaToString(FieldInfo fieldInfo, BigDecimal value, StringBuilder sb) {
 		if (value == null) {
-			return null;
+			return;
+		} else if (decimalFormat == null) {
+			sb.append(value);
 		} else {
+			decimalFormat.format(value);
+		}
+	}
+
+	@Override
+	public BigDecimal stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+			throws ParseException {
+		if (value.isEmpty()) {
+			return null;
+		} else if (decimalFormat == null) {
 			return new BigDecimal(value);
+		} else {
+			return (BigDecimal) decimalFormat.parse(value);
 		}
 	}
 }

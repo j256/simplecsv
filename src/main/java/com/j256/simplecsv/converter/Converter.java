@@ -6,7 +6,6 @@ import java.text.ParseException;
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
 import com.j256.simplecsv.ParseError.ErrorType;
-import com.j256.simplecsv.annotations.CsvField;
 
 /**
  * Converts from a textual representation to a Java representation.
@@ -27,8 +26,6 @@ public interface Converter<T> {
 	 * across multiple CSV entities.
 	 * </p>
 	 * 
-	 * @param allowNull
-	 *            The boolean set from {@link CsvField#allowNull()} about whether null values are allowed.
 	 * @param format
 	 *            Optional string format which affects the output and parsing of the field. Null if none supplied in
 	 *            which case the default format is used.
@@ -37,7 +34,7 @@ public interface Converter<T> {
 	 * @param field
 	 *            Reflection field associated with this converter.
 	 */
-	public void configure(boolean allowNull, String format, long flags, Field field);
+	public void configure(String format, long flags, Field field);
 
 	/**
 	 * Converts from a Java representation to string.

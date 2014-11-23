@@ -5,9 +5,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.j256.simplecsv.CsvField;
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
-import com.j256.simplecsv.annotations.CsvField;
 
 /**
  * Converter for the Java Date type which uses the {@link SimpleDateFormat} -- don't worry I protect it for reentrance.
@@ -21,8 +21,10 @@ import com.j256.simplecsv.annotations.CsvField;
  */
 public class DateConverter implements Converter<Date> {
 
-	private String datePattern;
-
+	private String datePattern = "MM/dd/yyyy";
+	/*
+	 * We need to do this because SimpleDateFormat is not thread safe.
+	 */
 	private final ThreadLocal<SimpleDateFormat> threadLocal = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
@@ -31,8 +33,10 @@ public class DateConverter implements Converter<Date> {
 	};
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		this.datePattern = format;
+		// we do this to validate that the pattern is correct so we throw immediately here
+		new SimpleDateFormat(format);
 	}
 
 	@Override
@@ -46,7 +50,7 @@ public class DateConverter implements Converter<Date> {
 	@Override
 	public Date stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
 			throws ParseException {
-		if (value == null) {
+		if (value.isEmpty()) {
 			return null;
 		} else {
 			return threadLocal.get().parse(value);

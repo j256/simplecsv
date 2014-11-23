@@ -2,7 +2,7 @@ package com.j256.simplecsv.converter;
 
 import java.text.DecimalFormat;
 
-import com.j256.simplecsv.annotations.CsvField;
+import com.j256.simplecsv.CsvField;
 
 /**
  * Converter for the Java Integer type.
@@ -14,7 +14,7 @@ import com.j256.simplecsv.annotations.CsvField;
  * 
  * @author graywatson
  */
-public class IntegerConverter extends NumberConverter<Integer> {
+public class IntegerConverter extends AbstractNumberConverter<Integer> {
 
 	@Override
 	protected Integer numberToValue(Number number) {

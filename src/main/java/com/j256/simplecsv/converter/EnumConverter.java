@@ -18,7 +18,7 @@ public class EnumConverter implements Converter<Enum<?>> {
 	private final Map<String, Enum<?>> enumStringMap = new HashMap<String, Enum<?>>();
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		Enum<?>[] constants = (Enum<?>[]) field.getType().getEnumConstants();
 		if (constants == null) {
 			throw new IllegalArgumentException("Field " + field + " improperly configured as a enum");
@@ -37,7 +37,7 @@ public class EnumConverter implements Converter<Enum<?>> {
 
 	@Override
 	public Enum<?> stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		if (value == null) {
+		if (value.isEmpty()) {
 			return null;
 		}
 		Enum<?> enumValue = enumStringMap.get(value);

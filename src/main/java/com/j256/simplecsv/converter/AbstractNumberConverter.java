@@ -7,19 +7,13 @@ import java.text.ParseException;
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
 import com.j256.simplecsv.ParseError.ErrorType;
-import com.j256.simplecsv.annotations.CsvField;
 
 /**
- * Converter for the Java Integer type.
- * 
- * <p>
- * NOTE: The {@link CsvField#format()} is the same pattern used by {@link DecimalFormat} and will be used in both
- * {@link #javaToString} and {@link #stringToJava} methods.
- * </p>
+ * Abstract converter for Java Number types.
  * 
  * @author graywatson
  */
-public abstract class NumberConverter<T extends Number> implements Converter<T> {
+public abstract class AbstractNumberConverter<T extends Number> implements Converter<T> {
 
 	private DecimalFormat decimalFormat;
 
@@ -27,7 +21,7 @@ public abstract class NumberConverter<T extends Number> implements Converter<T> 
 	protected abstract T parseString(String value) throws NumberFormatException;
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		if (format != null) {
 			decimalFormat = new DecimalFormat(format);
 		}
@@ -37,11 +31,10 @@ public abstract class NumberConverter<T extends Number> implements Converter<T> 
 	public void javaToString(FieldInfo fieldInfo, T value, StringBuilder sb) {
 		if (value == null) {
 			return;
-		}
-		if (decimalFormat == null) {
+		} else if (decimalFormat == null) {
 			sb.append(value);
 		} else {
-			decimalFormat.format(numberToValue(value));
+			sb.append(decimalFormat.format(numberToValue(value)));
 		}
 	}
 

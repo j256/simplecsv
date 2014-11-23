@@ -2,10 +2,10 @@ package com.j256.simplecsv.converter;
 
 import java.lang.reflect.Field;
 
+import com.j256.simplecsv.CsvField;
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
 import com.j256.simplecsv.ParseError.ErrorType;
-import com.j256.simplecsv.annotations.CsvField;
 
 /**
  * Converter for the Java Boolean type.
@@ -32,9 +32,20 @@ public class BooleanConverter implements Converter<Boolean> {
 	private boolean parseErrorOnInvalid;
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		if (format != null) {
-
+			String[] parts = format.split(",");
+			if (parts.length != 2) {
+				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
+			}
+			trueString = parts[0];
+			if (trueString.length() == 0) {
+				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
+			}
+			falseString = parts[1];
+			if (falseString.length() == 0) {
+				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
+			}
 		}
 		parseErrorOnInvalid = ((flags & PARSE_ERROR_ON_INVALID_VALUE) != 0);
 	}
@@ -42,9 +53,7 @@ public class BooleanConverter implements Converter<Boolean> {
 	@Override
 	public void javaToString(FieldInfo fieldInfo, Boolean value, StringBuilder sb) {
 		if (value != null) {
-			if (trueString == null) {
-				sb.append(value);
-			} else if (value) {
+			if (value) {
 				sb.append(trueString);
 			} else {
 				sb.append(falseString);
@@ -54,13 +63,11 @@ public class BooleanConverter implements Converter<Boolean> {
 
 	@Override
 	public Boolean stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		String trimmed = value.trim();
-		if (trimmed.length() == 0) {
+		if (value.isEmpty()) {
 			return null;
-		}
-		if (trimmed.equals(trueString)) {
+		} else if (value.equals(trueString)) {
 			return true;
-		} else if (trimmed.equals(falseString)) {
+		} else if (value.equals(falseString)) {
 			return false;
 		} else if (parseErrorOnInvalid) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);

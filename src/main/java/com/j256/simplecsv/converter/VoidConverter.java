@@ -13,7 +13,7 @@ import com.j256.simplecsv.ParseError;
 public class VoidConverter implements Converter<Void> {
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		// no op
 	}
 

@@ -2,9 +2,9 @@ package com.j256.simplecsv.converter;
 
 import java.lang.reflect.Field;
 
+import com.j256.simplecsv.CsvField;
 import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
-import com.j256.simplecsv.annotations.CsvField;
 
 /**
  * Converter for the Java String type.
@@ -31,7 +31,7 @@ public class StringConverter implements Converter<String> {
 	private boolean blankIsNull;
 
 	@Override
-	public void configure(boolean allowNull, String format, long flags, Field field) {
+	public void configure(String format, long flags, Field field) {
 		trimOutput = ((flags & TRIM_OUTPUT) != 0);
 		blankIsNull = ((flags & BLANK_IS_NULL) != 0);
 	}
@@ -49,9 +49,7 @@ public class StringConverter implements Converter<String> {
 
 	@Override
 	public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		if (value == null) {
-			return null;
-		} else if (value.isEmpty() && blankIsNull) {
+		if (value.isEmpty() && blankIsNull) {
 			return null;
 		} else {
 			return value;

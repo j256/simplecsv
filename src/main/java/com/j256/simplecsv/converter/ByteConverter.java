@@ -2,7 +2,7 @@ package com.j256.simplecsv.converter;
 
 import java.text.DecimalFormat;
 
-import com.j256.simplecsv.annotations.CsvField;
+import com.j256.simplecsv.CsvField;
 
 /**
  * Converter for the Java Byte type.
@@ -14,7 +14,7 @@ import com.j256.simplecsv.annotations.CsvField;
  * 
  * @author graywatson
  */
-public class ByteConverter extends NumberConverter<Byte> {
+public class ByteConverter extends AbstractNumberConverter<Byte> {
 
 	@Override
 	protected Byte numberToValue(Number number) {

@@ -2,7 +2,7 @@ package com.j256.simplecsv.converter;
 
 import java.text.DecimalFormat;
 
-import com.j256.simplecsv.annotations.CsvField;
+import com.j256.simplecsv.CsvField;
 
 /**
  * Converter for the Java Long type.
@@ -14,7 +14,7 @@ import com.j256.simplecsv.annotations.CsvField;
  * 
  * @author graywatson
  */
-public class LongConverter extends NumberConverter<Long> {
+public class LongConverter extends AbstractNumberConverter<Long> {
 
 	@Override
 	protected Long numberToValue(Number number) {

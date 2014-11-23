@@ -1,4 +1,4 @@
-package com.j256.simplecsv.annotations;
+package com.j256.simplecsv;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.StringConverter;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
@@ -35,7 +36,8 @@ public @interface CsvField {
 	 * <p>
 	 * WARNING: When this is set to true, for certain types, the read value will be different from the written one. For
 	 * example, if this is true and you write a null String as "", when you read it in you will get "" and _not_ null.
-	 * If this is not what you want then you will need to write a custom converter class.
+	 * If this is not what you want then you will need to write a custom converter class. See
+	 * {@link StringConverter#BLANK_IS_NULL}.
 	 * </p>
 	 */
 	public boolean allowNull() default true;
