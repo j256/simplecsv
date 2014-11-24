@@ -3,6 +3,7 @@ package com.j256.simplecsv;
 import java.lang.reflect.Field;
 
 import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.VoidConverter;
 
 /**
  * Information about a particular field.
@@ -16,18 +17,16 @@ public class FieldInfo {
 	private final Object configInfo;
 	private final String cellName;
 	private final boolean required;
-	private final boolean allowNull;
 	private final boolean trimInput;
 	private final String defaultValue;
 
 	private FieldInfo(Field field, Converter<?, ?> converter, Object configInfo, String cellName, boolean required,
-			boolean allowNull, boolean trimInput, String defaultValue) {
+			boolean trimInput, String defaultValue) {
 		this.field = field;
 		this.converter = converter;
 		this.configInfo = configInfo;
 		this.cellName = cellName;
 		this.required = required;
-		this.allowNull = allowNull;
 		this.trimInput = trimInput;
 		this.defaultValue = defaultValue;
 	}
@@ -59,13 +58,6 @@ public class FieldInfo {
 	}
 
 	/**
-	 * @see CsvField#allowNull()
-	 */
-	public boolean isAllowNull() {
-		return allowNull;
-	}
-
-	/**
 	 * @see CsvField#trimInput()
 	 */
 	public boolean isTrimInput() {
@@ -88,9 +80,19 @@ public class FieldInfo {
 			return null;
 		}
 		if (converter == null) {
-			throw new IllegalArgumentException("No converter available for type: " + field.getType());
+			if (csvField.converterClass() == VoidConverter.class) {
+				throw new IllegalArgumentException("No converter available for type: " + field.getType());
+			} else {
+				converter = ConverterUtils.constructConverter(csvField.converterClass());
+			}
 		}
-		Object configInfo = converter.configure(csvField.format(), csvField.converterFlags(), field);
+		String format;
+		if (csvField.format().equals(CsvField.DEFAULT_VALUE)) {
+			format = null;
+		} else {
+			format = csvField.format();
+		}
+		Object configInfo = converter.configure(format, csvField.converterFlags(), field);
 
 		String cellName;
 		if (csvField.cellName().equals(CsvField.DEFAULT_VALUE)) {
@@ -102,14 +104,14 @@ public class FieldInfo {
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new FieldInfo(field, converter, configInfo, cellName, csvField.required(), csvField.allowNull(),
-				csvField.trimInput(), defaultValue);
+		return new FieldInfo(field, converter, configInfo, cellName, csvField.required(), csvField.trimInput(),
+				defaultValue);
 	}
 
 	/**
 	 * For testing purposes.
 	 */
 	public static FieldInfo forTests(Converter<?, ?> converter, Object configInfo) {
-		return new FieldInfo(null, converter, configInfo, "name", false, true, false, null);
+		return new FieldInfo(null, converter, configInfo, "name", false, false, null);
 	}
 }

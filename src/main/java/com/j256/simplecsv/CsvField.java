@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.j256.simplecsv.converter.Converter;
-import com.j256.simplecsv.converter.StringConverter;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
@@ -29,18 +28,6 @@ public @interface CsvField {
 	 * Set to true if a value in the field is required -- i.e. the field cannot be empty.
 	 */
 	public boolean required() default false;
-
-	/**
-	 * Allows null values. If a null is used then an empty string is written to the CSV fields.
-	 * 
-	 * <p>
-	 * WARNING: When this is set to true, for certain types, the read value will be different from the written one. For
-	 * example, if this is true and you write a null String as "", when you read it in you will get "" and _not_ null.
-	 * If this is not what you want then you will need to write a custom converter class. See
-	 * {@link StringConverter#BLANK_IS_NULL}.
-	 * </p>
-	 */
-	public boolean allowNull() default true;
 
 	/**
 	 * Set to true if you want the field read from the line to be trimmed before it is converted to Java. This may not
@@ -67,7 +54,9 @@ public @interface CsvField {
 	public long converterFlags() default 0;
 
 	/**
-	 * What converter class to use. By default it will use the appropriate internal class.
+	 * What converter class to use. By default it will use the appropriate internal class. This will construct and
+	 * instance of the class for this particular field. If you want to use a singleton then you should register the type
+	 * using {@link CsvProcessor#registerConverter(Class, Converter)}.
 	 */
 	public Class<? extends Converter<?, ?>> converterClass() default VoidConverter.class;
 

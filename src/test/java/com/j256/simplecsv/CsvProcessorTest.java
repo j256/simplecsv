@@ -1,5 +1,7 @@
 package com.j256.simplecsv;
 
+import static org.junit.Assert.assertEquals;
+
 import java.text.ParseException;
 
 import org.junit.Test;
@@ -9,7 +11,21 @@ public class CsvProcessorTest {
 	@Test
 	public void testBasic() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		Basic basic = processor.readLine("1,str");
+		int value = 1;
+		String str = "str";
+		Basic basic = processor.readLine(value + "," + str);
+		assertEquals(value, basic.getValue());
+		assertEquals(str, basic.getString());
+	}
+
+	@Test
+	public void testQuoted() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		int value = 100;
+		String str = "strwow";
+		Basic basic = processor.readLine("\"" + value + "\",\"" + str + "\"");
+		assertEquals(value, basic.getValue());
+		assertEquals(str, basic.getString());
 	}
 
 	private static class Basic {
@@ -18,6 +34,7 @@ public class CsvProcessorTest {
 		@CsvField
 		private String string;
 
+		@SuppressWarnings("unused")
 		public Basic() {
 			// for simplecsv
 		}

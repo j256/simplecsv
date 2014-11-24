@@ -1,38 +1,15 @@
 package com.j256.simplecsv;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
-import org.apache.commons.lang3.CharUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import com.j256.simplecsv.ParseError.ErrorType;
-import com.j256.simplecsv.converter.BigDecimalConverter;
-import com.j256.simplecsv.converter.BigIntegerConverter;
-import com.j256.simplecsv.converter.BooleanConverter;
-import com.j256.simplecsv.converter.ByteConverter;
-import com.j256.simplecsv.converter.CharacterConverter;
 import com.j256.simplecsv.converter.Converter;
-import com.j256.simplecsv.converter.DateConverter;
-import com.j256.simplecsv.converter.DoubleConverter;
-import com.j256.simplecsv.converter.EnumConverter;
-import com.j256.simplecsv.converter.FloatConverter;
-import com.j256.simplecsv.converter.IntegerConverter;
-import com.j256.simplecsv.converter.LongConverter;
-import com.j256.simplecsv.converter.ShortConverter;
-import com.j256.simplecsv.converter.StringConverter;
-import com.j256.simplecsv.converter.UuidConverter;
 
 /**
  * CSV reader and writer.
@@ -56,31 +33,10 @@ public class CsvProcessor<T> {
 	private final FieldInfo[] fieldInfos;
 	private final Constructor<T> constructor;
 
-	private final Map<Class<?>, Converter<?, ?>> convertMap = new HashMap<Class<?>, Converter<?, ?>>();
+	private final Map<Class<?>, Converter<?, ?>> converterMap = new HashMap<Class<?>, Converter<?, ?>>();
 
 	{
-		convertMap.put(BigDecimal.class, BigDecimalConverter.getSingleton());
-		convertMap.put(BigInteger.class, BigIntegerConverter.getSingleton());
-		convertMap.put(Boolean.class, BooleanConverter.getSingleton());
-		convertMap.put(boolean.class, BooleanConverter.getSingleton());
-		convertMap.put(Byte.class, ByteConverter.getSingleton());
-		convertMap.put(byte.class, ByteConverter.getSingleton());
-		convertMap.put(Character.class, CharacterConverter.getSingleton());
-		convertMap.put(char.class, CharacterConverter.getSingleton());
-		convertMap.put(Date.class, DateConverter.getSingleton());
-		convertMap.put(Double.class, DoubleConverter.getSingleton());
-		convertMap.put(double.class, DoubleConverter.getSingleton());
-		convertMap.put(Enum.class, EnumConverter.getSingleton());
-		convertMap.put(Float.class, FloatConverter.getSingleton());
-		convertMap.put(float.class, FloatConverter.getSingleton());
-		convertMap.put(Integer.class, IntegerConverter.getSingleton());
-		convertMap.put(int.class, IntegerConverter.getSingleton());
-		convertMap.put(Long.class, LongConverter.getSingleton());
-		convertMap.put(long.class, LongConverter.getSingleton());
-		convertMap.put(Short.class, ShortConverter.getSingleton());
-		convertMap.put(short.class, ShortConverter.getSingleton());
-		convertMap.put(String.class, StringConverter.getSingleton());
-		convertMap.put(UUID.class, UuidConverter.getSingleton());
+		ConverterUtils.addInternalConverters(converterMap);
 	}
 
 	/**
@@ -92,7 +48,8 @@ public class CsvProcessor<T> {
 		List<FieldInfo> fieldInfos = new ArrayList<FieldInfo>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : entityClass.getDeclaredFields()) {
-				Converter<?, ?> converter = convertMap.get(field.getType());
+				Converter<?, ?> converter = converterMap.get(field.getType());
+				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				FieldInfo fieldInfo = FieldInfo.fromField(field, converter);
 				if (fieldInfo != null) {
 					fieldInfos.add(fieldInfo);
@@ -106,6 +63,14 @@ public class CsvProcessor<T> {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Could not find public no-arg constructor for: " + entityClass);
 		}
+	}
+
+	/**
+	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
+	 * {@link CsvField#converterClass()} annotation field.
+	 */
+	public <FT> void registerConverter(Class<FT> clazz, Converter<FT, ?> converter) {
+		converterMap.put(clazz, converter);
 	}
 
 	/**
@@ -147,6 +112,7 @@ public class CsvProcessor<T> {
 				throw new ParseException("Problems parsing line at position " + linePos + " (" + parseError + "): "
 						+ line, linePos);
 			}
+			fieldCount++;
 		}
 		if (fieldCount < fieldInfos.length && !allowPartialLines) {
 			throw new ParseException("Line does not have " + fieldInfos.length + " cells: " + line, 0);
@@ -192,15 +158,17 @@ public class CsvProcessor<T> {
 		// look for the next quote
 		int fieldEnd = line.indexOf(cellQuote, linePos);
 		if (fieldEnd < 0) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, line.length(), result, parseError);
+			linePos = line.length();
+			// XXX: is this an invalid un-terminated line?
+			extractValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
 			return linePos;
 		}
 		linePos = fieldEnd + 1;
 		if (linePos == line.length()) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
+			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
 			return linePos;
 		} else if (line.charAt(linePos) == cellSeparator) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
+			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
 			return linePos + 1;
 		}
 
@@ -217,17 +185,17 @@ public class CsvProcessor<T> {
 		// skip over quote
 		linePos++;
 
-		int start = linePos;
+		fieldStart = linePos;
 		while (linePos < line.length()) {
 			// look for the next quote
 			fieldEnd = line.indexOf(cellQuote, linePos);
 			if (fieldEnd < 0) {
-				sb.append(line, start, line.length());
+				sb.append(line, fieldStart, line.length());
 				break;
 			}
 			linePos = fieldEnd + 1;
 			if (linePos == line.length() || line.charAt(linePos) == cellSeparator) {
-				sb.append(line, start, linePos);
+				sb.append(line, fieldStart, fieldEnd);
 				break;
 			}
 
@@ -236,9 +204,9 @@ public class CsvProcessor<T> {
 				parseError.setMessage("quote '" + cellQuote + "' is not followed up separator '" + cellSeparator + "'");
 				return linePos;
 			}
-			sb.append(line, start, linePos);
+			sb.append(line, fieldStart, linePos);
 			linePos++;
-			start = linePos;
+			fieldStart = linePos;
 		}
 
 		String str = sb.toString();
@@ -270,57 +238,62 @@ public class CsvProcessor<T> {
 		if (fieldInfo.isTrimInput()) {
 			cellStr = cellStr.trim();
 		}
-
 		if (cellStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
 			cellStr = fieldInfo.getDefaultValue();
+		}
+		if (cellStr.isEmpty() && fieldInfo.isRequired()) {
+
 		}
 
 		Object value;
 		try {
 			value = fieldInfo.getConverter().stringToJava(line, lineNum, fieldInfo, cellStr, parseError);
 		} catch (ParseException e) {
+			parseError.setErrorType(ErrorType.INVALID_FORMAT);
+			parseError.setMessage(e.getMessage());
 			// TODO: how to handle
 			e.printStackTrace();
 			return;
 		} catch (Exception e) {
+			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
+			parseError.setMessage(e.getMessage());
 			// TODO: how to handle
 			e.printStackTrace();
 			return;
 		}
 
-		if (value == null && parseError.isError()) {
-			// TODO: how to handle
-			System.err.println("got error: " + parseError);
+		if (value == null) {
+			if (parseError.isError()) {
+				// TODO: how to handle
+				System.err.println("got error: " + parseError);
+				return;
+			}
+			// take the default value of the field
 			return;
 		}
 
 		try {
 			fieldInfo.getField().set(obj, value);
 		} catch (Exception e) {
+			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
+			parseError.setMessage(e.getMessage());
 			// TODO: how to handle
 			e.printStackTrace();
 			return;
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private static class CsvEscaper {
-
-		private static final char CSV_DELIMITER = ',';
-		private static final char CSV_QUOTE = '"';
-		private static final String CSV_QUOTE_STR = String.valueOf(CSV_QUOTE);
-		private static final char[] CSV_SEARCH_CHARS = new char[] { CSV_DELIMITER, CSV_QUOTE, CharUtils.CR,
-				CharUtils.LF };
-
-		public int translate(CharSequence input, Writer out) throws IOException {
-			if (StringUtils.containsNone(input.toString(), CSV_SEARCH_CHARS)) {
-				out.write(input.toString());
-			} else {
-				out.write(CSV_QUOTE);
-				out.write(StringUtils.replace(input.toString(), CSV_QUOTE_STR, CSV_QUOTE_STR + CSV_QUOTE_STR));
-				out.write(CSV_QUOTE);
-			}
-			return input.length();
-		}
-	}
+	// private final String CSV_QUOTE_STR = String.valueOf(cellQuote);
+	// private final char[] CSV_SEARCH_CHARS = new char[] { cellSeparator, cellQuote, '\r', '\n' };
+	//
+	// public int translate(CharSequence input, Writer out) throws IOException {
+	// if (StringUtils.containsNone(input.toString(), CSV_SEARCH_CHARS)) {
+	// out.write(input.toString());
+	// } else {
+	// out.write(cellQuote);
+	// out.write(StringUtils.replace(input.toString(), CSV_QUOTE_STR, CSV_QUOTE_STR + CSV_QUOTE_STR));
+	// out.write(cellQuote);
+	// }
+	// return input.length();
+	// }
 }
