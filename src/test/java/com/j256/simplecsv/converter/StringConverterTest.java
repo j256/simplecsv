@@ -47,14 +47,10 @@ public class StringConverterTest extends AbstractConverterTest {
 
 		String ok = "ok";
 		String spacedOk = " " + ok + " ";
-		StringBuilder sb = new StringBuilder();
-		converter.javaToString(fieldInfo, spacedOk, sb);
-		assertEquals(spacedOk, sb.toString());
+		assertEquals(spacedOk, converter.javaToString(fieldInfo, spacedOk));
 
 		configInfo = converter.configure(null, StringConverter.TRIM_OUTPUT, null);
 		fieldInfo = FieldInfo.forTests(converter, configInfo);
-		sb.setLength(0);
-		converter.javaToString(fieldInfo, spacedOk, sb);
-		assertEquals(ok, sb.toString());
+		assertEquals(ok, converter.javaToString(fieldInfo, spacedOk));
 	}
 }

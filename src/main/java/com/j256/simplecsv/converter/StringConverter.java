@@ -49,13 +49,15 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, String value, StringBuilder sb) {
-		if (value != null) {
+	public String javaToString(FieldInfo fieldInfo, String value) {
+		if (value == null) {
+			return null;
+		} else {
 			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
 			if (configInfo.trimOutput) {
-				sb.append(value.trim());
+				return value.trim();
 			} else {
-				sb.append(value);
+				return value;
 			}
 		}
 	}

@@ -24,8 +24,8 @@ public class VoidConverter implements Converter<Void, Void> {
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, Void value, StringBuilder sb) {
-		// no op
+	public String javaToString(FieldInfo fieldInfo, Void value) {
+		return null;
 	}
 
 	@Override

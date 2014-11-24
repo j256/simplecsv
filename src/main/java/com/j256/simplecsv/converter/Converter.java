@@ -53,12 +53,10 @@ public interface Converter<T, C> {
 	 *            Information about the field we are processing.
 	 * @param value
 	 *            Value of the field that we are converting.
-	 * @param sb
-	 *            String builder to which to append the string version of the value.
 	 * 
-	 * @return The String equivalent object of the value parameter or null in which case "" will be printed.
+	 * @return The String equivalent object of the value parameter or null in which case nothing will be printed.
 	 */
-	public void javaToString(FieldInfo fieldInfo, T value, StringBuilder sb);
+	public String javaToString(FieldInfo fieldInfo, T value);
 
 	/**
 	 * Converts from a string representation to Java.

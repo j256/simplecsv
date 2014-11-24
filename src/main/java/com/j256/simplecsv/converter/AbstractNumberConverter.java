@@ -37,14 +37,14 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, T value, StringBuilder sb) {
+	public String javaToString(FieldInfo fieldInfo, T value) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
-			return;
+			return null;
 		} else if (decimalFormat == null) {
-			sb.append(value);
+			return value.toString();
 		} else {
-			sb.append(decimalFormat.format(numberToValue(value)));
+			return decimalFormat.format(numberToValue(value));
 		}
 	}
 

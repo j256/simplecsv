@@ -40,9 +40,11 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, UUID value, StringBuilder sb) {
-		if (value != null) {
-			sb.append(value.toString());
+	public String javaToString(FieldInfo fieldInfo, UUID value) {
+		if (value == null) {
+			return null;
+		} else {
+			return value.toString();
 		}
 	}
 

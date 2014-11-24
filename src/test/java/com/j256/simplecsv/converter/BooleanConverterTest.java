@@ -66,8 +66,6 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	@Test
 	public void testNull() {
 		BooleanConverter converter = new BooleanConverter();
-		StringBuilder sb = new StringBuilder();
-		converter.javaToString(null, null, sb);
-		assertEquals(0, sb.length());
+		assertNull(converter.javaToString(null, null));
 	}
 }

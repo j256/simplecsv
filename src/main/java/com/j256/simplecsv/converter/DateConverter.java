@@ -56,11 +56,12 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, Date value, StringBuilder sb) {
-		if (value != null) {
+	public String javaToString(FieldInfo fieldInfo, Date value) {
+		if (value == null) {
+			return null;
+		} else {
 			String datePattern = (String) fieldInfo.getConfigInfo();
-			String str = getDateFormatter(datePattern).format(value);
-			sb.append(str);
+			return getDateFormatter(datePattern).format(value);
 		}
 	}
 

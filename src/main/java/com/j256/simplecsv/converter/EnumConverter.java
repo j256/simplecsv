@@ -67,9 +67,11 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, Enum<?> value, StringBuilder sb) {
-		if (value != null) {
-			sb.append(value.toString());
+	public String javaToString(FieldInfo fieldInfo, Enum<?> value) {
+		if (value == null) {
+			return null;
+		} else {
+			return value.name();
 		}
 	}
 

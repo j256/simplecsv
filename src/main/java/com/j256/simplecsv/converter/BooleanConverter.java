@@ -74,14 +74,15 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, Boolean value, StringBuilder sb) {
-		if (value != null) {
-			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
-			if (value) {
-				sb.append(configInfo.trueString);
-			} else {
-				sb.append(configInfo.falseString);
-			}
+	public String javaToString(FieldInfo fieldInfo, Boolean value) {
+		if (value == null) {
+			return null;
+		}
+		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+		if (value) {
+			return configInfo.trueString;
+		} else {
+			return configInfo.falseString;
 		}
 	}
 

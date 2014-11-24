@@ -89,15 +89,17 @@ public class FieldInfo {
 		if (csvField == null) {
 			return null;
 		}
-		if (converter == null) {
-			if (csvField.converterClass() == VoidConverter.class) {
+		if (csvField.converterClass() == VoidConverter.class) {
+			if (converter == null) {
 				throw new IllegalArgumentException("No converter available for type: " + field.getType());
 			} else {
-				@SuppressWarnings("unchecked")
-				Converter<Object, Object> castConverter =
-						(Converter<Object, Object>) ConverterUtils.constructConverter(csvField.converterClass());
-				converter = castConverter;
+				// use the passed in one
 			}
+		} else {
+			@SuppressWarnings("unchecked")
+			Converter<Object, Object> castConverter =
+					(Converter<Object, Object>) ConverterUtils.constructConverter(csvField.converterClass());
+			converter = castConverter;
 		}
 		String format;
 		if (csvField.format().equals(CsvField.DEFAULT_VALUE)) {

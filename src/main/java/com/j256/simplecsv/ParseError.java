@@ -72,9 +72,9 @@ public class ParseError {
 	@Override
 	public String toString() {
 		if (message == null) {
-			return errorType.toString();
+			return errorType.getTypeMessage();
 		} else {
-			return message + ", type " + errorType.toString();
+			return message + ", type " + errorType.getTypeMessage();
 		}
 	}
 
@@ -96,7 +96,7 @@ public class ParseError {
 			this.typeString = typeString;
 		}
 
-		public String getTypeString() {
+		public String getTypeMessage() {
 			return typeString;
 		}
 	}

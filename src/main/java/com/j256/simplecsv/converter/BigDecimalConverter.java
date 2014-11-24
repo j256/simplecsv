@@ -41,14 +41,14 @@ public class BigDecimalConverter implements Converter<BigDecimal, DecimalFormat>
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, BigDecimal value, StringBuilder sb) {
+	public String javaToString(FieldInfo fieldInfo, BigDecimal value) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
-			return;
+			return null;
 		} else if (decimalFormat == null) {
-			sb.append(value);
+			return value.toString();
 		} else {
-			sb.append(decimalFormat.format(value));
+			return decimalFormat.format(value);
 		}
 	}
 

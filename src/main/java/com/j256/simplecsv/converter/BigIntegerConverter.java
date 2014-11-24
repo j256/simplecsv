@@ -43,14 +43,14 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public void javaToString(FieldInfo fieldInfo, BigInteger value, StringBuilder sb) {
+	public String javaToString(FieldInfo fieldInfo, BigInteger value) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
-			return;
+			return null;
 		} else if (decimalFormat == null) {
-			sb.append(value);
+			return value.toString();
 		} else {
-			sb.append(decimalFormat.format(value));
+			return decimalFormat.format(value);
 		}
 	}
 

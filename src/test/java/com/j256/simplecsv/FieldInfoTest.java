@@ -90,8 +90,8 @@ public class FieldInfoTest {
 			return false;
 		}
 		@Override
-		public void javaToString(FieldInfo fieldInfo, String value, StringBuilder sb) {
-			sb.append(value);
+		public String javaToString(FieldInfo fieldInfo, String value) {
+			return value;
 		}
 		@Override
 		public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {

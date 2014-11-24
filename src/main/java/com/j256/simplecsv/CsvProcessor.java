@@ -101,12 +101,9 @@ public class CsvProcessor<T> {
 		int linePos = 0;
 		final ParseError parseError = new ParseError();
 		for (FieldInfo fieldInfo : fieldInfos) {
-			if (linePos == line.length()) {
-				break;
-			}
+			boolean atEnd = (linePos == line.length());
 			parseError.reset();
-			if (line.charAt(linePos) == cellQuote) {
-				linePos++;
+			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
 				linePos = processQuotedLine(line, 1, linePos, fieldInfo, result, parseError);
 			} else {
 				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, result, parseError);
@@ -116,9 +113,15 @@ public class CsvProcessor<T> {
 						+ line, linePos);
 			}
 			fieldCount++;
+			if (atEnd) {
+				break;
+			}
 		}
 		if (fieldCount < fieldInfos.length && !allowPartialLines) {
 			throw new ParseException("Line does not have " + fieldInfos.length + " cells: " + line, 0);
+		}
+		if (linePos < line.length()) {
+			throw new ParseException("Line has extra information past last column: " + line, 0);
 		}
 		return result;
 	}
@@ -135,9 +138,6 @@ public class CsvProcessor<T> {
 			} else {
 				sb.append(cellSeparator);
 			}
-			if (fieldInfo.isNeedsQuotes()) {
-				sb.append(cellQuote);
-			}
 			Field field = fieldInfo.getField();
 			Object value;
 			try {
@@ -147,8 +147,27 @@ public class CsvProcessor<T> {
 			}
 			@SuppressWarnings("unchecked")
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) fieldInfo.getConverter();
-			castConverter.javaToString(fieldInfo, value, sb);
-			if (fieldInfo.isNeedsQuotes()) {
+			String str = castConverter.javaToString(fieldInfo, value);
+			// need to protect the cell if it contains a quote
+			if (str.indexOf(cellQuote) >= 0) {
+				writeQuoted(sb, str);
+				continue;
+			}
+			boolean needsQuotes = fieldInfo.isNeedsQuotes();
+			if (!needsQuotes) {
+				for (int i = 0; i < str.length(); i++) {
+					char ch = str.charAt(i);
+					if (ch == cellSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
+						needsQuotes = true;
+						break;
+					}
+				}
+			}
+			if (needsQuotes) {
+				sb.append(cellQuote);
+			}
+			sb.append(str);
+			if (needsQuotes) {
 				sb.append(cellQuote);
 			}
 		}
@@ -191,64 +210,61 @@ public class CsvProcessor<T> {
 	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object result,
 			ParseError parseError) {
 
-		int fieldStart = linePos;
-
-		// look for the next quote
-		int fieldEnd = line.indexOf(cellQuote, linePos);
-		if (fieldEnd < 0) {
-			linePos = line.length();
-			// XXX: is this an invalid un-terminated line?
-			extractValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
-			return linePos;
-		}
-		linePos = fieldEnd + 1;
-		if (linePos == line.length()) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
-			return linePos;
-		} else if (line.charAt(linePos) == cellSeparator) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
-			return linePos + 1;
-		}
-
-		// must have a quote following a quote if there wasn't a cellSeparator
-		if (line.charAt(linePos) != cellQuote) {
-			parseError.setErrorType(ErrorType.INVALID_FORMAT);
-			parseError.setMessage("quote '" + cellQuote + "' is not followed up separator '" + cellSeparator + "'");
-			return linePos;
-		}
-
-		// need to build the string dynamically now
-		StringBuilder sb = new StringBuilder(32);
-		sb.append(line, fieldStart, linePos);
-		// skip over quote
+		// linePos is pointing at the first quote, move past it
 		linePos++;
+		int fieldStart = linePos;
+		int fieldEnd = linePos;
 
-		fieldStart = linePos;
+		StringBuilder sb = null;
 		while (linePos < line.length()) {
+
 			// look for the next quote
 			fieldEnd = line.indexOf(cellQuote, linePos);
 			if (fieldEnd < 0) {
-				sb.append(line, fieldStart, line.length());
-				break;
+				parseError.setErrorType(ErrorType.TRUNCATED_VALUE);
+				parseError.setMessage("Field not terminated with quote '" + cellQuote + "'");
+				return line.length();
 			}
+
 			linePos = fieldEnd + 1;
-			if (linePos == line.length() || line.charAt(linePos) == cellSeparator) {
-				sb.append(line, fieldStart, fieldEnd);
+			if (linePos == line.length()) {
+				break;
+			} else if (line.charAt(linePos) == cellSeparator) {
+				linePos++;
 				break;
 			}
 
+			// must have a quote following a quote if there wasn't a cellSeparator
 			if (line.charAt(linePos) != cellQuote) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage("quote '" + cellQuote + "' is not followed up separator '" + cellSeparator + "'");
 				return linePos;
 			}
-			sb.append(line, fieldStart, linePos);
+
+			fieldEnd = linePos;
 			linePos++;
+			if (linePos == line.length() || line.charAt(linePos) == cellSeparator) {
+				linePos++;
+				break;
+			}
+
+			// need to build the string dynamically now
+			if (sb == null) {
+				sb = new StringBuilder(32);
+			}
+			// add to the string-builder the field + 1 quote
+			sb.append(line, fieldStart, fieldEnd);
+			// line-pos is pointing past 2nd (maybe 3rd) quote
 			fieldStart = linePos;
 		}
 
-		String str = sb.toString();
-		extractValue(str, lineNumber, fieldInfo, 0, str.length(), result, parseError);
+		if (sb == null) {
+			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
+		} else {
+			sb.append(line, fieldStart, fieldEnd);
+			String str = sb.toString();
+			extractValue(str, lineNumber, fieldInfo, 0, str.length(), result, parseError);
+		}
 		return linePos;
 	}
 
@@ -267,6 +283,25 @@ public class CsvProcessor<T> {
 			linePos++;
 		}
 		return linePos;
+	}
+
+	private void writeQuoted(StringBuilder sb, String str) {
+		sb.append(cellQuote);
+		int start = 0;
+		while (true) {
+			int linePos = str.indexOf(cellQuote, start);
+			if (linePos < 0) {
+				sb.append(str, start, str.length());
+				break;
+			}
+			// move past the quote so we can output it
+			linePos++;
+			sb.append(str, start, linePos);
+			// output another quote
+			sb.append(cellQuote);
+			start = linePos;
+		}
+		sb.append(cellQuote);
 	}
 
 	private void extractValue(String line, int lineNum, FieldInfo fieldInfo, int fieldStart, int fieldEnd, Object obj,
@@ -320,18 +355,4 @@ public class CsvProcessor<T> {
 			return;
 		}
 	}
-
-	// private final String CSV_QUOTE_STR = String.valueOf(cellQuote);
-	// private final char[] CSV_SEARCH_CHARS = new char[] { cellSeparator, cellQuote, '\r', '\n' };
-	//
-	// public int translate(CharSequence input, Writer out) throws IOException {
-	// if (StringUtils.containsNone(input.toString(), CSV_SEARCH_CHARS)) {
-	// out.write(input.toString());
-	// } else {
-	// out.write(cellQuote);
-	// out.write(StringUtils.replace(input.toString(), CSV_QUOTE_STR, CSV_QUOTE_STR + CSV_QUOTE_STR));
-	// out.write(cellQuote);
-	// }
-	// return input.length();
-	// }
 }

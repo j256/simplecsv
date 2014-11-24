@@ -12,11 +12,12 @@ public abstract class AbstractConverterTest {
 
 	protected <T, C> String testConverter(Converter<T, C> converter, C configInfo, T value) throws ParseException {
 		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
-		StringBuilder sb = new StringBuilder();
-		converter.javaToString(fieldInfo, value, sb);
-		String strVal = sb.toString();
+		String strVal = converter.javaToString(fieldInfo, value);
 		ParseError parseError = new ParseError();
-		T converted = converter.stringToJava(strVal, 1, fieldInfo, strVal, parseError);
+		T converted = null;
+		if (strVal != null) {
+			converted = converter.stringToJava(strVal, 1, fieldInfo, strVal, parseError);
+		}
 		assertFalse(parseError.isError());
 		System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
 		assertEquals(value, converted);
