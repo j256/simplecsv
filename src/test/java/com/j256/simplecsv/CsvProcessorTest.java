@@ -1,8 +1,12 @@
 package com.j256.simplecsv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.text.ParseException;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -24,11 +28,11 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.readLine(line);
+		Basic basic = processor.processRow(line);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 	}
 
 	@Test
@@ -39,12 +43,12 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.readLine(line);
+		Basic basic = processor.processRow(line);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"", basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 	}
 
 	@Test
@@ -55,12 +59,12 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.readLine(line);
+		Basic basic = processor.processRow(line);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"wow\"", basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 	}
 
 	@Test
@@ -70,7 +74,7 @@ public class CsvProcessorTest {
 		int intValue = 1;
 		String str = "\"";
 		String line = intValue + ",\"" + str + "\"";
-		Basic basic = processor.readLine(line);
+		Basic basic = processor.processRow(line);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"", basic.getString());
@@ -79,7 +83,7 @@ public class CsvProcessorTest {
 	@Test(expected = ParseException.class)
 	public void testNotEnoughCells() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		processor.readLine("1,2");
+		processor.processRow("1,2");
 	}
 
 	@Test
@@ -114,13 +118,13 @@ public class CsvProcessorTest {
 		String str = "has,comma";
 		long longValue = 3452L;
 		String unquoted = "u,q";
-		Basic basic = new Basic(200, "has,comma", longValue, unquoted);
+		Basic basic = new Basic(intValue, str, longValue, unquoted);
 		String written = processor.buildLine(basic, false);
-		basic = processor.readLine(written);
+		basic = processor.processRow(written);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 	}
 
 	@Test
@@ -131,7 +135,7 @@ public class CsvProcessorTest {
 		String longColumn = "long";
 		String unquotedColumn = "unquoted stuff";
 		String header = intColumn + ",\"" + strColumn + "\"," + longColumn + "," + unquotedColumn;
-		String[] columnNames = processor.readHeader(header);
+		String[] columnNames = processor.processHeader(header);
 		assertEquals(4, columnNames.length);
 		assertEquals(intColumn, columnNames[0]);
 		assertEquals(strColumn, columnNames[1]);
@@ -139,21 +143,45 @@ public class CsvProcessorTest {
 		assertEquals(unquotedColumn, columnNames[3]);
 	}
 
+	@Test
+	public void testWriteReadFile() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		int intValue = 200;
+		String str = "has,comma";
+		long longValue = 3452L;
+		String unquoted = "u,q";
+		Basic basic = new Basic(intValue, str, longValue, unquoted);
+
+		File file = new File("target/" + getClass().getSimpleName());
+		file.delete();
+		processor.writeAll(file, Collections.singletonList(basic), true);
+
+		List<Basic> entities = processor.readAll(file, true, true);
+		assertNotNull(entities);
+		assertEquals(1, entities.size());
+		basic = entities.get(0);
+
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(str, basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquoted());
+	}
+
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
 			throws ParseException {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.readLine(line);
+		Basic basic = processor.processRow(line);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 
 		String written = processor.buildLine(basic, false);
-		basic = processor.readLine(written);
+		basic = processor.processRow(written);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedString());
+		assertEquals(unquoted, basic.getUnquoted());
 	}
 
 	private static class Basic {
@@ -164,7 +192,7 @@ public class CsvProcessorTest {
 		@CsvField
 		private long longValue;
 		@CsvField(converterClass = UnquotedStringConverter.class)
-		private String unquotedString;
+		private String unquoted;
 
 		@SuppressWarnings("unused")
 		public Basic() {
@@ -175,7 +203,7 @@ public class CsvProcessorTest {
 			this.intValue = intValue;
 			this.string = string;
 			this.longValue = longValue;
-			this.unquotedString = specialString;
+			this.unquoted = specialString;
 		}
 
 		public int getIntValue() {
@@ -190,8 +218,8 @@ public class CsvProcessorTest {
 			return longValue;
 		}
 
-		public String getUnquotedString() {
-			return unquotedString;
+		public String getUnquoted() {
+			return unquoted;
 		}
 	}
 

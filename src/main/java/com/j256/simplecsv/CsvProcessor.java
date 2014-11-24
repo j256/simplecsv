@@ -1,14 +1,18 @@
 package com.j256.simplecsv;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +79,14 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
+	 * {@link CsvField#converterClass()} annotation field.
+	 */
+	public <FT> void registerConverter(Class<FT> clazz, Converter<FT, ?> converter) {
+		converterMap.put(clazz, converter);
+	}
+
+	/**
 	 * Read in all of the entities in the file passed in.
 	 * 
 	 * @param file
@@ -126,7 +138,7 @@ public class CsvProcessor<T> {
 				if (line == null) {
 					return results;
 				}
-				results.add(readLine(line));
+				results.add(processRow(line));
 			}
 		} finally {
 			bufferedReader.close();
@@ -134,24 +146,65 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
-	 * {@link CsvField#converterClass()} annotation field.
-	 */
-	public <FT> void registerConverter(Class<FT> clazz, Converter<FT, ?> converter) {
-		converterMap.put(clazz, converter);
-	}
-
-	/**
 	 * Process a line and divide it up into a series of quoted fields.
 	 */
 	public String[] readHeader(BufferedReader reader) throws ParseException, IOException {
-		return readHeader(reader.readLine());
+		return processHeader(reader.readLine());
+	}
+
+	/**
+	 * Write a collection of entities to the writer.
+	 * 
+	 * @param file
+	 *            File to write the entities to.
+	 * @param entities
+	 *            Collection of entities to write to the writer.
+	 * @param writeHeader
+	 *            Write header to the start of the output file.
+	 */
+	public void writeAll(File file, Collection<T> entities, boolean writeHeader) throws IOException {
+		writeAll(new FileWriter(file), entities, writeHeader);
+	}
+
+	/**
+	 * Write a header and then the collection of entities to the writer.
+	 * 
+	 * @param writer
+	 *            To use to write the entities to a file. It will be closed before this method returns.
+	 * @param entities
+	 *            Collection of entities to write to the writer.
+	 * @param writeHeader
+	 *            Write header to the start of the output file.
+	 */
+	public void writeAll(Writer writer, Collection<T> entities, boolean writeHeader) throws IOException {
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		try {
+			if (writeHeader) {
+				writeHeader(bufferedWriter, true);
+			}
+			for (T entity : entities) {
+				String line = buildLine(entity, true);
+				bufferedWriter.write(line);
+			}
+		} finally {
+			bufferedWriter.close();
+		}
+	}
+
+	/**
+	 * Write the header line to the writer with a newline.
+	 * 
+	 * @param appendLineTermination
+	 *            Set to true to add the newline to the end of the line.
+	 */
+	public void writeHeader(BufferedWriter writer, boolean appendLineTermination) throws IOException {
+		writer.write(buildHeaderLine(appendLineTermination));
 	}
 
 	/**
 	 * Process a line and divide it up into a series of quoted fields.
 	 */
-	public String[] readHeader(String line) throws ParseException {
+	public String[] processHeader(String line) throws ParseException {
 		String[] result = new String[fieldInfos.length];
 		StringBuilder sb = new StringBuilder(32);
 		int linePos = 0;
@@ -184,7 +237,7 @@ public class CsvProcessor<T> {
 	 * Process a header line and return the associated entity.
 	 */
 	public boolean validateHeader(String line) throws ParseException {
-		String[] columns = readHeader(line);
+		String[] columns = processHeader(line);
 		if (columns.length != fieldInfos.length) {
 			return false;
 		}
@@ -199,7 +252,7 @@ public class CsvProcessor<T> {
 	/**
 	 * Read and process a line and return the associated entity.
 	 */
-	public T readLine(String line) throws ParseException {
+	public T processRow(String line) throws ParseException {
 		int fieldCount = 0;
 		T result;
 		try {
@@ -240,6 +293,9 @@ public class CsvProcessor<T> {
 
 	/**
 	 * Convert the entity into a string suitable to be written.
+	 * 
+	 * @param appendLineTermination
+	 *            Set to true to add the newline to the end of the line.
 	 */
 	public String buildHeaderLine(boolean appendLineTermination) {
 		StringBuilder sb = new StringBuilder();
