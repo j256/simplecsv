@@ -19,19 +19,61 @@ public class CsvProcessorTest {
 	@Test
 	public void testSingleQuotes() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		testReadLine(processor, 1, "\"", 2, "");
+		int intValue = 1;
+		String str = "\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		Basic basic = processor.readLine(line);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(str, basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquotedString());
 	}
 
 	@Test
 	public void testTwoQuotes() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		testReadLine(processor, 1, "\"\"", 2, "");
+		int intValue = 1;
+		String str = "\"\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		Basic basic = processor.readLine(line);
+		assertEquals(intValue, basic.getIntValue());
+		// NOTE: this seems to be right
+		assertEquals("\"", basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquotedString());
 	}
 
 	@Test
 	public void testTwoQuotesPlus() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		testReadLine(processor, 1, "\"\"wow\"", 2, "");
+		int intValue = 1;
+		String str = "\"\"wow\"\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		Basic basic = processor.readLine(line);
+		assertEquals(intValue, basic.getIntValue());
+		// NOTE: this seems to be right
+		assertEquals("\"wow\"", basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquotedString());
+	}
+
+	@Test
+	public void testPartialLine() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.setAllowPartialLines(true);
+		int intValue = 1;
+		String str = "\"";
+		String line = intValue + ",\"" + str + "\"";
+		Basic basic = processor.readLine(line);
+		assertEquals(intValue, basic.getIntValue());
+		// NOTE: this seems to be right
+		assertEquals("\"", basic.getString());
 	}
 
 	@Test(expected = ParseException.class)
@@ -48,7 +90,7 @@ public class CsvProcessorTest {
 		long longValue = 341442323234552L;
 		String unquoted = "fewpofjwe";
 		Basic basic = new Basic(intValue, str, longValue, unquoted);
-		String line = processor.writeLine(basic, false);
+		String line = processor.buildLine(basic, false);
 		assertEquals(intValue + ",\"" + str + "\"," + longValue + "," + unquoted, line);
 	}
 
@@ -61,7 +103,7 @@ public class CsvProcessorTest {
 		long longValue = 3452L;
 		String unquoted = "fewdqwpofjwe";
 		Basic basic = new Basic(intValue, beforeQuote + "\"" + afterQuote, longValue, unquoted);
-		String line = processor.writeLine(basic, false);
+		String line = processor.buildLine(basic, false);
 		assertEquals(intValue + ",\"" + beforeQuote + "\"\"" + afterQuote + "\"," + longValue + "," + unquoted, line);
 	}
 
@@ -73,12 +115,28 @@ public class CsvProcessorTest {
 		long longValue = 3452L;
 		String unquoted = "u,q";
 		Basic basic = new Basic(200, "has,comma", longValue, unquoted);
-		String written = processor.writeLine(basic, false);
+		String written = processor.buildLine(basic, false);
 		basic = processor.readLine(written);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedString());
+	}
+
+	@Test
+	public void testHeader() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		String intColumn = "int";
+		String strColumn = "string here";
+		String longColumn = "long";
+		String unquotedColumn = "unquoted stuff";
+		String header = intColumn + ",\"" + strColumn + "\"," + longColumn + "," + unquotedColumn;
+		String[] columnNames = processor.readHeader(header);
+		assertEquals(4, columnNames.length);
+		assertEquals(intColumn, columnNames[0]);
+		assertEquals(strColumn, columnNames[1]);
+		assertEquals(longColumn, columnNames[2]);
+		assertEquals(unquotedColumn, columnNames[3]);
 	}
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
@@ -90,7 +148,7 @@ public class CsvProcessorTest {
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedString());
 
-		String written = processor.writeLine(basic, false);
+		String written = processor.buildLine(basic, false);
 		basic = processor.readLine(written);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());

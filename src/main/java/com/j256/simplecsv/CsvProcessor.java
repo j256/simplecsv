@@ -1,9 +1,15 @@
 package com.j256.simplecsv;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +75,65 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Read in all of the entities in the file passed in.
+	 * 
+	 * @param file
+	 *            File to read in.
+	 * @param firstLineHeader
+	 *            Set to true to ignore the first line as the header.
+	 * @param validateHeader
+	 *            Set to true if the first line will be read and validated. If the first line header does not match what
+	 *            it should then null will be returned.
+	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
+	 */
+	public List<T> readAll(File file, boolean firstLineHeader, boolean validateHeader) throws IOException,
+			ParseException {
+		return readAll(new FileReader(file), firstLineHeader, validateHeader);
+	}
+
+	/**
+	 * Read in all of the entities in the reader passed in. It will use an internal buffered reader.
+	 * 
+	 * @param reader
+	 *            Reader used to read in the file. It will be closed when the method returns.
+	 * @param firstLineHeader
+	 *            Set to true to ignore the first line as the header.
+	 * @param validateHeader
+	 *            Set to true if the first line will be read and validated. If the first line header does not match what
+	 *            it should then null will be returned.
+	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
+	 */
+	public List<T> readAll(Reader reader, boolean firstLineHeader, boolean validateHeader) throws IOException,
+			ParseException {
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		try {
+			if (firstLineHeader) {
+				String line = bufferedReader.readLine();
+				if (line == null) {
+					if (validateHeader) {
+						return null;
+					} else {
+						return Collections.emptyList();
+					}
+				}
+				if (validateHeader && !validateHeader(line)) {
+					return null;
+				}
+			}
+			List<T> results = new ArrayList<T>();
+			while (true) {
+				String line = bufferedReader.readLine();
+				if (line == null) {
+					return results;
+				}
+				results.add(readLine(line));
+			}
+		} finally {
+			bufferedReader.close();
+		}
+	}
+
+	/**
 	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
 	 * {@link CsvField#converterClass()} annotation field.
 	 */
@@ -77,11 +142,58 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Process a line and divide it up into a series of quoted fields.
+	 */
+	public String[] readHeader(BufferedReader reader) throws ParseException, IOException {
+		return readHeader(reader.readLine());
+	}
+
+	/**
+	 * Process a line and divide it up into a series of quoted fields.
+	 */
+	public String[] readHeader(String line) throws ParseException {
+		String[] result = new String[fieldInfos.length];
+		StringBuilder sb = new StringBuilder(32);
+		int linePos = 0;
+		final ParseError parseError = new ParseError();
+		for (int i = 0; i < fieldInfos.length; i++) {
+			boolean atEnd = (linePos == line.length());
+			parseError.reset();
+			sb.setLength(0);
+			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
+				linePos = processQuotedLine(line, 1, linePos, null, null, sb, parseError);
+			} else {
+				linePos = processUnquotedLine(line, 1, linePos, null, null, sb, parseError);
+			}
+			if (parseError.isError()) {
+				throw new ParseException("Problems parsing line at position " + linePos + " (" + parseError + "): "
+						+ line, linePos);
+			}
+			result[i] = sb.toString();
+			if (atEnd) {
+				break;
+			}
+		}
+		if (linePos < line.length()) {
+			throw new ParseException("Line has extra information past last column: " + line, linePos);
+		}
+		return result;
+	}
+
+	/**
 	 * Process a header line and return the associated entity.
 	 */
-	public boolean validateHeader(String line) {
-		// TODO:
-		return false;
+	public boolean validateHeader(String line) throws ParseException {
+		String[] columns = readHeader(line);
+		if (columns.length != fieldInfos.length) {
+			return false;
+		}
+		for (int i = 0; i < columns.length; i++) {
+			if (columns[i] == null || !columns[i].equals(fieldInfos[i].getCellName())) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -104,9 +216,9 @@ public class CsvProcessor<T> {
 			boolean atEnd = (linePos == line.length());
 			parseError.reset();
 			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
-				linePos = processQuotedLine(line, 1, linePos, fieldInfo, result, parseError);
+				linePos = processQuotedLine(line, 1, linePos, fieldInfo, result, null, parseError);
 			} else {
-				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, result, parseError);
+				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, result, null, parseError);
 			}
 			if (parseError.isError()) {
 				throw new ParseException("Problems parsing line at position " + linePos + " (" + parseError + "): "
@@ -118,10 +230,10 @@ public class CsvProcessor<T> {
 			}
 		}
 		if (fieldCount < fieldInfos.length && !allowPartialLines) {
-			throw new ParseException("Line does not have " + fieldInfos.length + " cells: " + line, 0);
+			throw new ParseException("Line does not have " + fieldInfos.length + " cells: " + line, linePos);
 		}
 		if (linePos < line.length()) {
-			throw new ParseException("Line has extra information past last column: " + line, 0);
+			throw new ParseException("Line has extra information past last column: " + line, linePos);
 		}
 		return result;
 	}
@@ -129,7 +241,35 @@ public class CsvProcessor<T> {
 	/**
 	 * Convert the entity into a string suitable to be written.
 	 */
-	public String writeLine(T entity, boolean appendLineTermination) {
+	public String buildHeaderLine(boolean appendLineTermination) {
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (FieldInfo fieldInfo : fieldInfos) {
+			if (first) {
+				first = false;
+			} else {
+				sb.append(cellSeparator);
+			}
+			String header = fieldInfo.getCellName();
+			// need to protect the cell if it contains a quote
+			if (header.indexOf(cellQuote) >= 0) {
+				writeQuoted(sb, header);
+				continue;
+			}
+			sb.append(cellQuote);
+			sb.append(header);
+			sb.append(cellQuote);
+		}
+		if (appendLineTermination) {
+			sb.append(lineTermination);
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Convert the entity into a string suitable to be written.
+	 */
+	public String buildLine(T entity, boolean appendLineTermination) {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
 		for (FieldInfo fieldInfo : fieldInfos) {
@@ -208,7 +348,7 @@ public class CsvProcessor<T> {
 	}
 
 	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object result,
-			ParseError parseError) {
+			StringBuilder headerSb, ParseError parseError) {
 
 		// linePos is pointing at the first quote, move past it
 		linePos++;
@@ -243,7 +383,10 @@ public class CsvProcessor<T> {
 
 			fieldEnd = linePos;
 			linePos++;
-			if (linePos == line.length() || line.charAt(linePos) == cellSeparator) {
+			if (linePos == line.length()) {
+				break;
+			}
+			if (line.charAt(linePos) == cellSeparator) {
 				linePos++;
 				break;
 			}
@@ -259,24 +402,36 @@ public class CsvProcessor<T> {
 		}
 
 		if (sb == null) {
-			extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
+			if (headerSb == null) {
+				extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
+			} else {
+				headerSb.append(line, fieldStart, fieldEnd);
+			}
 		} else {
 			sb.append(line, fieldStart, fieldEnd);
 			String str = sb.toString();
-			extractValue(str, lineNumber, fieldInfo, 0, str.length(), result, parseError);
+			if (headerSb == null) {
+				extractAndAssignValue(str, lineNumber, fieldInfo, 0, str.length(), result, parseError);
+			} else {
+				headerSb.append(sb);
+			}
 		}
 		return linePos;
 	}
 
 	private int processUnquotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object result,
-			ParseError parseError) {
+			StringBuilder headerSb, ParseError parseError) {
 		int fieldStart = linePos;
 		linePos = line.indexOf(cellSeparator, fieldStart);
 		if (linePos < 0) {
 			linePos = line.length();
 		}
 
-		extractValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
+		if (headerSb == null) {
+			extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
+		} else {
+			headerSb.append(line, fieldStart, linePos);
+		}
 
 		if (linePos < line.length()) {
 			// skip over the separator
@@ -304,8 +459,23 @@ public class CsvProcessor<T> {
 		sb.append(cellQuote);
 	}
 
-	private void extractValue(String line, int lineNum, FieldInfo fieldInfo, int fieldStart, int fieldEnd, Object obj,
-			ParseError parseError) {
+	private void extractAndAssignValue(String line, int lineNum, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
+			Object target, ParseError parseError) {
+		Object value = extractValue(line, lineNum, fieldInfo, fieldStart, fieldEnd, target, parseError);
+		if (value == null) {
+			// either error or no value
+			return;
+		}
+		try {
+			fieldInfo.getField().set(target, value);
+		} catch (Exception e) {
+			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
+			parseError.setMessage(e.getMessage());
+		}
+	}
+
+	private Object extractValue(String line, int lineNum, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
+			Object target, ParseError parseError) {
 
 		String cellStr = line.substring(fieldStart, fieldEnd);
 		if (fieldInfo.isTrimInput()) {
@@ -318,41 +488,16 @@ public class CsvProcessor<T> {
 
 		}
 
-		Object value;
 		try {
-			value = fieldInfo.getConverter().stringToJava(line, lineNum, fieldInfo, cellStr, parseError);
+			return fieldInfo.getConverter().stringToJava(line, lineNum, fieldInfo, cellStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());
-			// TODO: how to handle
-			e.printStackTrace();
-			return;
+			return null;
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());
-			// TODO: how to handle
-			e.printStackTrace();
-			return;
-		}
-
-		if (value == null) {
-			if (parseError.isError()) {
-				// TODO: how to handle
-				System.err.println("got error: " + parseError);
-				return;
-			}
-			// take the default value of the field
-			return;
-		}
-
-		try {
-			fieldInfo.getField().set(obj, value);
-		} catch (Exception e) {
-			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
-			parseError.setMessage(e.getMessage());
-			// TODO: how to handle
-			e.printStackTrace();
-			return;
+			return null;
 		}
 	}
 }
