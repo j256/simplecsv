@@ -9,10 +9,10 @@ import java.lang.reflect.Field;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.CsvField;
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.EnumConverter.ConfigInfo;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
 
 public class EnumConverterTest extends AbstractConverterTest {
 

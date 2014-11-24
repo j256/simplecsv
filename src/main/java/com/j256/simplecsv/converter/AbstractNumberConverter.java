@@ -4,9 +4,9 @@ import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
-import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
+import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 /**
  * Abstract converter for Java Number types.

@@ -1,7 +1,8 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.processor;
 
 import java.lang.reflect.Field;
 
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;

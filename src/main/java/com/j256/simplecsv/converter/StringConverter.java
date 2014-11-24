@@ -2,9 +2,9 @@ package com.j256.simplecsv.converter;
 
 import java.lang.reflect.Field;
 
-import com.j256.simplecsv.CsvField;
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
+import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
 
 /**
  * Converter for the Java String type.

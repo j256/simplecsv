@@ -2,7 +2,7 @@ package com.j256.simplecsv.converter;
 
 import java.text.DecimalFormat;
 
-import com.j256.simplecsv.CsvField;
+import com.j256.simplecsv.common.CsvField;
 
 /**
  * Converter for the Java Long type.

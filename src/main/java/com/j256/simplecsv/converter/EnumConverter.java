@@ -4,10 +4,10 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.j256.simplecsv.CsvField;
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
-import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
+import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 /**
  * Converter for the Java Enum type associated with an Enum field.

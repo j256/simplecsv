@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.processor;
 
 import com.j256.simplecsv.converter.Converter;
 

@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.processor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -7,7 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.processor.ParseError;
+import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 public class ParseErrorTest {
 

@@ -1,0 +1,2 @@
+0.1: 11/24/2014
+	* Initial version.  Coding seems to be stabilizing although things are a bit rough.

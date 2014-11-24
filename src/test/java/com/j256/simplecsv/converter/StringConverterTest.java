@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
 import com.j256.simplecsv.converter.StringConverter.ConfigInfo;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
 
 public class StringConverterTest extends AbstractConverterTest {
 

@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.common;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.VoidConverter;
+import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
  * Field to be exported in CSV output.

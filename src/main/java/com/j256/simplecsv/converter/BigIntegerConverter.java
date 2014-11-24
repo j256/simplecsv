@@ -6,8 +6,8 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
 
 /**
  * Converter for the Java String type.

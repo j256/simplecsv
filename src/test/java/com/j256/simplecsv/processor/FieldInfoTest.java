@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.processor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -11,9 +11,12 @@ import java.lang.reflect.Field;
 
 import org.junit.Test;
 
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.IntegerConverter;
 import com.j256.simplecsv.converter.LongConverter;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
 
 public class FieldInfoTest {
 

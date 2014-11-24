@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.processor;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,9 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
+import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 /**
  * CSV reader and writer.

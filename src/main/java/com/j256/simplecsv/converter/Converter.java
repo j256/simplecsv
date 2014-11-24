@@ -3,9 +3,9 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 
-import com.j256.simplecsv.FieldInfo;
-import com.j256.simplecsv.ParseError;
-import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ParseError;
+import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 /**
  * Converts from a textual representation to a Java representation.
