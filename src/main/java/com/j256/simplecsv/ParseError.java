@@ -13,6 +13,9 @@ public class ParseError {
 
 	private ErrorType errorType = ErrorType.NONE;
 	private String message;
+	private String line;
+	private int lineNumber;
+	private int linePos;
 
 	public ErrorType getErrorType() {
 		return errorType;
@@ -30,9 +33,36 @@ public class ParseError {
 		this.message = message;
 	}
 
+	public void setLine(String line) {
+		this.line = line;
+	}
+
+	public String getLine() {
+		return line;
+	}
+
+	public void setLineNumber(int lineNumber) {
+		this.lineNumber = lineNumber;
+	}
+
+	public int getLineNumber() {
+		return lineNumber;
+	}
+
+	public void setLinePos(int linePos) {
+		this.linePos = linePos;
+	}
+
+	public int getLinePos() {
+		return linePos;
+	}
+
 	public void reset() {
 		this.errorType = ErrorType.NONE;
 		this.message = null;
+		this.line = null;
+		this.lineNumber = 0;
+		this.linePos = 0;
 	}
 
 	public boolean isError() {
@@ -44,7 +74,7 @@ public class ParseError {
 		if (message == null) {
 			return errorType.toString();
 		} else {
-			return message + " (" + errorType.toString() + ")";
+			return message + ", type " + errorType.toString();
 		}
 	}
 

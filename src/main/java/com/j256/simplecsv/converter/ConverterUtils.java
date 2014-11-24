@@ -1,4 +1,4 @@
-package com.j256.simplecsv;
+package com.j256.simplecsv.converter;
 
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
@@ -6,22 +6,6 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
-import com.j256.simplecsv.converter.BigDecimalConverter;
-import com.j256.simplecsv.converter.BigIntegerConverter;
-import com.j256.simplecsv.converter.BooleanConverter;
-import com.j256.simplecsv.converter.ByteConverter;
-import com.j256.simplecsv.converter.CharacterConverter;
-import com.j256.simplecsv.converter.Converter;
-import com.j256.simplecsv.converter.DateConverter;
-import com.j256.simplecsv.converter.DoubleConverter;
-import com.j256.simplecsv.converter.EnumConverter;
-import com.j256.simplecsv.converter.FloatConverter;
-import com.j256.simplecsv.converter.IntegerConverter;
-import com.j256.simplecsv.converter.LongConverter;
-import com.j256.simplecsv.converter.ShortConverter;
-import com.j256.simplecsv.converter.StringConverter;
-import com.j256.simplecsv.converter.UuidConverter;
 
 /**
  * Manages the collection of converter objects so we can reuse them as necessary.

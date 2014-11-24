@@ -41,6 +41,11 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
+	public boolean isNeedsQuotes(Boolean parseErrorOnMoreThanOne) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, Character value, StringBuilder sb) {
 		if (value != null) {
 			sb.append(value);

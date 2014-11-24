@@ -35,6 +35,11 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
+	public boolean isNeedsQuotes(Void configInfo) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, UUID value, StringBuilder sb) {
 		if (value != null) {
 			sb.append(value.toString());

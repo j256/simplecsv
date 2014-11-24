@@ -3,6 +3,7 @@ package com.j256.simplecsv;
 import java.lang.reflect.Field;
 
 import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
@@ -18,16 +19,18 @@ public class FieldInfo {
 	private final String cellName;
 	private final boolean required;
 	private final boolean trimInput;
+	private final boolean needsQuotes;
 	private final String defaultValue;
 
 	private FieldInfo(Field field, Converter<?, ?> converter, Object configInfo, String cellName, boolean required,
-			boolean trimInput, String defaultValue) {
+			boolean trimInput, boolean needsQuotes, String defaultValue) {
 		this.field = field;
 		this.converter = converter;
 		this.configInfo = configInfo;
 		this.cellName = cellName;
 		this.required = required;
 		this.trimInput = trimInput;
+		this.needsQuotes = needsQuotes;
 		this.defaultValue = defaultValue;
 	}
 
@@ -65,6 +68,13 @@ public class FieldInfo {
 	}
 
 	/**
+	 * Returns whether this field should be surrounded by quotes or not.
+	 */
+	public boolean isNeedsQuotes() {
+		return needsQuotes;
+	}
+
+	/**
 	 * @see CsvField#defaultValue()
 	 */
 	public String getDefaultValue() {
@@ -83,7 +93,10 @@ public class FieldInfo {
 			if (csvField.converterClass() == VoidConverter.class) {
 				throw new IllegalArgumentException("No converter available for type: " + field.getType());
 			} else {
-				converter = ConverterUtils.constructConverter(csvField.converterClass());
+				@SuppressWarnings("unchecked")
+				Converter<Object, Object> castConverter =
+						(Converter<Object, Object>) ConverterUtils.constructConverter(csvField.converterClass());
+				converter = castConverter;
 			}
 		}
 		String format;
@@ -93,6 +106,9 @@ public class FieldInfo {
 			format = csvField.format();
 		}
 		Object configInfo = converter.configure(format, csvField.converterFlags(), field);
+		@SuppressWarnings("unchecked")
+		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
+		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
 
 		String cellName;
 		if (csvField.cellName().equals(CsvField.DEFAULT_VALUE)) {
@@ -105,13 +121,13 @@ public class FieldInfo {
 			defaultValue = csvField.defaultValue();
 		}
 		return new FieldInfo(field, converter, configInfo, cellName, csvField.required(), csvField.trimInput(),
-				defaultValue);
+				needsQuotes, defaultValue);
 	}
 
 	/**
 	 * For testing purposes.
 	 */
 	public static FieldInfo forTests(Converter<?, ?> converter, Object configInfo) {
-		return new FieldInfo(null, converter, configInfo, "name", false, false, null);
+		return new FieldInfo(null, converter, configInfo, "name", false, false, false, null);
 	}
 }

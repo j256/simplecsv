@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.j256.simplecsv.ParseError.ErrorType;
 import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.ConverterUtils;
 
 /**
  * CSV reader and writer.
@@ -27,7 +28,7 @@ public class CsvProcessor<T> {
 
 	private char cellSeparator = DEFAULT_CELL_SEPARATOR;
 	private char cellQuote = DEFAULT_CELL_QUOTE;
-	private String rowTermination;
+	private String lineTermination = System.getProperty("line.separator");
 	private boolean allowPartialLines;
 
 	private final FieldInfo[] fieldInfos;
@@ -50,7 +51,9 @@ public class CsvProcessor<T> {
 			for (Field field : entityClass.getDeclaredFields()) {
 				Converter<?, ?> converter = converterMap.get(field.getType());
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
-				FieldInfo fieldInfo = FieldInfo.fromField(field, converter);
+				@SuppressWarnings("unchecked")
+				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
+				FieldInfo fieldInfo = FieldInfo.fromField(field, castConverter);
 				if (fieldInfo != null) {
 					fieldInfos.add(fieldInfo);
 					field.setAccessible(true);
@@ -121,6 +124,41 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Convert the entity into a string suitable to be written.
+	 */
+	public String writeLine(T entity, boolean appendLineTermination) {
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (FieldInfo fieldInfo : fieldInfos) {
+			if (first) {
+				first = false;
+			} else {
+				sb.append(cellSeparator);
+			}
+			if (fieldInfo.isNeedsQuotes()) {
+				sb.append(cellQuote);
+			}
+			Field field = fieldInfo.getField();
+			Object value;
+			try {
+				value = field.get(entity);
+			} catch (Exception e) {
+				throw new IllegalStateException("Could not get value from entity field: " + field);
+			}
+			@SuppressWarnings("unchecked")
+			Converter<Object, Object> castConverter = (Converter<Object, Object>) fieldInfo.getConverter();
+			castConverter.javaToString(fieldInfo, value, sb);
+			if (fieldInfo.isNeedsQuotes()) {
+				sb.append(cellQuote);
+			}
+		}
+		if (appendLineTermination) {
+			sb.append(lineTermination);
+		}
+		return sb.toString();
+	}
+
+	/**
 	 * String that separates cells in out CSV input and output.
 	 */
 	public void setCellSeparator(char cellSeparator) {
@@ -138,8 +176,8 @@ public class CsvProcessor<T> {
 	 * Sets the character which is written at the end of the row. Default is to use
 	 * System.getProperty("line.separator");.
 	 */
-	public void setRowTermination(String rowTermination) {
-		this.rowTermination = rowTermination;
+	public void setLineTermination(String lineTermination) {
+		this.lineTermination = lineTermination;
 	}
 
 	/**

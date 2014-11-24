@@ -19,6 +19,11 @@ public class VoidConverter implements Converter<Void, Void> {
 	}
 
 	@Override
+	public boolean isNeedsQuotes(Void configInfo) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, Void value, StringBuilder sb) {
 		// no op
 	}

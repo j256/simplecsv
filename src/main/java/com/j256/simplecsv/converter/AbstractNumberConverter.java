@@ -19,6 +19,15 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	protected abstract T parseString(String value) throws NumberFormatException;
 
 	@Override
+	public boolean isNeedsQuotes(DecimalFormat decimalFormat) {
+		if (decimalFormat == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	@Override
 	public DecimalFormat configure(String format, long flags, Field field) {
 		if (format == null) {
 			return null;

@@ -38,6 +38,11 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
+	public boolean isNeedsQuotes(DecimalFormat decimalFormat) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, BigInteger value, StringBuilder sb) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
@@ -50,8 +55,8 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public BigInteger stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value,
-			ParseError parseError) throws ParseException {
+	public BigInteger stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+			throws ParseException {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;

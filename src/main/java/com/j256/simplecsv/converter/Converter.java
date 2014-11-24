@@ -42,6 +42,11 @@ public interface Converter<T, C> {
 	public C configure(String format, long flags, Field field);
 
 	/**
+	 * Returns true if the field needs to be quoted in the CSV output.
+	 */
+	public boolean isNeedsQuotes(C configInfo);
+
+	/**
 	 * Converts from a Java representation to string.
 	 * 
 	 * @param fieldInfo

@@ -44,6 +44,11 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
+	public boolean isNeedsQuotes(ConfigInfo configInfo) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, String value, StringBuilder sb) {
 		if (value != null) {
 			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();

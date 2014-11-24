@@ -62,6 +62,11 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
+	public boolean isNeedsQuotes(ConfigInfo configInfo) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, Enum<?> value, StringBuilder sb) {
 		if (value != null) {
 			sb.append(value.toString());

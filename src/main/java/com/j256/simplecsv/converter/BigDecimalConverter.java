@@ -36,6 +36,11 @@ public class BigDecimalConverter implements Converter<BigDecimal, DecimalFormat>
 	}
 
 	@Override
+	public boolean isNeedsQuotes(DecimalFormat decimalFormat) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, BigDecimal value, StringBuilder sb) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {

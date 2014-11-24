@@ -51,6 +51,11 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
+	public boolean isNeedsQuotes(String datePattern) {
+		return true;
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, Date value, StringBuilder sb) {
 		if (value != null) {
 			String datePattern = (String) fieldInfo.getConfigInfo();

@@ -62,6 +62,18 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
+	public boolean isNeedsQuotes(ConfigInfo configInfo) {
+		try {
+			Long.parseLong(configInfo.trueString);
+			Long.parseLong(configInfo.falseString);
+			// if they are both numbers then no
+			return false;
+		} catch (NumberFormatException nfe) {
+			return true;
+		}
+	}
+
+	@Override
 	public void javaToString(FieldInfo fieldInfo, Boolean value, StringBuilder sb) {
 		if (value != null) {
 			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
