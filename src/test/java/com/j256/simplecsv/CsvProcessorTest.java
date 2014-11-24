@@ -28,7 +28,7 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.processRow(line);
+		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
@@ -43,7 +43,7 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.processRow(line);
+		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"", basic.getString());
@@ -59,7 +59,7 @@ public class CsvProcessorTest {
 		long longValue = 2L;
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.processRow(line);
+		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"wow\"", basic.getString());
@@ -74,7 +74,7 @@ public class CsvProcessorTest {
 		int intValue = 1;
 		String str = "\"";
 		String line = intValue + ",\"" + str + "\"";
-		Basic basic = processor.processRow(line);
+		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
 		assertEquals("\"", basic.getString());
@@ -83,7 +83,7 @@ public class CsvProcessorTest {
 	@Test(expected = ParseException.class)
 	public void testNotEnoughCells() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		processor.processRow("1,2");
+		processor.processRow("1,2", null);
 	}
 
 	@Test
@@ -120,7 +120,7 @@ public class CsvProcessorTest {
 		String unquoted = "u,q";
 		Basic basic = new Basic(intValue, str, longValue, unquoted);
 		String written = processor.buildLine(basic, false);
-		basic = processor.processRow(written);
+		basic = processor.processRow(written, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
@@ -135,7 +135,7 @@ public class CsvProcessorTest {
 		String longColumn = "long";
 		String unquotedColumn = "unquoted stuff";
 		String header = intColumn + ",\"" + strColumn + "\"," + longColumn + "," + unquotedColumn;
-		String[] columnNames = processor.processHeader(header);
+		String[] columnNames = processor.processHeader(header, null);
 		assertEquals(4, columnNames.length);
 		assertEquals(intColumn, columnNames[0]);
 		assertEquals(strColumn, columnNames[1]);
@@ -170,14 +170,14 @@ public class CsvProcessorTest {
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
 			throws ParseException {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
-		Basic basic = processor.processRow(line);
+		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquoted());
 
 		String written = processor.buildLine(basic, false);
-		basic = processor.processRow(written);
+		basic = processor.processRow(written, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
