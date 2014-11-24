@@ -32,7 +32,7 @@ public class BigDecimalConverter implements Converter<BigDecimal> {
 		} else if (decimalFormat == null) {
 			sb.append(value);
 		} else {
-			decimalFormat.format(value);
+			sb.append(decimalFormat.format(value));
 		}
 	}
 

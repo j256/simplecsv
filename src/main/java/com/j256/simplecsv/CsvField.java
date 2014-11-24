@@ -18,7 +18,7 @@ import com.j256.simplecsv.converter.VoidConverter;
 @Target(ElementType.FIELD)
 public @interface CsvField {
 
-	public static final String DEFAULT_VALUE = "default";
+	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
 	 * Sets the name of the cell used in the header and for logging. If not specified, then the field name will be used.

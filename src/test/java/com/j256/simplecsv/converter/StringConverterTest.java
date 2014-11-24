@@ -14,7 +14,6 @@ public class StringConverterTest extends AbstractConverterTest {
 	public void testStuff() throws Exception {
 		StringConverter converter = new StringConverter();
 		converter.configure(null, 0, null);
-
 		testConverter(converter, "");
 		testConverter(converter, "one");
 		testConverter(converter, "two");

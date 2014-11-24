@@ -34,7 +34,7 @@ public class BigIntegerConverter implements Converter<BigInteger> {
 		} else if (decimalFormat == null) {
 			sb.append(value);
 		} else {
-			decimalFormat.format(value);
+			sb.append(decimalFormat.format(value));
 		}
 	}
 

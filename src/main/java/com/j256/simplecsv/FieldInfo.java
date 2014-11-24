@@ -84,13 +84,13 @@ public class FieldInfo {
 		csvField.converterClass();
 
 		String cellName;
-		if (csvField.cellName() == null) {
+		if (csvField.cellName().equals(CsvField.DEFAULT_VALUE)) {
 			cellName = field.getName();
 		} else {
 			cellName = csvField.cellName();
 		}
 		String defaultValue = null;
-		if (csvField.defaultValue() != CsvField.DEFAULT_VALUE) {
+		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
 		return new FieldInfo(field, null, cellName, csvField.required(), csvField.allowNull(), csvField.trimInput(),

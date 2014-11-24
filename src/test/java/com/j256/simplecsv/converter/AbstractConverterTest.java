@@ -1,6 +1,7 @@
 package com.j256.simplecsv.converter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.text.ParseException;
 
@@ -15,7 +16,9 @@ public abstract class AbstractConverterTest {
 		StringBuilder sb = new StringBuilder();
 		converter.javaToString(null, value, sb);
 		String strVal = sb.toString();
-		T converted = converter.stringToJava(strVal, 1, null, strVal, new ParseError());
+		ParseError parseError = new ParseError();
+		T converted = converter.stringToJava(strVal, 1, null, strVal, parseError);
+		assertFalse(parseError.isError());
 		System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
 		assertEquals(value, converted);
 		return strVal;
