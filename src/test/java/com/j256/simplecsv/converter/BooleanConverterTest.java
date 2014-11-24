@@ -9,22 +9,24 @@ import java.text.ParseException;
 
 import org.junit.Test;
 
+import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
+import com.j256.simplecsv.converter.BooleanConverter.ConfigInfo;
 
 public class BooleanConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws ParseException {
 		BooleanConverter converter = new BooleanConverter();
-		converter.configure(null, 0, null);
-		testConverter(converter, true);
-		testConverter(converter, false);
-		testConverter(converter, null);
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		testConverter(converter, configInfo, true);
+		testConverter(converter, configInfo, false);
+		testConverter(converter, configInfo, null);
 		converter = new BooleanConverter();
 		converter.configure("1,0", 0, null);
-		testConverter(converter, true);
-		testConverter(converter, false);
-		testConverter(converter, null);
+		testConverter(converter, configInfo, true);
+		testConverter(converter, configInfo, false);
+		testConverter(converter, configInfo, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -48,13 +50,16 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	@Test
 	public void testParseErrorOnBadValue() {
 		BooleanConverter converter = new BooleanConverter();
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertEquals(false, converter.stringToJava("line", 1, null, "unknown", parseError));
+		assertEquals(false, converter.stringToJava("line", 1, fieldInfo, "unknown", parseError));
 		assertFalse(parseError.isError());
 
-		converter.configure(null, BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE, null);
+		configInfo = converter.configure(null, BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE, null);
+		fieldInfo = FieldInfo.forTests(converter, configInfo);
 		parseError.reset();
-		assertNull(converter.stringToJava("line", 1, null, "unknown", parseError));
+		assertNull(converter.stringToJava("line", 1, fieldInfo, "unknown", parseError));
 		assertTrue(parseError.isError());
 	}
 

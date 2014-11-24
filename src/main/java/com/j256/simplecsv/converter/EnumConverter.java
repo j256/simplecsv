@@ -19,7 +19,7 @@ import com.j256.simplecsv.ParseError.ErrorType;
  * 
  * @author graywatson
  */
-public class EnumConverter implements Converter<Enum<?>> {
+public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInfo> {
 
 	/**
 	 * If this flag is set then the {@link CsvField#format()} string is actually the name of the enum constant that will
@@ -28,12 +28,19 @@ public class EnumConverter implements Converter<Enum<?>> {
 	 */
 	public static final long FORMAT_IS_UNKNOWN_VALUE = 1 << 1;
 
-	private final Map<String, Enum<?>> enumStringMap = new HashMap<String, Enum<?>>();
-	private Enum<?> unknownValue;
+	private static final EnumConverter singleton = new EnumConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static EnumConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
+	public ConfigInfo configure(String format, long flags, Field field) {
 
+		Map<String, Enum<?>> enumStringMap = new HashMap<String, Enum<?>>();
 		Enum<?>[] constants = (Enum<?>[]) field.getType().getEnumConstants();
 		if (constants == null) {
 			throw new IllegalArgumentException("Field " + field + " improperly configured as a enum");
@@ -42,6 +49,7 @@ public class EnumConverter implements Converter<Enum<?>> {
 			enumStringMap.put(enumVal.name(), enumVal);
 		}
 
+		Enum<?> unknownValue = null;
 		if ((flags & FORMAT_IS_UNKNOWN_VALUE) != 0) {
 			unknownValue = enumStringMap.get(format);
 			if (unknownValue == null) {
@@ -49,6 +57,8 @@ public class EnumConverter implements Converter<Enum<?>> {
 						+ field.getType());
 			}
 		}
+
+		return new ConfigInfo(enumStringMap, unknownValue);
 	}
 
 	@Override
@@ -63,15 +73,25 @@ public class EnumConverter implements Converter<Enum<?>> {
 		if (value.isEmpty()) {
 			return null;
 		}
-		Enum<?> enumValue = enumStringMap.get(value);
+		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+		Enum<?> enumValue = configInfo.enumStringMap.get(value);
 		if (enumValue != null) {
 			return enumValue;
-		} else if (unknownValue != null) {
-			return unknownValue;
+		} else if (configInfo.unknownValue != null) {
+			return configInfo.unknownValue;
 		} else {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(value);
 			return null;
+		}
+	}
+
+	public static class ConfigInfo {
+		final Map<String, Enum<?>> enumStringMap;
+		final Enum<?> unknownValue;
+		private ConfigInfo(Map<String, Enum<?>> enumStringMap, Enum<?> unknownValue) {
+			this.enumStringMap = enumStringMap;
+			this.unknownValue = unknownValue;
 		}
 	}
 }

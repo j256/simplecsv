@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class ShortConverter extends AbstractNumberConverter<Short> {
 
+	private static final ShortConverter singleton = new ShortConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static ShortConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Short numberToValue(Number number) {
 		return number.shortValue();

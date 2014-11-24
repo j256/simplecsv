@@ -9,21 +9,20 @@ public class CsvProcessorTest {
 	@Test
 	public void testBasic() throws ParseException {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		
-		processor.readLine("hello");
+		Basic basic = processor.readLine("1,str");
 	}
 
 	private static class Basic {
 		@CsvField
 		private int value;
 		@CsvField
-		private int string;
+		private String string;
 
 		public Basic() {
 			// for simplecsv
 		}
-		
-		public Basic(int value, int string) {
+
+		public Basic(int value, String string) {
 			this.value = value;
 			this.string = string;
 		}
@@ -32,7 +31,7 @@ public class CsvProcessorTest {
 			return value;
 		}
 
-		public int getString() {
+		public String getString() {
 			return string;
 		}
 	}

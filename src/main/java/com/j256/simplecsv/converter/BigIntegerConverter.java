@@ -14,21 +14,32 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class BigIntegerConverter implements Converter<BigInteger> {
+public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat> {
 
-	private DecimalFormat decimalFormat;
+	private static final BigIntegerConverter singleton = new BigIntegerConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static BigIntegerConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		if (format != null) {
-			decimalFormat = new DecimalFormat(format);
+	public DecimalFormat configure(String format, long flags, Field field) {
+		if (format == null) {
+			return null;
+		} else {
+			DecimalFormat decimalFormat = new DecimalFormat(format);
 			decimalFormat.setParseBigDecimal(true);
 			decimalFormat.setParseIntegerOnly(true);
+			return decimalFormat;
 		}
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, BigInteger value, StringBuilder sb) {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
 			return;
 		} else if (decimalFormat == null) {
@@ -39,8 +50,9 @@ public class BigIntegerConverter implements Converter<BigInteger> {
 	}
 
 	@Override
-	public BigInteger stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
-			throws ParseException {
+	public BigInteger stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value,
+			ParseError parseError) throws ParseException {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (decimalFormat == null) {

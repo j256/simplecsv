@@ -6,47 +6,55 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
+import com.j256.simplecsv.converter.StringConverter.ConfigInfo;
 
 public class StringConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
 		StringConverter converter = new StringConverter();
-		converter.configure(null, 0, null);
-		testConverter(converter, "");
-		testConverter(converter, "one");
-		testConverter(converter, "two");
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		testConverter(converter, configInfo, "");
+		testConverter(converter, configInfo, "one");
+		testConverter(converter, configInfo, "two");
 	}
 
 	@Test
 	public void testBlankNull() throws Exception {
 		StringConverter converter = new StringConverter();
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
-		assertEquals("", converter.stringToJava("line", 1, null, "", parseError));
+		assertEquals("", converter.stringToJava("line", 1, fieldInfo, "", parseError));
 		assertFalse(parseError.isError());
 
-		converter.configure(null, StringConverter.BLANK_IS_NULL, null);
-		assertNull(converter.stringToJava("line", 1, null, "", parseError));
+		configInfo = converter.configure(null, StringConverter.BLANK_IS_NULL, null);
+		fieldInfo = FieldInfo.forTests(converter, configInfo);
+		assertNull(converter.stringToJava("line", 1, fieldInfo, "", parseError));
 		assertFalse(parseError.isError());
 
-		testConverter(converter, null);
+		testConverter(converter, configInfo, null);
 	}
 
 	@Test
 	public void testTrimOutput() {
 		StringConverter converter = new StringConverter();
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
 
 		String ok = "ok";
 		String spacedOk = " " + ok + " ";
 		StringBuilder sb = new StringBuilder();
-		converter.javaToString(null, spacedOk, sb);
+		converter.javaToString(fieldInfo, spacedOk, sb);
 		assertEquals(spacedOk, sb.toString());
 
-		converter.configure(null, StringConverter.TRIM_OUTPUT, null);
+		configInfo = converter.configure(null, StringConverter.TRIM_OUTPUT, null);
+		fieldInfo = FieldInfo.forTests(converter, configInfo);
 		sb.setLength(0);
-		converter.javaToString(null, spacedOk, sb);
+		converter.javaToString(fieldInfo, spacedOk, sb);
 		assertEquals(ok, sb.toString());
 	}
 }

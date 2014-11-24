@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class ByteConverter extends AbstractNumberConverter<Byte> {
 
+	private static final ByteConverter singleton = new ByteConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static ByteConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Byte numberToValue(Number number) {
 		return number.byteValue();

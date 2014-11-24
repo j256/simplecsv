@@ -18,7 +18,7 @@ import com.j256.simplecsv.ParseError.ErrorType;
  * 
  * @author graywatson
  */
-public class BooleanConverter implements Converter<Boolean> {
+public class BooleanConverter implements Converter<Boolean, BooleanConverter.ConfigInfo> {
 
 	/**
 	 * Set this flag using {@link CsvField#converterFlags()} if you want a parse error to be generated if the value is
@@ -27,13 +27,23 @@ public class BooleanConverter implements Converter<Boolean> {
 	 */
 	public static final long PARSE_ERROR_ON_INVALID_VALUE = 1 << 1;
 
-	private String trueString = "true";
-	private String falseString = "false";
-	private boolean parseErrorOnInvalid;
+	private static final BooleanConverter singleton = new BooleanConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static BooleanConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		if (format != null) {
+	public ConfigInfo configure(String format, long flags, Field field) {
+		String trueString;
+		String falseString;
+		if (format == null) {
+			trueString = "true";
+			falseString = "false";
+		} else {
 			String[] parts = format.split(",", 2);
 			if (parts.length != 2) {
 				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
@@ -47,33 +57,47 @@ public class BooleanConverter implements Converter<Boolean> {
 				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
 			}
 		}
-		parseErrorOnInvalid = ((flags & PARSE_ERROR_ON_INVALID_VALUE) != 0);
+		boolean parseErrorOnInvalid = ((flags & PARSE_ERROR_ON_INVALID_VALUE) != 0);
+		return new ConfigInfo(trueString, falseString, parseErrorOnInvalid);
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, Boolean value, StringBuilder sb) {
 		if (value != null) {
+			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
 			if (value) {
-				sb.append(trueString);
+				sb.append(configInfo.trueString);
 			} else {
-				sb.append(falseString);
+				sb.append(configInfo.falseString);
 			}
 		}
 	}
 
 	@Override
 	public Boolean stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
-		} else if (value.equals(trueString)) {
+		} else if (value.equals(configInfo.trueString)) {
 			return true;
-		} else if (value.equals(falseString)) {
+		} else if (value.equals(configInfo.falseString)) {
 			return false;
-		} else if (parseErrorOnInvalid) {
+		} else if (configInfo.parseErrorOnInvalid) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			return null;
 		} else {
 			return false;
+		}
+	}
+
+	public static class ConfigInfo {
+		final String trueString;
+		final String falseString;
+		final boolean parseErrorOnInvalid;
+		private ConfigInfo(String trueString, String falseString, boolean parseErrorOnInvalid) {
+			this.trueString = trueString;
+			this.falseString = falseString;
+			this.parseErrorOnInvalid = parseErrorOnInvalid;
 		}
 	}
 }

@@ -11,8 +11,8 @@ public class UuidConverterTest extends AbstractConverterTest {
 		UuidConverter converter = new UuidConverter();
 		converter.configure(null, 0, null);
 		for (int i = 0; i < 100; i++) {
-			testConverter(converter, UUID.randomUUID());
+			testConverter(converter, null, UUID.randomUUID());
 		}
-		testConverter(converter, null);
+		testConverter(converter, null, null);
 	}
 }

@@ -10,11 +10,12 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class VoidConverter implements Converter<Void> {
+public class VoidConverter implements Converter<Void, Void> {
 
 	@Override
-	public void configure(String format, long flags, Field field) {
+	public Void configure(String format, long flags, Field field) {
 		// no op
+		return null;
 	}
 
 	@Override

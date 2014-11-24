@@ -17,7 +17,7 @@ import com.j256.simplecsv.ParseError.ErrorType;
  * 
  * @author graywatson
  */
-public class CharacterConverter implements Converter<Character> {
+public class CharacterConverter implements Converter<Character, Boolean> {
 
 	/**
 	 * Use this flag if you want a parse error generated when the input has more than one character. Default is to just
@@ -25,11 +25,19 @@ public class CharacterConverter implements Converter<Character> {
 	 */
 	public static final long PARSE_ERROR_IF_MORE_THAN_ONE_CHAR = 1 << 1;
 
-	private boolean parseErrorOnMoreThanOne;
+	private static final CharacterConverter singleton = new CharacterConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static CharacterConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		this.parseErrorOnMoreThanOne = ((flags & PARSE_ERROR_IF_MORE_THAN_ONE_CHAR) != 0);
+	public Boolean configure(String format, long flags, Field field) {
+		boolean parseErrorOnMoreThanOne = ((flags & PARSE_ERROR_IF_MORE_THAN_ONE_CHAR) != 0);
+		return parseErrorOnMoreThanOne;
 	}
 
 	@Override
@@ -41,6 +49,7 @@ public class CharacterConverter implements Converter<Character> {
 
 	@Override
 	public Character stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+		Boolean parseErrorOnMoreThanOne = (Boolean) fieldInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (value.length() > 1 && parseErrorOnMoreThanOne) {

@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class FloatConverter extends AbstractNumberConverter<Float> {
 
+	private static final FloatConverter singleton = new FloatConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static FloatConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Float numberToValue(Number number) {
 		return number.floatValue();

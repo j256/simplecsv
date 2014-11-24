@@ -5,19 +5,18 @@ import static org.junit.Assert.assertFalse;
 
 import java.text.ParseException;
 
+import com.j256.simplecsv.FieldInfo;
 import com.j256.simplecsv.ParseError;
 
 public abstract class AbstractConverterTest {
 
-	/**
-	 * Test the converter.
-	 */
-	protected <T> String testConverter(Converter<T> converter, T value) throws ParseException {
+	protected <T, C> String testConverter(Converter<T, C> converter, C configInfo, T value) throws ParseException {
+		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
 		StringBuilder sb = new StringBuilder();
-		converter.javaToString(null, value, sb);
+		converter.javaToString(fieldInfo, value, sb);
 		String strVal = sb.toString();
 		ParseError parseError = new ParseError();
-		T converted = converter.stringToJava(strVal, 1, null, strVal, parseError);
+		T converted = converter.stringToJava(strVal, 1, fieldInfo, strVal, parseError);
 		assertFalse(parseError.isError());
 		System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
 		assertEquals(value, converted);

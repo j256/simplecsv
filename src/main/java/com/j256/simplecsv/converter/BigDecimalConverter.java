@@ -13,20 +13,31 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class BigDecimalConverter implements Converter<BigDecimal> {
+public class BigDecimalConverter implements Converter<BigDecimal, DecimalFormat> {
 
-	private DecimalFormat decimalFormat;
+	private static final BigDecimalConverter singleton = new BigDecimalConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static BigDecimalConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		if (format != null) {
-			decimalFormat = new DecimalFormat(format);
+	public DecimalFormat configure(String format, long flags, Field field) {
+		if (format == null) {
+			return null;
+		} else {
+			DecimalFormat decimalFormat = new DecimalFormat(format);
 			decimalFormat.setParseBigDecimal(true);
+			return decimalFormat;
 		}
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, BigDecimal value, StringBuilder sb) {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
 			return;
 		} else if (decimalFormat == null) {
@@ -39,6 +50,7 @@ public class BigDecimalConverter implements Converter<BigDecimal> {
 	@Override
 	public BigDecimal stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
 			throws ParseException {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (decimalFormat == null) {

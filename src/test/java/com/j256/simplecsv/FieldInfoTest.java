@@ -10,13 +10,15 @@ import java.lang.reflect.Field;
 
 import org.junit.Test;
 
+import com.j256.simplecsv.converter.IntegerConverter;
+
 public class FieldInfoTest {
 
 	@Test
 	public void testStuff() throws Exception {
 		String fieldName = "field";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field);
+		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
 		assertSame(field, fieldInfo.getField());
 		assertNull(fieldInfo.getDefaultValue());
 		assertEquals(fieldName, fieldInfo.getCellName());
@@ -28,7 +30,7 @@ public class FieldInfoTest {
 	public void testNameSet() throws Exception {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field);
+		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
 		assertEquals(MyClass.HAS_NAME_FIELD_NAME, fieldInfo.getCellName());
 	}
 
@@ -36,8 +38,14 @@ public class FieldInfoTest {
 	public void testDefaultValue() throws Exception {
 		String fieldName = "defaultValue";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field);
+		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
 		assertEquals(fieldName, fieldInfo.getDefaultValue());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNoConverter() throws Exception {
+		Field field = MyClass.class.getDeclaredField("defaultValue");
+		FieldInfo.fromField(field, null);
 	}
 
 	private static class MyClass {

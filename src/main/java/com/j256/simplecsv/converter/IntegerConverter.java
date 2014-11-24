@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class IntegerConverter extends AbstractNumberConverter<Integer> {
 
+	private static final IntegerConverter singleton = new IntegerConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static IntegerConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Integer numberToValue(Number number) {
 		return number.intValue();

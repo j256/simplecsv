@@ -19,30 +19,42 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class DateConverter implements Converter<Date> {
+public class DateConverter implements Converter<Date, String> {
 
-	private String datePattern = "MM/dd/yyyy";
+	public static final String DEFAULT_DATE_PATTERN = "MM/dd/yyyy";
+
 	/*
 	 * We need to do this because SimpleDateFormat is not thread safe.
 	 */
-	private final ThreadLocal<SimpleDateFormat> threadLocal = new ThreadLocal<SimpleDateFormat>() {
-		@Override
-		protected SimpleDateFormat initialValue() {
-			return new SimpleDateFormat(datePattern);
-		}
-	};
+	private final ThreadLocal<SimpleDateFormat> threadLocal = new ThreadLocal<SimpleDateFormat>();
+
+	private static final DateConverter singleton = new DateConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static DateConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		this.datePattern = format;
+	public String configure(String format, long flags, Field field) {
+		String datePattern;
+		if (format == null) {
+			datePattern = DEFAULT_DATE_PATTERN;
+		} else {
+			datePattern = format;
+		}
 		// we do this to validate that the pattern is correct so we throw immediately here
-		new SimpleDateFormat(format);
+		new SimpleDateFormat(datePattern);
+		return datePattern;
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, Date value, StringBuilder sb) {
 		if (value != null) {
-			String str = threadLocal.get().format(value);
+			String datePattern = (String) fieldInfo.getConfigInfo();
+			String str = getDateFormatter(datePattern).format(value);
 			sb.append(str);
 		}
 	}
@@ -53,7 +65,19 @@ public class DateConverter implements Converter<Date> {
 		if (value.isEmpty()) {
 			return null;
 		} else {
-			return threadLocal.get().parse(value);
+			String datePattern = (String) fieldInfo.getConfigInfo();
+			return getDateFormatter(datePattern).parse(value);
 		}
 	}
+
+	private SimpleDateFormat getDateFormatter(String format) {
+		// we do this because we can't use the initValue() method
+		SimpleDateFormat formatter = threadLocal.get();
+		if (formatter == null) {
+			formatter = new SimpleDateFormat(format);
+			threadLocal.set(formatter);
+		}
+		return formatter;
+	}
+
 }

@@ -69,7 +69,7 @@ public @interface CsvField {
 	/**
 	 * What converter class to use. By default it will use the appropriate internal class.
 	 */
-	public Class<? extends Converter<?>> converterClass() default VoidConverter.class;
+	public Class<? extends Converter<?, ?>> converterClass() default VoidConverter.class;
 
 	/**
 	 * Set this to a default string that if the cell is empty when read, the value will be used instead. Default is the

@@ -11,19 +11,20 @@ public class DateConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws ParseException {
 		DateConverter converter = new DateConverter();
-		testConverter(converter, makeDate(2014, 11, 23));
-		testConverter(converter, makeDate(2014, 1, 1));
-		testConverter(converter, makeDate(2014, 1, 30));
-		testConverter(converter, makeDate(2014, 12, 31));
-		testConverter(converter, null);
+		String configInfo = converter.configure(null, 0, null);
+		testConverter(converter, configInfo, makeDate(2014, 11, 23));
+		testConverter(converter, configInfo, makeDate(2014, 1, 1));
+		testConverter(converter, configInfo, makeDate(2014, 1, 30));
+		testConverter(converter, configInfo, makeDate(2014, 12, 31));
+		testConverter(converter, configInfo, null);
 
 		converter = new DateConverter();
-		converter.configure("yyyyMMdd", 0, null);
-		testConverter(converter, makeDate(2014, 11, 23));
-		testConverter(converter, makeDate(2014, 1, 1));
-		testConverter(converter, makeDate(2014, 1, 30));
-		testConverter(converter, makeDate(2014, 12, 31));
-		testConverter(converter, null);
+		configInfo = converter.configure("yyyyMMdd", 0, null);
+		testConverter(converter, configInfo, makeDate(2014, 11, 23));
+		testConverter(converter, configInfo, makeDate(2014, 1, 1));
+		testConverter(converter, configInfo, makeDate(2014, 1, 30));
+		testConverter(converter, configInfo, makeDate(2014, 12, 31));
+		testConverter(converter, configInfo, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)

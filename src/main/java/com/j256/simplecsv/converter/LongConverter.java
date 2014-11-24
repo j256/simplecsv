@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class LongConverter extends AbstractNumberConverter<Long> {
 
+	private static final LongConverter singleton = new LongConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static LongConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Long numberToValue(Number number) {
 		return number.longValue();

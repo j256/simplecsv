@@ -1,6 +1,6 @@
 package com.j256.simplecsv.converter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 

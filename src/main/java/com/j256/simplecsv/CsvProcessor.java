@@ -4,14 +4,35 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.j256.simplecsv.ParseError.ErrorType;
+import com.j256.simplecsv.converter.BigDecimalConverter;
+import com.j256.simplecsv.converter.BigIntegerConverter;
+import com.j256.simplecsv.converter.BooleanConverter;
+import com.j256.simplecsv.converter.ByteConverter;
+import com.j256.simplecsv.converter.CharacterConverter;
+import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.DateConverter;
+import com.j256.simplecsv.converter.DoubleConverter;
+import com.j256.simplecsv.converter.EnumConverter;
+import com.j256.simplecsv.converter.FloatConverter;
+import com.j256.simplecsv.converter.IntegerConverter;
+import com.j256.simplecsv.converter.LongConverter;
+import com.j256.simplecsv.converter.ShortConverter;
+import com.j256.simplecsv.converter.StringConverter;
+import com.j256.simplecsv.converter.UuidConverter;
 
 /**
  * CSV reader and writer.
@@ -24,13 +45,43 @@ import com.j256.simplecsv.ParseError.ErrorType;
  */
 public class CsvProcessor<T> {
 
-	private char cellSeparator;
-	private char cellQuote;
+	public static final char DEFAULT_CELL_SEPARATOR = ',';
+	public static final char DEFAULT_CELL_QUOTE = '"';
+
+	private char cellSeparator = DEFAULT_CELL_SEPARATOR;
+	private char cellQuote = DEFAULT_CELL_QUOTE;
 	private String rowTermination;
 	private boolean allowPartialLines;
 
 	private final FieldInfo[] fieldInfos;
 	private final Constructor<T> constructor;
+
+	private final Map<Class<?>, Converter<?, ?>> convertMap = new HashMap<Class<?>, Converter<?, ?>>();
+
+	{
+		convertMap.put(BigDecimal.class, BigDecimalConverter.getSingleton());
+		convertMap.put(BigInteger.class, BigIntegerConverter.getSingleton());
+		convertMap.put(Boolean.class, BooleanConverter.getSingleton());
+		convertMap.put(boolean.class, BooleanConverter.getSingleton());
+		convertMap.put(Byte.class, ByteConverter.getSingleton());
+		convertMap.put(byte.class, ByteConverter.getSingleton());
+		convertMap.put(Character.class, CharacterConverter.getSingleton());
+		convertMap.put(char.class, CharacterConverter.getSingleton());
+		convertMap.put(Date.class, DateConverter.getSingleton());
+		convertMap.put(Double.class, DoubleConverter.getSingleton());
+		convertMap.put(double.class, DoubleConverter.getSingleton());
+		convertMap.put(Enum.class, EnumConverter.getSingleton());
+		convertMap.put(Float.class, FloatConverter.getSingleton());
+		convertMap.put(float.class, FloatConverter.getSingleton());
+		convertMap.put(Integer.class, IntegerConverter.getSingleton());
+		convertMap.put(int.class, IntegerConverter.getSingleton());
+		convertMap.put(Long.class, LongConverter.getSingleton());
+		convertMap.put(long.class, LongConverter.getSingleton());
+		convertMap.put(Short.class, ShortConverter.getSingleton());
+		convertMap.put(short.class, ShortConverter.getSingleton());
+		convertMap.put(String.class, StringConverter.getSingleton());
+		convertMap.put(UUID.class, UuidConverter.getSingleton());
+	}
 
 	/**
 	 * Constructs a process with an entity class whose fields should be marked with {@link CvsField} annotations.
@@ -41,7 +92,8 @@ public class CsvProcessor<T> {
 		List<FieldInfo> fieldInfos = new ArrayList<FieldInfo>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : entityClass.getDeclaredFields()) {
-				FieldInfo fieldInfo = FieldInfo.fromField(field);
+				Converter<?, ?> converter = convertMap.get(field.getType());
+				FieldInfo fieldInfo = FieldInfo.fromField(field, converter);
 				if (fieldInfo != null) {
 					fieldInfos.add(fieldInfo);
 					field.setAccessible(true);
@@ -260,7 +312,6 @@ public class CsvProcessor<T> {
 		private static final char[] CSV_SEARCH_CHARS = new char[] { CSV_DELIMITER, CSV_QUOTE, CharUtils.CR,
 				CharUtils.LF };
 
-		@SuppressWarnings("unused")
 		public int translate(CharSequence input, Writer out) throws IOException {
 			if (StringUtils.containsNone(input.toString(), CSV_SEARCH_CHARS)) {
 				out.write(input.toString());

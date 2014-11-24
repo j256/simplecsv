@@ -11,20 +11,24 @@ import com.j256.simplecsv.ParseError.ErrorType;
  * Converts from a textual representation to a Java representation.
  * 
  * <p>
- * Converters must have a public no-arg constructor so they can be constructed by the library.
+ * Converters must have a public no-arg constructor so they can be constructed by the library. Also, they will be reused
+ * so all local state should be saved in the config-info object that is returned by the
+ * {@link #configure(String, long, Field)} method and passed to the other methods.
  * </p>
+ * 
+ * @param <T>
+ *            The Java type that we are converting from/to.
+ * @param <C>
+ *            The configuration information object (or null if none) that we use to share state so we can use this
+ *            converter with multiple entities. If your converter has no config-info then you can use Void here and
+ *            return null from {@link #configure(String, long, Field)}.
  * 
  * @author graywatson
  */
-public interface Converter<T> {
+public interface Converter<T, C> {
 
 	/**
 	 * Configure this instance of the converter based on the associated params.
-	 * 
-	 * <p>
-	 * NOTE: It is assumed that a converter associated with the same type, same format, and same flags can be reused
-	 * across multiple CSV entities.
-	 * </p>
 	 * 
 	 * @param format
 	 *            Optional string format which affects the output and parsing of the field. Null if none supplied in
@@ -33,8 +37,9 @@ public interface Converter<T> {
 	 *            Optional numerical flags which affect the output and parsing of the field. 0 if no flags supplied.
 	 * @param field
 	 *            Reflection field associated with this converter.
+	 * @return Information structure or null if none. This will be passed to the other methods.
 	 */
-	public void configure(String format, long flags, Field field);
+	public C configure(String format, long flags, Field field);
 
 	/**
 	 * Converts from a Java representation to string.
@@ -45,6 +50,7 @@ public interface Converter<T> {
 	 *            Value of the field that we are converting.
 	 * @param sb
 	 *            String builder to which to append the string version of the value.
+	 * 
 	 * @return The String equivalent object of the value parameter or null in which case "" will be printed.
 	 */
 	public void javaToString(FieldInfo fieldInfo, T value, StringBuilder sb);
@@ -63,6 +69,7 @@ public interface Converter<T> {
 	 * @param parseError
 	 *            Parse error which can we use to set information about parse errors here. If there are no parse errors
 	 *            then just ignore this field. Any exceptions thrown will also be caught and interpreted as errors.
+	 * 
 	 * @return The Java equivalent object of the value parameter or null. Null can mean a null value or if the
 	 *         parseError type is set to something other than {@link ErrorType#NONE}.
 	 * @throws ParseException

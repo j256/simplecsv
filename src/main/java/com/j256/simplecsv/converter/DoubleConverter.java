@@ -16,6 +16,15 @@ import com.j256.simplecsv.CsvField;
  */
 public class DoubleConverter extends AbstractNumberConverter<Double> {
 
+	private static final DoubleConverter singleton = new DoubleConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static DoubleConverter getSingleton() {
+		return singleton;
+	}
+
 	@Override
 	protected Double numberToValue(Number number) {
 		return number.doubleValue();

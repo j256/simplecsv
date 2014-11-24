@@ -17,11 +17,21 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class UuidConverter implements Converter<UUID> {
+public class UuidConverter implements Converter<UUID, Void> {
+
+	private static final UuidConverter singleton = new UuidConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static UuidConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
+	public Void configure(String format, long flags, Field field) {
 		// no op
+		return null;
 	}
 
 	@Override

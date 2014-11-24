@@ -16,7 +16,7 @@ import com.j256.simplecsv.ParseError;
  * 
  * @author graywatson
  */
-public class StringConverter implements Converter<String> {
+public class StringConverter implements Converter<String, StringConverter.ConfigInfo> {
 
 	/**
 	 * If enabled, trim() to be called on the string before it is printed.
@@ -27,19 +27,27 @@ public class StringConverter implements Converter<String> {
 	 */
 	public static final long BLANK_IS_NULL = 1 << 2;
 
-	private boolean trimOutput;
-	private boolean blankIsNull;
+	private static final StringConverter singleton = new StringConverter();
+
+	/**
+	 * Get singleton for class.
+	 */
+	public static StringConverter getSingleton() {
+		return singleton;
+	}
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		trimOutput = ((flags & TRIM_OUTPUT) != 0);
-		blankIsNull = ((flags & BLANK_IS_NULL) != 0);
+	public ConfigInfo configure(String format, long flags, Field field) {
+		boolean trimOutput = ((flags & TRIM_OUTPUT) != 0);
+		boolean blankIsNull = ((flags & BLANK_IS_NULL) != 0);
+		return new ConfigInfo(trimOutput, blankIsNull);
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, String value, StringBuilder sb) {
 		if (value != null) {
-			if (trimOutput) {
+			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+			if (configInfo.trimOutput) {
 				sb.append(value.trim());
 			} else {
 				sb.append(value);
@@ -49,10 +57,21 @@ public class StringConverter implements Converter<String> {
 
 	@Override
 	public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		if (value.isEmpty() && blankIsNull) {
+		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+		if (value.isEmpty() && configInfo.blankIsNull) {
 			return null;
 		} else {
 			return value;
 		}
+	}
+
+	public static class ConfigInfo {
+		final boolean trimOutput;
+		final boolean blankIsNull;
+		private ConfigInfo(boolean trimOutput, boolean blankIsNull) {
+			this.trimOutput = trimOutput;
+			this.blankIsNull = blankIsNull;
+		}
+
 	}
 }

@@ -13,22 +13,23 @@ import com.j256.simplecsv.ParseError.ErrorType;
  * 
  * @author graywatson
  */
-public abstract class AbstractNumberConverter<T extends Number> implements Converter<T> {
-
-	private DecimalFormat decimalFormat;
+public abstract class AbstractNumberConverter<T extends Number> implements Converter<T, DecimalFormat> {
 
 	protected abstract T numberToValue(Number number);
 	protected abstract T parseString(String value) throws NumberFormatException;
 
 	@Override
-	public void configure(String format, long flags, Field field) {
-		if (format != null) {
-			decimalFormat = new DecimalFormat(format);
+	public DecimalFormat configure(String format, long flags, Field field) {
+		if (format == null) {
+			return null;
+		} else {
+			return new DecimalFormat(format);
 		}
 	}
 
 	@Override
 	public void javaToString(FieldInfo fieldInfo, T value, StringBuilder sb) {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {
 			return;
 		} else if (decimalFormat == null) {
@@ -41,6 +42,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	@Override
 	public T stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
 			throws ParseException {
+		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value.length() == 0) {
 			return null;
 		} else if (decimalFormat == null) {
