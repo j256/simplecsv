@@ -85,7 +85,8 @@ public class ParseError {
 		NONE("none"),
 		INVALID_FORMAT("invalid format"),
 		TRUNCATED_VALUE("truncated value"),
-		INVALID_BLANK("blank cell is invalid"),
+		NO_HEADER("no header line"),
+		INVALID_HEADER("no valid header line"),
 		INVALID_NULL("null value is invalid"),
 		INTERNAL_ERROR("internal error"),
 		// end

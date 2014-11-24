@@ -2,14 +2,18 @@ package com.j256.simplecsv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.io.StringReader;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 
+import com.j256.simplecsv.ParseError.ErrorType;
 import com.j256.simplecsv.converter.StringConverter;
 
 public class CsvProcessorTest {
@@ -156,7 +160,7 @@ public class CsvProcessorTest {
 		file.delete();
 		processor.writeAll(file, Collections.singletonList(basic), true);
 
-		List<Basic> entities = processor.readAll(file, true, true);
+		List<Basic> entities = processor.readAll(file, true, true, null);
 		assertNotNull(entities);
 		assertEquals(1, entities.size());
 		basic = entities.get(0);
@@ -165,6 +169,28 @@ public class CsvProcessorTest {
 		assertEquals(str, basic.getString());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquoted());
+	}
+
+	@Test
+	public void testReadBadHeaderFile() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("");
+		List<Basic> entities = processor.readAll(reader, true, true, null);
+		assertNull(entities);
+
+		reader = new StringReader("");
+		List<ParseError> errors = new ArrayList<ParseError>();
+		entities = processor.readAll(reader, true, true, errors);
+		assertNull(entities);
+		assertEquals(1, errors.size());
+		assertEquals(ErrorType.NO_HEADER, errors.get(0).getErrorType());
+
+		reader = new StringReader("bad header\n");
+		errors.clear();
+		entities = processor.readAll(reader, true, true, errors);
+		assertNull(entities);
+		assertEquals(1, errors.size());
+		assertEquals(ErrorType.INVALID_HEADER, errors.get(0).getErrorType());
 	}
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)

@@ -90,39 +90,20 @@ public class CsvProcessor<T> {
 	 * Read in all of the entities in the file passed in.
 	 * 
 	 * @param file
-	 *            File to read in.
-	 * @param firstLineHeader
-	 *            Set to true to ignore the first line as the header.
-	 * @param validateHeader
-	 *            Set to true if the first line will be read and validated. If the first line header does not match what
-	 *            it should then null will be returned.
-	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
-	 * @throws ParseException
-	 *             If there are any parsing problems.
-	 * @throws IOException
-	 *             If there are any IO exceptions thrown when reading.
-	 */
-	public List<T> readAll(File file, boolean firstLineHeader, boolean validateHeader) throws IOException,
-			ParseException {
-		return readAll(new FileReader(file), firstLineHeader, validateHeader);
-	}
-
-	/**
-	 * Read in all of the entities in the file passed in.
-	 * 
-	 * @param file
-	 *            File to read in.
+	 *            Where to read the header and entities from. It will be closed when the method returns.
 	 * @param firstLineHeader
 	 *            Set to true to ignore the first line as the header.
 	 * @param validateHeader
 	 *            Set to true if the first line will be read and validated. If the first line header does not match what
 	 *            it should then null will be returned.
 	 * @param parseErrors
-	 *            Any errors will be added to the collection and null will be returned. If validateHeader is true and
-	 *            the header does not match then no additional lines will be processed.
+	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
+	 *            is true and the header does not match then no additional lines will be returned. If this is null then
+	 *            a ParseException will be thrown on parsing problems.
 	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
 	 * @throws ParseException
-	 *             Any problems should be added to the parseErrors collection.
+	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
+	 *             an exception should be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -135,58 +116,7 @@ public class CsvProcessor<T> {
 	 * Read in all of the entities in the reader passed in. It will use an internal buffered reader.
 	 * 
 	 * @param reader
-	 *            Reader used to read in the file. It will be closed when the method returns.
-	 * @param firstLineHeader
-	 *            Set to true to ignore the first line as the header.
-	 * @param validateHeader
-	 *            Set to true if the first line will be read and validated. If the first line header does not match what
-	 *            it should then null will be returned.
-	 * @return A list of entities read in or null if the validateHeader was enabled and the header did not validate.
-	 * @throws ParseException
-	 *             If there are any parsing problems.
-	 * @throws IOException
-	 *             If there are any IO exceptions thrown when reading.
-	 */
-	public List<T> readAll(Reader reader, boolean firstLineHeader, boolean validateHeader) throws ParseException,
-			IOException {
-		BufferedReader bufferedReader = new BufferedReader(reader);
-		try {
-			if (firstLineHeader) {
-				String line = bufferedReader.readLine();
-				if (line == null) {
-					if (validateHeader) {
-						return null;
-					} else {
-						return Collections.emptyList();
-					}
-				}
-				if (validateHeader) {
-					if (!validateHeader(line, null)) {
-						return null;
-					}
-				}
-			}
-			List<T> results = new ArrayList<T>();
-			while (true) {
-				String line = bufferedReader.readLine();
-				if (line == null) {
-					return results;
-				}
-				T result = processRow(line, null);
-				if (result != null) {
-					results.add(result);
-				}
-			}
-		} finally {
-			bufferedReader.close();
-		}
-	}
-
-	/**
-	 * Read in all of the entities in the reader passed in. It will use an internal buffered reader.
-	 * 
-	 * @param reader
-	 *            Reader used to read in the file. It will be closed when the method returns.
+	 *            Where to read the header and entities from. It will be closed when the method returns.
 	 * @param firstLineHeader
 	 *            Set to true to ignore the first line as the header.
 	 * @param validateHeader
@@ -194,10 +124,12 @@ public class CsvProcessor<T> {
 	 *            it should then null will be returned.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
-	 *            is true and the header does not match then no additional lines will be returned.
+	 *            is true and the header does not match then no additional lines will be returned. If this is null then
+	 *            a ParseException will be thrown on parsing problems.
 	 * @return A list of entities read in or null if parseErrors is not null.
 	 * @throws ParseException
-	 *             Any problems should be added to the parseErrors collection.
+	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
+	 *             an exception should be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -208,25 +140,27 @@ public class CsvProcessor<T> {
 			ParseError parseError = new ParseError();
 			if (firstLineHeader) {
 				String line = bufferedReader.readLine();
-				if (line == null) {
-					if (validateHeader) {
-						parseError.setErrorType(ErrorType.INVALID_BLANK);
-						parseError.setMessage("no header line in file");
-						parseErrors.add(parseError);
-						parseErrors.add(parseError);
-						return null;
-					} else {
-						return Collections.emptyList();
-					}
-				}
 				if (validateHeader) {
-					if (!validateHeader(line, parseError)) {
-						parseErrors.add(parseError);
+					if (line == null) {
+						if (parseErrors != null) {
+							parseError.setErrorType(ErrorType.NO_HEADER);
+							parseErrors.add(parseError);
+						}
+						return null;
+					} else if (!validateHeader(line, parseError)) {
+						if (parseErrors != null) {
+							parseErrors.add(parseError);
+						}
 						return null;
 					}
+				} else if (line == null) {
+					return Collections.emptyList();
 				}
 			}
 			List<T> results = new ArrayList<T>();
+			if (parseErrors == null) {
+				parseError = null;
+			}
 			while (true) {
 				String line = bufferedReader.readLine();
 				if (line == null) {
@@ -234,8 +168,11 @@ public class CsvProcessor<T> {
 				}
 				T result = processRow(line, parseError);
 				if (result == null) {
-					parseErrors.add(parseError);
-					parseError = new ParseError();
+					// should not get here but let's be careful
+					if (parseErrors != null) {
+						parseErrors.add(parseError);
+						parseError = new ParseError();
+					}
 				} else {
 					results.add(result);
 				}
@@ -248,81 +185,51 @@ public class CsvProcessor<T> {
 	/**
 	 * Process a line and divide it up into a series of quoted fields.
 	 * 
-	 * @param reader
-	 *            Reader to (uh) read the header from.
+	 * @param bufferedReader
+	 *            Where to read the header from.
 	 * @param parseError
-	 *            If not null, this will be set with any parse errors.
+	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
+	 *            a ParseException will be thrown instead.
+	 * @return Array of header cell names or null on error.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public String[] readHeader(BufferedReader reader, ParseError parseError) throws ParseException, IOException {
-		return processHeader(reader.readLine(), parseError);
-	}
-
-	/**
-	 * Write a collection of entities to the writer.
-	 * 
-	 * @param file
-	 *            File to write the entities to.
-	 * @param entities
-	 *            Collection of entities to write to the writer.
-	 * @param writeHeader
-	 *            Write header to the start of the output file.
-	 */
-	public void writeAll(File file, Collection<T> entities, boolean writeHeader) throws IOException {
-		writeAll(new FileWriter(file), entities, writeHeader);
-	}
-
-	/**
-	 * Write a header and then the collection of entities to the writer.
-	 * 
-	 * @param writer
-	 *            To use to write the entities to a file. It will be closed before this method returns.
-	 * @param entities
-	 *            Collection of entities to write to the writer.
-	 * @param writeHeader
-	 *            Write header to the start of the output file.
-	 */
-	public void writeAll(Writer writer, Collection<T> entities, boolean writeHeader) throws IOException {
-		BufferedWriter bufferedWriter = new BufferedWriter(writer);
-		try {
-			if (writeHeader) {
-				writeHeader(bufferedWriter, true);
-			}
-			for (T entity : entities) {
-				String line = buildLine(entity, true);
-				bufferedWriter.write(line);
-			}
-		} finally {
-			bufferedWriter.close();
-		}
-	}
-
-	/**
-	 * Write the header line to the writer with a newline.
-	 * 
-	 * @param appendLineTermination
-	 *            Set to true to add the newline to the end of the line.
-	 */
-	public void writeHeader(BufferedWriter writer, boolean appendLineTermination) throws IOException {
-		writer.write(buildHeaderLine(appendLineTermination));
+	public String[] readHeader(BufferedReader bufferedReader, ParseError parseError) throws ParseException, IOException {
+		return processHeader(bufferedReader.readLine(), parseError);
 	}
 
 	/**
 	 * Process a header line and return the associated entity.
 	 * 
+	 * @param line
+	 *            Line to process to get our validate our header.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @throws ParseException
-	 *             If there is any parsing problem. See parseError parameter.
 	 * @return true if the header matched the cell names configured here otherwise false.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
 	 */
 	public boolean validateHeader(String line, ParseError parseError) throws ParseException {
 		String[] columns = processHeader(line, parseError);
 		if (columns.length != fieldInfos.length) {
+			if (parseError != null) {
+				parseError.setErrorType(ErrorType.INVALID_HEADER);
+				parseError.setMessage("got " + columns.length + " header columns, expected " + fieldInfos.length);
+			}
 			return false;
 		}
 		for (int i = 0; i < columns.length; i++) {
 			if (columns[i] == null || !columns[i].equals(fieldInfos[i].getCellName())) {
+				if (parseError != null) {
+					parseError.setErrorType(ErrorType.INVALID_HEADER);
+					parseError.setMessage("got column name '" + columns[i] + "', expected '"
+							+ fieldInfos[i].getCellName() + "'");
+				}
 				return false;
 			}
 		}
@@ -337,10 +244,11 @@ public class CsvProcessor<T> {
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @throws ParseException
-	 *             If there is any parsing problem. See parseError parameter.
 	 * @return Returns an array of processed header names entity or null if an error and parseError has been set. The
 	 *         array will be the same length as the number of configured fields so some elements may be null.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
 		String[] result = new String[fieldInfos.length];
@@ -381,18 +289,21 @@ public class CsvProcessor<T> {
 	/**
 	 * Read and process a line and return the associated entity.
 	 * 
+	 * @param line
+	 *            to process to build our entity.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @throws ParseException
-	 *             If there is any parsing problem. See parseError parameter.
 	 * @return Returns a processed entity or null if an error and parseError has been set.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
 	 */
 	public T processRow(String line, ParseError parseError) throws ParseException {
 		int fieldCount = 0;
-		T result;
+		T target;
 		try {
-			result = constructor.newInstance();
+			target = constructor.newInstance();
 		} catch (Exception e) {
 			ParseException parseException =
 					new ParseException("Could not construct instance of " + constructor.getDeclaringClass(), 0);
@@ -408,12 +319,13 @@ public class CsvProcessor<T> {
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
-				linePos = processQuotedLine(line, 1, linePos, fieldInfo, result, null, localParseError);
+				linePos = processQuotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
 			} else {
-				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, result, null, localParseError);
+				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
 			}
 			if (localParseError.isError()) {
 				if (localParseError == parseError) {
+					// parseError has the error information
 					return null;
 				} else {
 					throw new ParseException("Problems parsing line at position " + linePos + " (" + localParseError
@@ -431,7 +343,64 @@ public class CsvProcessor<T> {
 		if (linePos < line.length()) {
 			throw new ParseException("Line has extra information past last column: " + line, linePos);
 		}
-		return result;
+		return target;
+	}
+
+	/**
+	 * Write a collection of entities to the writer.
+	 * 
+	 * @param file
+	 *            Where to write the header and entities.
+	 * @param entities
+	 *            Collection of entities to write to the writer.
+	 * @param writeHeader
+	 *            Set to true to write header at the start of the output file.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when writing.
+	 */
+	public void writeAll(File file, Collection<T> entities, boolean writeHeader) throws IOException {
+		writeAll(new FileWriter(file), entities, writeHeader);
+	}
+
+	/**
+	 * Write a header and then the collection of entities to the writer.
+	 * 
+	 * @param writer
+	 *            Where to write the header and entities. It will be closed before this method returns.
+	 * @param entities
+	 *            Collection of entities to write to the writer.
+	 * @param writeHeader
+	 *            Set to true to write header at the start of the writer.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when writing.
+	 */
+	public void writeAll(Writer writer, Collection<T> entities, boolean writeHeader) throws IOException {
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		try {
+			if (writeHeader) {
+				writeHeader(bufferedWriter, true);
+			}
+			for (T entity : entities) {
+				String line = buildLine(entity, true);
+				bufferedWriter.write(line);
+			}
+		} finally {
+			bufferedWriter.close();
+		}
+	}
+
+	/**
+	 * Write the header line to the writer with a newline.
+	 * 
+	 * @param bufferedWriter
+	 *            Where to write our header information.
+	 * @param appendLineTermination
+	 *            Set to true to add the newline to the end of the line.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when writing.
+	 */
+	public void writeHeader(BufferedWriter bufferedWriter, boolean appendLineTermination) throws IOException {
+		bufferedWriter.write(buildHeaderLine(appendLineTermination));
 	}
 
 	/**
@@ -546,7 +515,7 @@ public class CsvProcessor<T> {
 		this.allowPartialLines = allowPartialLines;
 	}
 
-	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object result,
+	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 
 		// linePos is pointing at the first quote, move past it
@@ -606,7 +575,7 @@ public class CsvProcessor<T> {
 
 		if (sb == null) {
 			if (headerSb == null) {
-				extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, result, parseError);
+				extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, target, parseError);
 			} else {
 				headerSb.append(line, fieldStart, fieldEnd);
 			}
@@ -614,7 +583,7 @@ public class CsvProcessor<T> {
 			sb.append(line, fieldStart, fieldEnd);
 			String str = sb.toString();
 			if (headerSb == null) {
-				extractAndAssignValue(str, lineNumber, fieldInfo, 0, str.length(), result, parseError);
+				extractAndAssignValue(str, lineNumber, fieldInfo, 0, str.length(), target, parseError);
 			} else {
 				headerSb.append(sb);
 			}
@@ -622,7 +591,7 @@ public class CsvProcessor<T> {
 		return linePos;
 	}
 
-	private int processUnquotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object result,
+	private int processUnquotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 		int fieldStart = linePos;
 		linePos = line.indexOf(cellSeparator, fieldStart);
@@ -631,7 +600,7 @@ public class CsvProcessor<T> {
 		}
 
 		if (headerSb == null) {
-			extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, linePos, result, parseError);
+			extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, linePos, target, parseError);
 		} else {
 			headerSb.append(line, fieldStart, linePos);
 		}
@@ -662,6 +631,9 @@ public class CsvProcessor<T> {
 		sb.append(cellQuote);
 	}
 
+	/**
+	 * Extract a value from the line, convert it into its java equivalent, and assign it to our target object.
+	 */
 	private void extractAndAssignValue(String line, int lineNumber, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
 			Object target, ParseError parseError) {
 		Object value = extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, target, parseError);
@@ -679,6 +651,9 @@ public class CsvProcessor<T> {
 		}
 	}
 
+	/**
+	 * Extract a value from the line and convert it into its java equivalent.
+	 */
 	private Object extractValue(String line, int lineNumber, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
 			Object target, ParseError parseError) {
 
@@ -690,7 +665,7 @@ public class CsvProcessor<T> {
 			cellStr = fieldInfo.getDefaultValue();
 		}
 		if (cellStr.isEmpty() && fieldInfo.isRequired()) {
-			parseError.setErrorType(ErrorType.INVALID_BLANK);
+			parseError.setErrorType(ErrorType.NO_HEADER);
 			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(fieldStart);
 			return null;
