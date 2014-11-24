@@ -34,7 +34,7 @@ public class BooleanConverter implements Converter<Boolean> {
 	@Override
 	public void configure(String format, long flags, Field field) {
 		if (format != null) {
-			String[] parts = format.split(",");
+			String[] parts = format.split(",", 2);
 			if (parts.length != 2) {
 				throw new IllegalArgumentException("Invalid boolean format should in the form of T,F: " + format);
 			}

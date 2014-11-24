@@ -23,7 +23,7 @@ public class StringConverter implements Converter<String> {
 	 */
 	public static final long TRIM_OUTPUT = 1 << 1;
 	/**
-	 * If enabled, a blank string will be interpretted as a null value.
+	 * If enabled, a blank string will be interpreted as a null value.
 	 */
 	public static final long BLANK_IS_NULL = 1 << 2;
 

@@ -23,7 +23,7 @@ public class CharacterConverter implements Converter<Character> {
 	 * Use this flag if you want a parse error generated when the input has more than one character. Default is to just
 	 * take the first character.
 	 */
-	public static final long PARSE_ERROR_IF_MORE_THAN_ONE_CHAR = 1 << 2;
+	public static final long PARSE_ERROR_IF_MORE_THAN_ONE_CHAR = 1 << 1;
 
 	private boolean parseErrorOnMoreThanOne;
 

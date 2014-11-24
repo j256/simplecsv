@@ -81,6 +81,9 @@ public class CsvProcessor<T> {
 		int linePos = 0;
 		final ParseError parseError = new ParseError();
 		for (FieldInfo fieldInfo : fieldInfos) {
+			if (linePos == line.length()) {
+				break;
+			}
 			parseError.reset();
 			if (line.charAt(linePos) == cellQuote) {
 				linePos++;
@@ -216,11 +219,10 @@ public class CsvProcessor<T> {
 			cellStr = cellStr.trim();
 		}
 
-		if (cellStr.length() == 0 && fieldInfo.getDefaultValue() != null) {
+		if (cellStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
 			cellStr = fieldInfo.getDefaultValue();
 		}
 
-		parseError.reset();
 		Object value;
 		try {
 			value = fieldInfo.getConverter().stringToJava(line, lineNum, fieldInfo, cellStr, parseError);

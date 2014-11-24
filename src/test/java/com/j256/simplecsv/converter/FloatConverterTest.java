@@ -17,11 +17,10 @@ public class FloatConverterTest extends AbstractConverterTest {
 	@Test
 	public void testFormat() throws Exception {
 		FloatConverter converter = new FloatConverter();
-		converter.configure("###,##0.0##", 0, null);
+		converter.configure("###,##0.0################", 0, null);
 		testConverter(converter, -1.0F);
 		testConverter(converter, 0.11F);
 		testConverter(converter, 1.2F);
-		testConverter(converter, Float.MIN_VALUE);
-		testConverter(converter, Float.MAX_VALUE);
+		testConverter(converter, 1000.222F);
 	}
 }

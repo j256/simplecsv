@@ -30,7 +30,7 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadFormat() {
 		BooleanConverter converter = new BooleanConverter();
-		converter.configure("1,2,3", 0, null);
+		converter.configure("1", 0, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
