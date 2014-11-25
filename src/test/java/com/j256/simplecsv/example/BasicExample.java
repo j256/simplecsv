@@ -1,6 +1,7 @@
 package com.j256.simplecsv.example;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,6 +24,10 @@ public class BasicExample {
 	private static final String CSV_FILE_PATH = "target/" + BasicExample.class.getSimpleName() + ".csv";
 
 	public static void main(String[] args) throws Exception {
+		new BasicExample().doMain();
+	}
+
+	private void doMain() throws Exception {
 
 		// create some fake accounts
 		List<Account> accounts = createFakeAccounts();
@@ -41,19 +46,34 @@ public class BasicExample {
 		// now read in the accounts
 		List<Account> readAccounts =
 				csvProcessor.readAll(csvFile, true /* read in header */, true /* validate header */, null);
-		assertEquals(accounts, readAccounts);
 
 		// print out our read in accounts
 		printAccounts(readAccounts);
+		compareAccounts(accounts, readAccounts);
 	}
 
-	private static void printAccounts(List<Account> readAccounts) {
+	private List<Account> createFakeAccounts() {
+		Account account1 = new Account("Bill Smith", 1, 123123.34);
+		Account account2 = new Account("Foo Bar", 2, 0.12);
+		Account account3 = new Account("Jim Jimston", 3, -5125640.00);
+		List<Account> accounts = Arrays.asList(account1, account2, account3);
+		return accounts;
+	}
+
+	private void printAccounts(List<Account> readAccounts) {
 		for (Account account : readAccounts) {
 			System.out.println(account.name + "," + account.number + "," + account.amount);
 		}
 	}
 
-	private static void printFile(File csvFile) throws FileNotFoundException, IOException {
+	private void compareAccounts(List<Account> accounts1, List<Account> accounts2) {
+		assertEquals(accounts1.size(), accounts2.size());
+		for (int i = 0; i < accounts1.size(); i++) {
+			assertTrue(accounts1.get(i).isSame(accounts2.get(i)));
+		}
+	}
+
+	private void printFile(File csvFile) throws FileNotFoundException, IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(csvFile));
 		try {
 			while (true) {
@@ -66,14 +86,6 @@ public class BasicExample {
 		} finally {
 			reader.close();
 		}
-	}
-
-	private static List<Account> createFakeAccounts() {
-		Account account1 = new Account("Bill Smith", 1, 123123.34);
-		Account account2 = new Account("Foo Bar", 2, 0.12);
-		Account account3 = new Account("Jim Jimston", 3, -5125640.00);
-		List<Account> accounts = Arrays.asList(account1, account2, account3);
-		return accounts;
 	}
 
 	/**
@@ -89,7 +101,9 @@ public class BasicExample {
 		private double amount;
 
 		public Account() {
-			// for simple-csv
+			/*
+			 * For simple-csv which needs to be able to construct these entities.
+			 */
 		}
 
 		public Account(String name, long number, double amount) {
@@ -98,45 +112,8 @@ public class BasicExample {
 			this.amount = amount;
 		}
 
-		public String getName() {
-			return name;
-		}
-
-		public long getNumber() {
-			return number;
-		}
-
-		public double getAmount() {
-			return amount;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			long temp = Double.doubleToLongBits(amount);
-			int result = prime + (int) (temp ^ (temp >>> 32));
-			result = prime * result + ((name == null) ? 0 : name.hashCode());
-			result = prime * result + (int) (number ^ (number >>> 32));
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == null || getClass() != obj.getClass()) {
-				return false;
-			}
-			Account other = (Account) obj;
-			if (Double.doubleToLongBits(amount) != Double.doubleToLongBits(other.amount)) {
-				return false;
-			}
-			if (name == null) {
-				if (other.name != null) {
-					return false;
-				}
-			} else if (!name.equals(other.name)) {
-				return false;
-			}
-			return (number == other.number);
+		public boolean isSame(Account other) {
+			return this.name.equals(other.name) && this.number == other.number && this.amount == other.amount;
 		}
 	}
 }
