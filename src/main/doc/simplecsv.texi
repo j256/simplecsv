@@ -1,0 +1,177 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename simplecsv.info
+@settitle SimpleCSV Documentation
+@headings double
+@c %**end of header
+
+@c ----------------------------------------------------------------
+@set simplecsv_version 0.1
+@set simplecsv_year 2014
+@set simplecsv_date November @value{simplecsv_year}
+@set package SimpleCSV
+@c ----------------------------------------------------------------
+
+@titlepage
+@headings off
+@title SimpleCSV Package
+@subtitle Version @value{simplecsv_version}
+@subtitle @value{simplecsv_date}
+@author Gray Watson
+
+@page
+This manual is licensed by Gray Watson under the Creative Commons Attribution-Share Alike 3.0 License.
+
+Permission is granted to make and distribute verbatim copies of this manual provided this license
+notice and this permission notice are preserved on all copies.
+@end titlepage
+
+@c ----------------------------------------------------------------
+
+@c In the printed manual, we put the contents at the front.  For the digital manuals it is at the end. 
+@iftex
+@contents
+@end iftex
+
+@c ----------------------------------------------------------------
+@node Top, Quick Start, (dir), (dir)
+@top SimpleCSV
+@everyheading @thischapter @| @thispage @| @today{}
+
+Version @value{simplecsv_version} -- @value{simplecsv_date}
+
+@cindex introduction
+@cindex author
+@cindex simple csv
+This package provides some Java classes to help with the reading and writing of CSV (Comma Separated Values) files.
+
+To get started quickly using SimpleCSV, @pxref{Quick Start}.  You can also take a look at the examples section of the
+document which has various working code packages. @xref{Examples}.
+@ifhtml
+There is also a @uref{http://256.com/sources/simplecsv/docs/simplecsv.pdf, PDF version of this documentation}.
+@end ifhtml
+@iftex
+There is also a @uref{http://256.com/sources/simplecsv/docs/simplecsv.html, HTML version of this documentation}.
+@end iftex
+
+Gray Watson @uref{http://256.com/gray/}
+
+@menu
+* Quick Start::                Start using SimpleCSV quickly.
+* Using::                      How to use SimpleCSV.
+* Examples::                   Usage examples to help you get started.
+* License::                    Open Source license for the project.
+* Index of Concepts::          Index of concepts in the manual.
+@end menu
+
+@c ----------------------------------------------------------------
+@node Quick Start, Using, Top, Top
+@chapter Start Using Quickly
+
+@cindex getting started
+@cindex how to get started
+@cindex quick start
+To use SimpleCSV you need to do the following steps.  For more information, @pxref{Using}.
+
+@enumerate
+
+@item Download SimpleCSV from the @uref{http://256.com/sources/simplecsv/releases/, SimpleCSV release page}.  @xref{Downloading}.
+
+@item Add @code{@@CsvField} annotation to each of the fields that you want to write and read to/from CSV files.
+
+@example
+public class Account @{
+    @dots{}
+    @@CsvField
+    private String name;
+@end example
+
+@item Create a CsvProcessor utility class for the entity.
+
+@example
+CsvProcessor<Account> processor =
+    new CsvProcessor<Account>(Account.class);
+@end example
+
+@item Write a collection of @code{Account} entities to disk in CSV format.
+
+@example
+processor.writeAll(new File("accounts.csv"),
+    accounts, true /* write header */); 
+@end example
+
+@item Read in from a CSV file and get a collection of @code{Account}s:
+
+@example
+List<Account> accounts =
+    processor.readAll(new File("accounts.csv"),
+    true /* first line header */,
+    true /* validate header */,
+    null /* used to record parse errors */); 
+@end example
+
+@end enumerate
+
+For more extensive instructions, @pxref{Using}.
+
+@c ----------------------------------------------------------------
+@node Using, Downloading, Quick Start, Top
+@chapter Using SimpleCSV
+
+@cindex how to use
+@cindex using SimpleCSV
+@menu
+* Downloading ::                Downloading the SimpleCSV jar.
+@end menu
+
+@c ----------------------------------------------------------------
+@node Downloading, Examples, Using, Using
+@section Downloading Jar
+
+@cindex how to download the jars
+@cindex downloading the jars
+@cindex where to get new jars
+To get started with SimpleCSV, you will need to download the jar file.  The @uref{http://256.com/sources/simplecsv/releases/, SimpleCSV
+release page} is the default repository but the jars are also available from the @uref{http://repo1.maven.org/maven2/com/j256/simplecsv/,
+central maven repository}.
+
+The code works with Java 6 or later.
+
+@c ----------------------------------------------------------------
+@node Examples, License, Downloading, Top
+@chapter Example Code
+
+@cindex examples of code
+@cindex code examples
+Sorry.  Need to flesh this out.
+
+@c ----------------------------------------------------------------
+@node License, Index of Concepts, Examples, Top
+@chapter Open Source License
+
+@cindex license
+@cindex open source license
+This document is part of the SimpleCSV project.
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby
+granted, provided that this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL,
+DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The author may be contacted via @uref{http://256.com/sources/simplecsv/}
+
+@c ----------------------------------------------------------------
+@node Index of Concepts,, License, Top
+@unnumbered Index of Concepts
+
+@printindex cp
+
+@ifhtml
+@contents
+@end ifhtml
+
+@bye
