@@ -34,12 +34,24 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  */
 public class CsvProcessor<T> {
 
+	/**
+	 * Default separator character for cells. This can be changed with {@link #setCellSeparator(char)}.
+	 */
 	public static final char DEFAULT_CELL_SEPARATOR = ',';
+	/**
+	 * Default quote character for cells to wrap cells that have special characters. This can be changed with
+	 * {@link #setCellQuote(char)}.
+	 */
 	public static final char DEFAULT_CELL_QUOTE = '"';
+	/**
+	 * Default line termination string to be written at the end of CSV lines. This can be changed with
+	 * {@link #setLineTermination(String)}.
+	 */
+	public static final String DEFAULT_LINE_TERMINATION = System.getProperty("line.separator");
 
 	private char cellSeparator = DEFAULT_CELL_SEPARATOR;
 	private char cellQuote = DEFAULT_CELL_QUOTE;
-	private String lineTermination = System.getProperty("line.separator");
+	private String lineTermination = DEFAULT_LINE_TERMINATION;
 	private boolean allowPartialLines;
 
 	private final FieldInfo[] fieldInfos;
@@ -52,9 +64,8 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Constructs a process with an entity class whose fields should be marked with {@link CvsField} annotations.
-	 * 
-	 * @throws IllegalArgumentException
+	 * Constructs a processor with an entity class whose fields should be marked with {@link CsvField} annotations. The
+	 * entity-class must also define a public no-arg contructor so the processor can instantiate them using reflection.
 	 */
 	public CsvProcessor(Class<T> entityClass) throws IllegalArgumentException {
 		List<FieldInfo> fieldInfos = new ArrayList<FieldInfo>();
@@ -391,7 +402,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Write the header line to the writer with a newline.
+	 * Write the header line to the writer.
 	 * 
 	 * @param bufferedWriter
 	 *            Where to write our header information.
@@ -405,7 +416,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Convert the entity into a string suitable to be written.
+	 * Build and return a header string made up of quoted cell names.
 	 * 
 	 * @param appendLineTermination
 	 *            Set to true to add the newline to the end of the line.
@@ -436,7 +447,10 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Convert the entity into a string suitable to be written.
+	 * Convert the entity into a string of cell values.
+	 * 
+	 * @param appendLineTermination
+	 *            Set to true to add the newline to the end of the line.
 	 */
 	public String buildLine(T entity, boolean appendLineTermination) {
 		StringBuilder sb = new StringBuilder();

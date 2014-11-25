@@ -93,7 +93,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 		}
 	}
 
-	public static class ConfigInfo {
+	static class ConfigInfo {
 		final Map<String, Enum<?>> enumStringMap;
 		final Enum<?> unknownValue;
 		private ConfigInfo(Map<String, Enum<?>> enumStringMap, Enum<?> unknownValue) {

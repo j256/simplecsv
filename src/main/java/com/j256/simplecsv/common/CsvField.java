@@ -10,7 +10,7 @@ import com.j256.simplecsv.converter.VoidConverter;
 import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
- * Field to be exported in CSV output.
+ * Annotation to be added to a field to mark it as a cell in a CSV file.
  * 
  * @author graywatson
  */
@@ -18,6 +18,7 @@ import com.j256.simplecsv.processor.CsvProcessor;
 @Target(ElementType.FIELD)
 public @interface CsvField {
 
+	/** Used internally to detect whether or not a value has been configured. */
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
@@ -38,14 +39,14 @@ public @interface CsvField {
 
 	/**
 	 * Sets the format for this field. Not all types use the format specifier. Take a look at the particular converter
-	 * class for more particulars. The default tends to be the toString() and often use of the java.text.Format classes
-	 * are used to override.
+	 * class javadocs for more particulars. The default format tends to be the toString() of the type, and often use of
+	 * the java.text.Format classes are used to override.
 	 */
 	public String format() default DEFAULT_VALUE;
 
 	/**
-	 * Flags for the converter which adjust the output. Depending on the converter, these flags may not exist. These
-	 * need to be constants that are added together. For example,
+	 * Optional flags for the converter which adjust the output. The flags that are used depend on the converter. See
+	 * the converter Javadocs for more information. These need to be constants that are added together. For example,
 	 * 
 	 * <pre>
 	 * &#064;CsvField(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
@@ -55,9 +56,10 @@ public @interface CsvField {
 	public long converterFlags() default 0;
 
 	/**
-	 * What converter class to use. By default it will use the appropriate internal class. This will construct and
-	 * instance of the class for this particular field. If you want to use a singleton then you should register the type
-	 * using {@link CsvProcessor#registerConverter(Class, Converter)}.
+	 * The converter class to use to convert this field if you don't want to use the default appropriate internal class.
+	 * This will construct and instance of the class for this particular field. If you want to use a singleton then you
+	 * should register the type using {@link CsvProcessor#registerConverter(Class, Converter)}. This converter class
+	 * must have a public no-arg constructor.
 	 */
 	public Class<? extends Converter<?, ?>> converterClass() default VoidConverter.class;
 

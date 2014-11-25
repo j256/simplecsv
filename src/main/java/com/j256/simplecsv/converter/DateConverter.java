@@ -10,17 +10,21 @@ import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
- * Converter for the Java Date type which uses the {@link SimpleDateFormat} -- don't worry I protect it for reentrance.
+ * Converter for the Java java.util.Date type which uses the {@link SimpleDateFormat} -- don't worry I protect it for
+ * reentrance.
  * 
  * <p>
- * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_INPUT} to call {@link String#trim()} when
- * reading a cell and/or {@link #TRIM_OUTPUT} for trimming before a cell is printed.
+ * The {@link CsvField#format()} parameter can be set the {@link SimpleDateFormat} format string to read and write the
+ * date.
  * </p>
  * 
  * @author graywatson
  */
 public class DateConverter implements Converter<Date, String> {
 
+	/**
+	 * Default {@link SimpleDateFormat} format pattern used to read/write java.util.Date types.
+	 */
 	public static final String DEFAULT_DATE_PATTERN = "MM/dd/yyyy";
 
 	/*
@@ -85,5 +89,4 @@ public class DateConverter implements Converter<Date, String> {
 		}
 		return formatter;
 	}
-
 }

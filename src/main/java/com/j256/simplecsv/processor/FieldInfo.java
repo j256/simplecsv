@@ -8,7 +8,7 @@ import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
- * Information about a particular field.
+ * Information about a particular field used internally to keep track of the CSV fields.
  * 
  * @author graywatson
  */

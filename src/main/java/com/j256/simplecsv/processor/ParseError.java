@@ -3,9 +3,13 @@ package com.j256.simplecsv.processor;
 import com.j256.simplecsv.converter.Converter;
 
 /**
- * Used to set errors if necessary. To use this you should return null from
+ * Used to report back with any parsing or internal errors.
+ * 
+ * <p>
+ * To use in your {@link Converter} class, you should return null from
  * {@link Converter#stringToJava(String, int, FieldInfo, String, ParseError)} and set the error type to something other
  * than {@link ErrorType#NONE}. The message can be null if there is no additional information about the error.
+ * </p>
  * 
  * @author graywatson
  */
@@ -65,6 +69,9 @@ public class ParseError {
 		this.linePos = 0;
 	}
 
+	/**
+	 * Returns true if the error-type is not {@link ErrorType#NONE}.
+	 */
 	public boolean isError() {
 		return (errorType != ErrorType.NONE);
 	}
@@ -82,12 +89,19 @@ public class ParseError {
 	 * The type of the error.
 	 */
 	public enum ErrorType {
+		/** no error */
 		NONE("none"),
+		/** line is in an invalid format */
 		INVALID_FORMAT("invalid format"),
+		/** line seems to be truncated */
 		TRUNCATED_VALUE("truncated value"),
+		/** no header line read */
 		NO_HEADER("no header line"),
+		/** header line seems to be invalid */
 		INVALID_HEADER("no valid header line"),
+		/** null value for this field is invalid */
 		INVALID_NULL("null value is invalid"),
+		/** internal error was encountered */
 		INTERNAL_ERROR("internal error"),
 		// end
 		;

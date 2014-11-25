@@ -16,6 +16,11 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * output and read 1 for true and 0 for false.
  * </p>
  * 
+ * <p>
+ * The {@link CsvField#converterFlags()} can be set {@link #PARSE_ERROR_ON_INVALID_VALUE} if you want a parse error
+ * generated on unknown values.
+ * </p>
+ * 
  * @author graywatson
  */
 public class BooleanConverter implements Converter<Boolean, BooleanConverter.ConfigInfo> {
@@ -103,7 +108,7 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 		}
 	}
 
-	public static class ConfigInfo {
+	static class ConfigInfo {
 		final String trueString;
 		final String falseString;
 		final boolean parseErrorOnInvalid;

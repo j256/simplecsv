@@ -9,7 +9,7 @@ import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
- * Converter for the Java String type.
+ * Converter for the Java BigDecimal type.
  * 
  * @author graywatson
  */

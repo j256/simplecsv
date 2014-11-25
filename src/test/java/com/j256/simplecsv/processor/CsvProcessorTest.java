@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,9 +15,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.converter.StringConverter;
-import com.j256.simplecsv.processor.CsvProcessor;
-import com.j256.simplecsv.processor.ParseError;
+import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 public class CsvProcessorTest {
@@ -252,10 +251,22 @@ public class CsvProcessorTest {
 		}
 	}
 
-	public static class UnquotedStringConverter extends StringConverter {
+	public static class UnquotedStringConverter implements Converter<String, Void> {
 		@Override
-		public boolean isNeedsQuotes(ConfigInfo configInfo) {
+		public Void configure(String format, long flags, Field field) {
+			return null;
+		}
+		@Override
+		public boolean isNeedsQuotes(Void configInfo) {
 			return false;
+		}
+		@Override
+		public String javaToString(FieldInfo fieldInfo, String value) {
+			return value;
+		}
+		@Override
+		public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+			return value;
 		}
 	}
 }

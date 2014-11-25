@@ -15,7 +15,14 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  */
 public abstract class AbstractNumberConverter<T extends Number> implements Converter<T, DecimalFormat> {
 
+	/**
+	 * Convert a number to the appropriate Java type.
+	 */
 	protected abstract T numberToValue(Number number);
+
+	/**
+	 * Parse a string into the appropriate Java type.
+	 */
 	protected abstract T parseString(String value) throws NumberFormatException;
 
 	@Override

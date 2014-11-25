@@ -10,8 +10,8 @@ import com.j256.simplecsv.processor.ParseError;
  * Converter for the Java String type.
  * 
  * <p>
- * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_INPUT} to call {@link String#trim()} when
- * reading a cell and/or {@link #TRIM_OUTPUT} for trimming before a cell is printed.
+ * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_OUTPUT} for trimming before a cell is
+ * printed and/or {@link #BLANK_IS_NULL} to have a blank-string interpreted as a null value.
  * </p>
  * 
  * @author graywatson
@@ -23,7 +23,8 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	 */
 	public static final long TRIM_OUTPUT = 1 << 1;
 	/**
-	 * If enabled, a blank string will be interpreted as a null value.
+	 * If enabled, a blank string will be interpreted as a null value. By default a blank string will be written as a
+	 * blank string in the Java object.
 	 */
 	public static final long BLANK_IS_NULL = 1 << 2;
 
@@ -72,7 +73,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 		}
 	}
 
-	public static class ConfigInfo {
+	static class ConfigInfo {
 		final boolean trimOutput;
 		final boolean blankIsNull;
 		private ConfigInfo(boolean trimOutput, boolean blankIsNull) {
