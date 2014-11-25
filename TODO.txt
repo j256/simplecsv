@@ -2,4 +2,11 @@
 Used to maintain requested features or future work.
 ===================================================
 
-- need to handle \\r \\n \\b  \\t and other special characters
+- do we need to need to handle \\r \\n \\b  \\t and other special characters
+- need to add examples
+- need to flesh out manual a TON
+- need to add programmatic CSV configuration
+- some way to divide up CsvProcessor
+- some way to handle a version column at the end of the row?
+	- no data, only header
+	- specify the version in the name of the column

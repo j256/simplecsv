@@ -10,7 +10,7 @@ import com.j256.simplecsv.converter.VoidConverter;
 import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
- * Annotation to be added to a field to mark it as a cell in a CSV file.
+ * Annotation to be added to a field to mark it as a column in a CSV file.
  * 
  * @author graywatson
  */
@@ -22,9 +22,9 @@ public @interface CsvField {
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
-	 * Sets the name of the cell used in the header and for logging. If not specified, then the field name will be used.
+	 * Sets the name of the used in the header and for logging. If not specified, then the field name will be used.
 	 */
-	public String cellName() default DEFAULT_VALUE;
+	public String columnName() default DEFAULT_VALUE;
 
 	/**
 	 * Set to true if a value in the field is required -- i.e. the field cannot be empty.
@@ -64,8 +64,8 @@ public @interface CsvField {
 	public Class<? extends Converter<?, ?>> converterClass() default VoidConverter.class;
 
 	/**
-	 * Set this to a default string that if the cell is empty when read, the value will be used instead. Default is the
-	 * empty string.
+	 * Set this to a default string that if the column is empty when read, the value will be used instead. Default is
+	 * the empty string.
 	 */
 	public String defaultValue() default DEFAULT_VALUE;
 }

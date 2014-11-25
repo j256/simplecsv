@@ -17,18 +17,18 @@ public class FieldInfo {
 	private final Field field;
 	private final Converter<?, ?> converter;
 	private final Object configInfo;
-	private final String cellName;
+	private final String columnName;
 	private final boolean required;
 	private final boolean trimInput;
 	private final boolean needsQuotes;
 	private final String defaultValue;
 
-	private FieldInfo(Field field, Converter<?, ?> converter, Object configInfo, String cellName, boolean required,
+	private FieldInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, boolean required,
 			boolean trimInput, boolean needsQuotes, String defaultValue) {
 		this.field = field;
 		this.converter = converter;
 		this.configInfo = configInfo;
-		this.cellName = cellName;
+		this.columnName = columnName;
 		this.required = required;
 		this.trimInput = trimInput;
 		this.needsQuotes = needsQuotes;
@@ -48,10 +48,10 @@ public class FieldInfo {
 	}
 
 	/**
-	 * @see CsvField#cellName()
+	 * @see CsvField#columnName()
 	 */
-	public String getCellName() {
-		return cellName;
+	public String getColumnName() {
+		return columnName;
 	}
 
 	/**
@@ -113,17 +113,17 @@ public class FieldInfo {
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
 
-		String cellName;
-		if (csvField.cellName().equals(CsvField.DEFAULT_VALUE)) {
-			cellName = field.getName();
+		String columnName;
+		if (csvField.columnName().equals(CsvField.DEFAULT_VALUE)) {
+			columnName = field.getName();
 		} else {
-			cellName = csvField.cellName();
+			columnName = csvField.columnName();
 		}
 		String defaultValue = null;
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new FieldInfo(field, converter, configInfo, cellName, csvField.required(), csvField.trimInput(),
+		return new FieldInfo(field, converter, configInfo, columnName, csvField.required(), csvField.trimInput(),
 				needsQuotes, defaultValue);
 	}
 

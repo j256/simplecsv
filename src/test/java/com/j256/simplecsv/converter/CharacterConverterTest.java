@@ -34,13 +34,13 @@ public class CharacterConverterTest extends AbstractConverterTest {
 		ParseError parseError = new ParseError();
 		char one = '1';
 		char two = '2';
-		String cellVal = new String(new char[] { one, two });
-		assertEquals((Object) one, converter.stringToJava("line", 1, fieldInfo, cellVal, parseError));
+		String columnVal = new String(new char[] { one, two });
+		assertEquals((Object) one, converter.stringToJava("line", 1, fieldInfo, columnVal, parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, CharacterConverter.PARSE_ERROR_IF_MORE_THAN_ONE_CHAR, null);
 		fieldInfo = FieldInfo.forTests(converter, configInfo);
-		converter.stringToJava("line", 1, fieldInfo, cellVal, parseError);
+		converter.stringToJava("line", 1, fieldInfo, columnVal, parseError);
 		assertTrue(parseError.isError());
 	}
 }

@@ -35,22 +35,22 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
 public class CsvProcessor<T> {
 
 	/**
-	 * Default separator character for cells. This can be changed with {@link #setCellSeparator(char)}.
+	 * Default separator character for columns. This can be changed with {@link #setColumnSeparator(char)}.
 	 */
-	public static final char DEFAULT_CELL_SEPARATOR = ',';
+	public static final char DEFAULT_COLUMN_SEPARATOR = ',';
 	/**
-	 * Default quote character for cells to wrap cells that have special characters. This can be changed with
-	 * {@link #setCellQuote(char)}.
+	 * Default quote character for columns to wrap them if they have special characters. This can be changed with
+	 * {@link #setColumnQuote(char)}.
 	 */
-	public static final char DEFAULT_CELL_QUOTE = '"';
+	public static final char DEFAULT_COLUMN_QUOTE = '"';
 	/**
 	 * Default line termination string to be written at the end of CSV lines. This can be changed with
 	 * {@link #setLineTermination(String)}.
 	 */
 	public static final String DEFAULT_LINE_TERMINATION = System.getProperty("line.separator");
 
-	private char cellSeparator = DEFAULT_CELL_SEPARATOR;
-	private char cellQuote = DEFAULT_CELL_QUOTE;
+	private char columnSeparator = DEFAULT_COLUMN_SEPARATOR;
+	private char columnQuote = DEFAULT_COLUMN_QUOTE;
 	private String lineTermination = DEFAULT_LINE_TERMINATION;
 	private boolean allowPartialLines;
 
@@ -202,15 +202,38 @@ public class CsvProcessor<T> {
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @return Array of header cell names or null on error.
+	 * @param validate
+	 *            Validate the header after it is read. This will return null if the header is not valid.
+	 * @return Array of header column names or null on error.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
 	 *             exception should be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public String[] readHeader(BufferedReader bufferedReader, ParseError parseError) throws ParseException, IOException {
-		return processHeader(bufferedReader.readLine(), parseError);
+	public String[] readHeader(BufferedReader bufferedReader, boolean validate, ParseError parseError)
+			throws ParseException, IOException {
+		String header = bufferedReader.readLine();
+		if (header == null) {
+			if (parseError == null) {
+				throw new ParseException("no header line read", 0);
+			} else {
+				parseError.setErrorType(ErrorType.NO_HEADER);
+				parseError.setLineNumber(1);
+				return null;
+			}
+		}
+		String[] columns = processHeader(header, parseError);
+		if (columns == null) {
+			return null;
+		} else if (validateHeaderColumns(columns, parseError)) {
+			if (parseError == null) {
+				throw new ParseException("header line is not valid: " + header, 0);
+			} else {
+				return null;
+			}
+		}
+		return columns;
 	}
 
 	/**
@@ -221,13 +244,30 @@ public class CsvProcessor<T> {
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @return true if the header matched the cell names configured here otherwise false.
+	 * @return true if the header matched the column names configured here otherwise false.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
 	 *             exception should be thrown.
 	 */
 	public boolean validateHeader(String line, ParseError parseError) throws ParseException {
 		String[] columns = processHeader(line, parseError);
+		return validateHeaderColumns(columns, parseError);
+	}
+
+	/**
+	 * Validate header columns returned by {@link #processHeader(String, ParseError)}.
+	 * 
+	 * @param columns
+	 *            Array of columns to validate.
+	 * @param parseError
+	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
+	 *            a ParseException will be thrown instead.
+	 * @return true if the header matched the column names configured here otherwise false.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
+	 */
+	public boolean validateHeaderColumns(String[] columns, ParseError parseError) {
 		if (columns.length != fieldInfos.length) {
 			if (parseError != null) {
 				parseError.setErrorType(ErrorType.INVALID_HEADER);
@@ -236,11 +276,11 @@ public class CsvProcessor<T> {
 			return false;
 		}
 		for (int i = 0; i < columns.length; i++) {
-			if (columns[i] == null || !columns[i].equals(fieldInfos[i].getCellName())) {
+			if (columns[i] == null || !columns[i].equals(fieldInfos[i].getColumnName())) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
 					parseError.setMessage("got column name '" + columns[i] + "', expected '"
-							+ fieldInfos[i].getCellName() + "'");
+							+ fieldInfos[i].getColumnName() + "'");
 				}
 				return false;
 			}
@@ -274,7 +314,7 @@ public class CsvProcessor<T> {
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			sb.setLength(0);
-			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
+			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
 				linePos = processQuotedLine(line, 1, linePos, null, null, sb, localParseError);
 			} else {
 				linePos = processUnquotedLine(line, 1, linePos, null, null, sb, localParseError);
@@ -330,7 +370,7 @@ public class CsvProcessor<T> {
 		for (FieldInfo fieldInfo : fieldInfos) {
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
-			if (linePos < line.length() && line.charAt(linePos) == cellQuote) {
+			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
 				linePos = processQuotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
 			} else {
 				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
@@ -350,7 +390,7 @@ public class CsvProcessor<T> {
 			}
 		}
 		if (fieldCount < fieldInfos.length && !allowPartialLines) {
-			throw new ParseException("Line does not have " + fieldInfos.length + " cells: " + line, linePos);
+			throw new ParseException("Line does not have " + fieldInfos.length + " columns: " + line, linePos);
 		}
 		if (linePos < line.length()) {
 			throw new ParseException("Line has extra information past last column: " + line, linePos);
@@ -416,7 +456,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Build and return a header string made up of quoted cell names.
+	 * Build and return a header string made up of quoted column names.
 	 * 
 	 * @param appendLineTermination
 	 *            Set to true to add the newline to the end of the line.
@@ -428,17 +468,17 @@ public class CsvProcessor<T> {
 			if (first) {
 				first = false;
 			} else {
-				sb.append(cellSeparator);
+				sb.append(columnSeparator);
 			}
-			String header = fieldInfo.getCellName();
-			// need to protect the cell if it contains a quote
-			if (header.indexOf(cellQuote) >= 0) {
+			String header = fieldInfo.getColumnName();
+			// need to protect the column if it contains a quote
+			if (header.indexOf(columnQuote) >= 0) {
 				writeQuoted(sb, header);
 				continue;
 			}
-			sb.append(cellQuote);
+			sb.append(columnQuote);
 			sb.append(header);
-			sb.append(cellQuote);
+			sb.append(columnQuote);
 		}
 		if (appendLineTermination) {
 			sb.append(lineTermination);
@@ -447,7 +487,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Convert the entity into a string of cell values.
+	 * Convert the entity into a string of column values.
 	 * 
 	 * @param appendLineTermination
 	 *            Set to true to add the newline to the end of the line.
@@ -459,7 +499,7 @@ public class CsvProcessor<T> {
 			if (first) {
 				first = false;
 			} else {
-				sb.append(cellSeparator);
+				sb.append(columnSeparator);
 			}
 			Field field = fieldInfo.getField();
 			Object value;
@@ -471,8 +511,8 @@ public class CsvProcessor<T> {
 			@SuppressWarnings("unchecked")
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) fieldInfo.getConverter();
 			String str = castConverter.javaToString(fieldInfo, value);
-			// need to protect the cell if it contains a quote
-			if (str.indexOf(cellQuote) >= 0) {
+			// need to protect the column if it contains a quote
+			if (str.indexOf(columnQuote) >= 0) {
 				writeQuoted(sb, str);
 				continue;
 			}
@@ -480,18 +520,18 @@ public class CsvProcessor<T> {
 			if (!needsQuotes) {
 				for (int i = 0; i < str.length(); i++) {
 					char ch = str.charAt(i);
-					if (ch == cellSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
+					if (ch == columnSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
 						needsQuotes = true;
 						break;
 					}
 				}
 			}
 			if (needsQuotes) {
-				sb.append(cellQuote);
+				sb.append(columnQuote);
 			}
 			sb.append(str);
 			if (needsQuotes) {
-				sb.append(cellQuote);
+				sb.append(columnQuote);
 			}
 		}
 		if (appendLineTermination) {
@@ -501,17 +541,17 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * String that separates cells in out CSV input and output.
+	 * String that separates columns in out CSV input and output.
 	 */
-	public void setCellSeparator(char cellSeparator) {
-		this.cellSeparator = cellSeparator;
+	public void setColumnSeparator(char columnSeparator) {
+		this.columnSeparator = columnSeparator;
 	}
 
 	/**
-	 * Quote character that is used to wrap each cell.
+	 * Quote character that is used to wrap each column.
 	 */
-	public void setCellQuote(char cellQuote) {
-		this.cellQuote = cellQuote;
+	public void setColumnQuote(char columnQuote) {
+		this.columnQuote = columnQuote;
 	}
 
 	/**
@@ -523,7 +563,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Set to true to allow lines that do not have values for all of the cells. Otherwise an IllegalArgumentException is
+	 * Set to true to allow lines that do not have values for all of the columns. Otherwise an IllegalArgumentException is
 	 * thrown.
 	 */
 	public void setAllowPartialLines(boolean allowPartialLines) {
@@ -542,10 +582,10 @@ public class CsvProcessor<T> {
 		while (linePos < line.length()) {
 
 			// look for the next quote
-			fieldEnd = line.indexOf(cellQuote, linePos);
+			fieldEnd = line.indexOf(columnQuote, linePos);
 			if (fieldEnd < 0) {
 				parseError.setErrorType(ErrorType.TRUNCATED_VALUE);
-				parseError.setMessage("Field not terminated with quote '" + cellQuote + "'");
+				parseError.setMessage("Field not terminated with quote '" + columnQuote + "'");
 				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return line.length();
@@ -554,15 +594,15 @@ public class CsvProcessor<T> {
 			linePos = fieldEnd + 1;
 			if (linePos == line.length()) {
 				break;
-			} else if (line.charAt(linePos) == cellSeparator) {
+			} else if (line.charAt(linePos) == columnSeparator) {
 				linePos++;
 				break;
 			}
 
-			// must have a quote following a quote if there wasn't a cellSeparator
-			if (line.charAt(linePos) != cellQuote) {
+			// must have a quote following a quote if there wasn't a columnSeparator
+			if (line.charAt(linePos) != columnQuote) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
-				parseError.setMessage("quote '" + cellQuote + "' is not followed up separator '" + cellSeparator + "'");
+				parseError.setMessage("quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
 				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return linePos;
@@ -573,7 +613,7 @@ public class CsvProcessor<T> {
 			if (linePos == line.length()) {
 				break;
 			}
-			if (line.charAt(linePos) == cellSeparator) {
+			if (line.charAt(linePos) == columnSeparator) {
 				linePos++;
 				break;
 			}
@@ -609,7 +649,7 @@ public class CsvProcessor<T> {
 	private int processUnquotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 		int fieldStart = linePos;
-		linePos = line.indexOf(cellSeparator, fieldStart);
+		linePos = line.indexOf(columnSeparator, fieldStart);
 		if (linePos < 0) {
 			linePos = line.length();
 		}
@@ -628,10 +668,10 @@ public class CsvProcessor<T> {
 	}
 
 	private void writeQuoted(StringBuilder sb, String str) {
-		sb.append(cellQuote);
+		sb.append(columnQuote);
 		int start = 0;
 		while (true) {
-			int linePos = str.indexOf(cellQuote, start);
+			int linePos = str.indexOf(columnQuote, start);
 			if (linePos < 0) {
 				sb.append(str, start, str.length());
 				break;
@@ -640,10 +680,10 @@ public class CsvProcessor<T> {
 			linePos++;
 			sb.append(str, start, linePos);
 			// output another quote
-			sb.append(cellQuote);
+			sb.append(columnQuote);
 			start = linePos;
 		}
-		sb.append(cellQuote);
+		sb.append(columnQuote);
 	}
 
 	/**
@@ -672,14 +712,14 @@ public class CsvProcessor<T> {
 	private Object extractValue(String line, int lineNumber, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
 			Object target, ParseError parseError) {
 
-		String cellStr = line.substring(fieldStart, fieldEnd);
+		String columnStr = line.substring(fieldStart, fieldEnd);
 		if (fieldInfo.isTrimInput()) {
-			cellStr = cellStr.trim();
+			columnStr = columnStr.trim();
 		}
-		if (cellStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
-			cellStr = fieldInfo.getDefaultValue();
+		if (columnStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
+			columnStr = fieldInfo.getDefaultValue();
 		}
-		if (cellStr.isEmpty() && fieldInfo.isRequired()) {
+		if (columnStr.isEmpty() && fieldInfo.isRequired()) {
 			parseError.setErrorType(ErrorType.NO_HEADER);
 			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(fieldStart);
@@ -687,7 +727,7 @@ public class CsvProcessor<T> {
 		}
 
 		try {
-			return fieldInfo.getConverter().stringToJava(line, lineNumber, fieldInfo, cellStr, parseError);
+			return fieldInfo.getConverter().stringToJava(line, lineNumber, fieldInfo, columnStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());

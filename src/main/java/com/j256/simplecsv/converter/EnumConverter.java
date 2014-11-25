@@ -23,8 +23,8 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 
 	/**
 	 * If this flag is set then the {@link CsvField#format()} string is actually the name of the enum constant that will
-	 * be used if the value in the cell is unknown. So, for example, if the cell value is "red" but there is not an enum
-	 * name that corresponds to "red" then the format value "blue" will be used instead.
+	 * be used if the value in the column is unknown. So, for example, if the column value is "red" but there is not an
+	 * enum name that corresponds to "red" then the format value "blue" will be used instead.
 	 */
 	public static final long FORMAT_IS_UNKNOWN_VALUE = 1 << 1;
 

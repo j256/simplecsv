@@ -143,7 +143,19 @@ The code works with Java 6 or later.
 
 @cindex examples of code
 @cindex code examples
-Sorry.  Need to flesh this out.
+Here is some example code to help you get going with SimpleCSV.  I often find that code is the best documentation of how
+to get something working.  Please feel free to suggest additional example packages for inclusion here.  Source code submissions
+are welcome as long as you don't get piqued if we don't chose your's.
+
+@table @asis
+
+@cindex simple example
+@item Simple, basic
+
+This is a simple application which publishes a single object.  See the
+@uref{http://256.com/sources/simplecsv/docs/example-simple, source code on github}.
+
+@end table
 
 @c ----------------------------------------------------------------
 @node License, Index of Concepts, Examples, Top

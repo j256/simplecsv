@@ -10,7 +10,7 @@ import com.j256.simplecsv.processor.ParseError;
  * Converter for the Java String type.
  * 
  * <p>
- * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_OUTPUT} for trimming before a cell is
+ * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_OUTPUT} for trimming before a column is
  * printed and/or {@link #BLANK_IS_NULL} to have a blank-string interpreted as a null value.
  * </p>
  * 

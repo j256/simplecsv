@@ -27,7 +27,7 @@ public class FieldInfoTest {
 		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
 		assertSame(field, fieldInfo.getField());
 		assertNull(fieldInfo.getDefaultValue());
-		assertEquals(fieldName, fieldInfo.getCellName());
+		assertEquals(fieldName, fieldInfo.getColumnName());
 		assertFalse(fieldInfo.isRequired());
 	}
 
@@ -36,7 +36,7 @@ public class FieldInfoTest {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
 		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
-		assertEquals(MyClass.HAS_NAME_FIELD_NAME, fieldInfo.getCellName());
+		assertEquals(MyClass.HAS_NAME_FIELD_NAME, fieldInfo.getColumnName());
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class FieldInfoTest {
 		public static final String HAS_NAME_FIELD_NAME = "not has Name";
 		@CsvField
 		private int field;
-		@CsvField(cellName = HAS_NAME_FIELD_NAME)
+		@CsvField(columnName = HAS_NAME_FIELD_NAME)
 		private int hasName;
 		@CsvField(defaultValue = "defaultValue")
 		private String defaultValue;
