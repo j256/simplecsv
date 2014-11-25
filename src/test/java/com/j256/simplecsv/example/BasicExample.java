@@ -1,4 +1,4 @@
-package com.j256.simplecsv.converter.example;
+package com.j256.simplecsv.example;
 
 import static org.junit.Assert.assertEquals;
 
