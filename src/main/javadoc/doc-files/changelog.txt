@@ -1,3 +1,6 @@
+0.4: 11/25/2014
+	* Fixed processing bug with null values.  Seems to be usable.
+
 0.3: 11/25/2014
 	* Improved header validation method.
 	* Added better read and write methods for individual entity lines.
