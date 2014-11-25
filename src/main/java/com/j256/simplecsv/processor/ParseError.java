@@ -61,6 +61,9 @@ public class ParseError {
 		return linePos;
 	}
 
+	/**
+	 * Resets all of the fields to non-error status. This is used internally so we can reuse an instance of this class.
+	 */
 	public void reset() {
 		this.errorType = ErrorType.NONE;
 		this.message = null;
