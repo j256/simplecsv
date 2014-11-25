@@ -1,3 +1,7 @@
+0.3: 11/25/2014
+	* Improved header validation method.
+	* Added better read and write methods for individual entity lines.
+
 0.2: 11/25/2014
 	* Some small improvements.  Added an example.  Renamed cell -> column.
 	* Improved header validation method.

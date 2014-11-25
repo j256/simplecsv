@@ -173,12 +173,22 @@ public class CsvProcessorTest {
 		assertEquals(unquoted, basic.getUnquoted());
 	}
 
-	@Test
-	public void testReadBadHeaderFile() throws Exception {
+	@Test(expected = ParseException.class)
+	public void testReadNoHeaderFile() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		StringReader reader = new StringReader("");
 		List<Basic> entities = processor.readAll(reader, true, true, null);
 		assertNull(entities);
+	}
+
+	@Test
+	public void testReadBadHeaderFile() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, true, true, parseErrors);
+		assertNull(entities);
+		assertEquals(1, parseErrors.size());
 
 		reader = new StringReader("");
 		List<ParseError> errors = new ArrayList<ParseError>();

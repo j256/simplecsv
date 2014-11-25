@@ -13,7 +13,6 @@ import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,44 +148,32 @@ public class CsvProcessor<T> {
 			Collection<ParseError> parseErrors) throws IOException, ParseException {
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		try {
-			ParseError parseError = new ParseError();
+			ParseError parseError = null;
+			if (parseErrors != null) {
+				parseError = new ParseError();
+			}
 			if (firstLineHeader) {
-				String line = bufferedReader.readLine();
-				if (validateHeader) {
-					if (line == null) {
-						if (parseErrors != null) {
-							parseError.setErrorType(ErrorType.NO_HEADER);
-							parseErrors.add(parseError);
-						}
-						return null;
-					} else if (!validateHeader(line, parseError)) {
-						if (parseErrors != null) {
-							parseErrors.add(parseError);
-						}
-						return null;
+				if (readHeader(bufferedReader, validateHeader, parseError) == null) {
+					if (parseError != null && parseError.isError()) {
+						parseErrors.add(parseError);
 					}
-				} else if (line == null) {
-					return Collections.emptyList();
+					return null;
 				}
 			}
 			List<T> results = new ArrayList<T>();
-			if (parseErrors == null) {
-				parseError = null;
-			}
 			while (true) {
-				String line = bufferedReader.readLine();
-				if (line == null) {
-					return results;
+				if (parseError != null) {
+					parseError.reset();
 				}
-				T result = processRow(line, parseError);
-				if (result == null) {
-					// should not get here but let's be careful
-					if (parseErrors != null) {
-						parseErrors.add(parseError);
-						parseError = new ParseError();
-					}
-				} else {
+				T result = readRow(bufferedReader, parseError);
+				if (result != null) {
 					results.add(result);
+				} else if (parseError != null && parseError.isError()) {
+					// if there was an error then add it to the list
+					parseErrors.add(parseError);
+				} else {
+					// if no error (and no exception) then EOF
+					return results;
 				}
 			}
 		} finally {
@@ -195,7 +182,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Process a line and divide it up into a series of quoted fields.
+	 * Read in a line and process it as a CSV header.
 	 * 
 	 * @param bufferedReader
 	 *            Where to read the header from.
@@ -226,7 +213,7 @@ public class CsvProcessor<T> {
 		String[] columns = processHeader(header, parseError);
 		if (columns == null) {
 			return null;
-		} else if (validateHeaderColumns(columns, parseError)) {
+		} else if (validate && !validateHeaderColumns(columns, parseError)) {
 			if (parseError == null) {
 				throw new ParseException("header line is not valid: " + header, 0);
 			} else {
@@ -237,7 +224,32 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Process a header line and return the associated entity.
+	 * Read an entity line from the reader.
+	 * 
+	 * @param bufferedReader
+	 *            Where to read the row from.
+	 * @param parseError
+	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
+	 *            a ParseException will be thrown instead.
+	 * @return Entity read in or null on EOF or error. Check {@link ParseError#isError()} to see if it was an error or
+	 *         EOF.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
+	 *             exception should be thrown.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when reading.
+	 */
+	public T readRow(BufferedReader bufferedReader, ParseError parseError) throws ParseException, IOException {
+		String line = bufferedReader.readLine();
+		if (line == null) {
+			return null;
+		} else {
+			return processRow(line, parseError);
+		}
+	}
+
+	/**
+	 * Process a header row and return the associated entity.
 	 * 
 	 * @param line
 	 *            Line to process to get our validate our header.
@@ -303,7 +315,7 @@ public class CsvProcessor<T> {
 	 *             exception should be thrown.
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
-		String[] result = new String[fieldInfos.length];
+		String[] headerColumns = new String[fieldInfos.length];
 		StringBuilder sb = new StringBuilder(32);
 		int linePos = 0;
 		ParseError localParseError = parseError;
@@ -327,7 +339,7 @@ public class CsvProcessor<T> {
 							+ "): " + line, linePos);
 				}
 			}
-			result[i] = sb.toString();
+			headerColumns[i] = sb.toString();
 			if (atEnd) {
 				break;
 			}
@@ -335,7 +347,7 @@ public class CsvProcessor<T> {
 		if (linePos < line.length()) {
 			throw new ParseException("Line has extra information past last column: " + line, linePos);
 		}
-		return result;
+		return headerColumns;
 	}
 
 	/**
@@ -368,6 +380,7 @@ public class CsvProcessor<T> {
 			localParseError = new ParseError();
 		}
 		for (FieldInfo fieldInfo : fieldInfos) {
+			// we have to do this because a blank column may be ok
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
@@ -388,6 +401,7 @@ public class CsvProcessor<T> {
 			if (atEnd) {
 				break;
 			}
+			// NOTE: we can't break here if we are at the end of line because might be blank field
 		}
 		if (fieldCount < fieldInfos.length && !allowPartialLines) {
 			throw new ParseException("Line does not have " + fieldInfos.length + " columns: " + line, linePos);
@@ -433,8 +447,7 @@ public class CsvProcessor<T> {
 				writeHeader(bufferedWriter, true);
 			}
 			for (T entity : entities) {
-				String line = buildLine(entity, true);
-				bufferedWriter.write(line);
+				writeRow(bufferedWriter, entity, true);
 			}
 		} finally {
 			bufferedWriter.close();
@@ -453,6 +466,23 @@ public class CsvProcessor<T> {
 	 */
 	public void writeHeader(BufferedWriter bufferedWriter, boolean appendLineTermination) throws IOException {
 		bufferedWriter.write(buildHeaderLine(appendLineTermination));
+	}
+
+	/**
+	 * Write an entity row to the writer.
+	 * 
+	 * @param bufferedWriter
+	 *            Where to write our header information.
+	 * @param entity
+	 *            The entity we are writing to the buffered writer.
+	 * @param appendLineTermination
+	 *            Set to true to add the newline to the end of the line.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when writing.
+	 */
+	public void writeRow(BufferedWriter bufferedWriter, T entity, boolean appendLineTermination) throws IOException {
+		String line = buildLine(entity, appendLineTermination);
+		bufferedWriter.write(line);
 	}
 
 	/**
@@ -563,8 +593,8 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Set to true to allow lines that do not have values for all of the columns. Otherwise an IllegalArgumentException is
-	 * thrown.
+	 * Set to true to allow lines that do not have values for all of the columns. Otherwise an IllegalArgumentException
+	 * is thrown.
 	 */
 	public void setAllowPartialLines(boolean allowPartialLines) {
 		this.allowPartialLines = allowPartialLines;
@@ -602,18 +632,21 @@ public class CsvProcessor<T> {
 			// must have a quote following a quote if there wasn't a columnSeparator
 			if (line.charAt(linePos) != columnQuote) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
-				parseError.setMessage("quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
+				parseError.setMessage("quote '" + columnQuote + "' is not followed up separator '" + columnSeparator
+						+ "'");
 				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return linePos;
 			}
 
 			fieldEnd = linePos;
+			// move past possibly end quote
 			linePos++;
 			if (linePos == line.length()) {
 				break;
 			}
 			if (line.charAt(linePos) == columnSeparator) {
+				// move past the comma
 				linePos++;
 				break;
 			}

@@ -6,7 +6,7 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 0.2
+@set simplecsv_version 0.3
 @set simplecsv_year 2014
 @set simplecsv_date November @value{simplecsv_year}
 @set package SimpleCSV
@@ -215,7 +215,7 @@ Override the column name:
 private long number;
 @end example
 
-Change the column input/output format.  This will display the amount as @code{$1,231.00} or $code{($2,000,000.28)}. 
+Change the column input/output format.  This will display the amount as @code{$1,231.00} or @code{($2,000,000.28)}. 
 
 @example
 @@CsvField(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
