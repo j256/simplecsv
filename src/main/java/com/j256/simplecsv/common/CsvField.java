@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.text.DecimalFormat;
 
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.VoidConverter;
@@ -22,25 +23,27 @@ public @interface CsvField {
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
-	 * Sets the name of the used in the header and for logging. If not specified, then the field name will be used.
+	 * This allows you to override and set a column name for the field. By default it will use the field name. This
+	 * column name is used when you are generating and validating the header line.
 	 */
 	public String columnName() default DEFAULT_VALUE;
 
 	/**
-	 * Set to true if a value in the field is required -- i.e. the field cannot be empty.
+	 * Set to true if a value in the column is required. This means that it cannot be empty when it is being read in and
+	 * a parse error or exception will be generated.
 	 */
 	public boolean required() default false;
 
 	/**
-	 * Set to true if you want the field read from the line to be trimmed before it is converted to Java. This may not
-	 * apply to all field types.
+	 * Set to true if you want the column read from the line to be trimmed (using {@link String#trim()}) before it is
+	 * converted to Java. This may not be applicable to all field types.
 	 */
 	public boolean trimInput() default false;
 
 	/**
-	 * Sets the format for this field. Not all types use the format specifier. Take a look at the particular converter
-	 * class javadocs for more particulars. The default format tends to be the toString() of the type, and often use of
-	 * the java.text.Format classes are used to override.
+	 * Sets the format for this column. Not all types use the format specifier. Take a look at the particular converter
+	 * class javadocs for more particulars. The default format tends to be the toString() of the type, and (for example)
+	 * the {@link DecimalFormat} class is used to override for numbers.
 	 */
 	public String format() default DEFAULT_VALUE;
 
@@ -56,7 +59,7 @@ public @interface CsvField {
 	public long converterFlags() default 0;
 
 	/**
-	 * The converter class to use to convert this field if you don't want to use the default appropriate internal class.
+	 * Sets the converter to use to convert this column if you don't want to use the default appropriate internal class.
 	 * This will construct and instance of the class for this particular field. If you want to use a singleton then you
 	 * should register the type using {@link CsvProcessor#registerConverter(Class, Converter)}. This converter class
 	 * must have a public no-arg constructor.
@@ -64,8 +67,8 @@ public @interface CsvField {
 	public Class<? extends Converter<?, ?>> converterClass() default VoidConverter.class;
 
 	/**
-	 * Set this to a default string that if the column is empty when read, the value will be used instead. Default is
-	 * the empty string.
+	 * Set this to a default string for the column. If the column is empty when read, the value will be used instead.
+	 * Default is the empty string.
 	 */
 	public String defaultValue() default DEFAULT_VALUE;
 }

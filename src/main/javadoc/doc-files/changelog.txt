@@ -1,2 +1,6 @@
+0.2: 11/25/2014
+	* Some small improvements.  Added an example.  Renamed cell -> column.
+	* Improved header validation method.
+
 0.1: 11/24/2014
 	* Initial version.  Coding seems to be stabilizing although things are a bit rough.

@@ -6,7 +6,7 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 0.1
+@set simplecsv_version 0.2
 @set simplecsv_year 2014
 @set simplecsv_date November @value{simplecsv_year}
 @set package SimpleCSV
@@ -77,7 +77,7 @@ To use SimpleCSV you need to do the following steps.  For more information, @pxr
 
 @item Download SimpleCSV from the @uref{http://256.com/sources/simplecsv/releases/, SimpleCSV release page}.  @xref{Downloading}.
 
-@item Add @code{@@CsvField} annotation to each of the fields that you want to write and read to/from CSV files.
+@item Add @code{@@CsvField} annotation to each of the fields that you want to write and read to/from CSV files.  @xref{CsvField Annotation}.
 
 @example
 public class Account @{
@@ -122,10 +122,11 @@ For more extensive instructions, @pxref{Using}.
 @cindex using SimpleCSV
 @menu
 * Downloading ::                Downloading the SimpleCSV jar.
+* CsvField Annotation ::        Details about the @@CsvField annotation.
 @end menu
 
 @c ----------------------------------------------------------------
-@node Downloading, Examples, Using, Using
+@node Downloading, CsvField Annotation, Using, Using
 @section Downloading Jar
 
 @cindex how to download the jars
@@ -138,7 +139,98 @@ central maven repository}.
 The code works with Java 6 or later.
 
 @c ----------------------------------------------------------------
-@node Examples, License, Downloading, Top
+@node CsvField Annotation, Examples, Downloading, Using
+@section CsvField Annotation
+
+@cindex CsvField annotation
+@cindex @@CsvField
+The @code{@@CsvField} annotation is used to mark the fields in your entity that you want to write to and read from CSV files.
+It also allows you to customize the output format and other details for the particular field instance.  The following
+fields can be used:
+
+@table @code
+
+@cindex column name
+@cindex header name
+@cindex custom header name
+@item columnName
+
+This allows you to override and set a column name for the field.  By default it will use the field name.  This column
+name is used when you are generating and validating the header line.
+
+@cindex required columns
+@item required
+
+Set to true if a value in the column is required.  This means that it cannot be empty when it is being read in and a
+parse error or exception will be generated.
+
+@cindex trim columns
+@item trimInput
+
+Set to true if you want the column read from the line to be trimmed (using @code{String.trim()}) before it is
+converted to Java. This may not be applicable to all field types.
+
+@cindex column format
+@cindex format of column
+@item format
+
+Sets the format for this column. Not all types use the format specifier. Take a look at the particular converter
+class javadocs for more particulars. The default format tends to be the @code{toString()} of the type, and
+(for example) the @code{java.text.DecimalFormat} class is used to override for numbers.
+
+@cindex converter flags
+@item converterFlags
+
+Optional flags for the converter which adjust the output. The flags that are used depend on the converter. See
+the converter Javadocs for more information. These need to be constants that are added together. For example,
+
+@example
+@@CsvField(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
+private Xxx dollarAmount;
+@end example
+
+@cindex custom converter
+@cindex converter, custom
+@item converterClass
+
+Sets the converter to use to convert this column if you don't want to use the default appropriate internal class.
+This will construct and instance of the class for this particular field. If you want to use a singleton then you
+should register the type using @code{CsvProcessor.registerConverter(...)}. This converter class must have a public
+no-arg constructor.
+
+@cindex default value
+@item defaultValue
+
+Set this to a default string for the column.  If the column is empty when read, the value will be used instead. Default is
+the empty string.
+
+@end table
+
+Here's some examples of how to use the @code{@@CsvField} annotation.
+
+Override the column name:
+
+@example
+@@CsvField(columnName = "Account Number")
+private long number;
+@end example
+
+Change the column input/output format.  This will display the amount as @code{$1,231.00} or $code{($2,000,000.28)}. 
+
+@example
+@@CsvField(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
+private double amount;
+@end example
+
+Specifying a custom converter class for an object that you have defined. 
+
+@example
+@@CsvField(columnName = "Gender", converterClass = GenderConverter.class)
+private Gender gender;
+@end example
+
+@c ----------------------------------------------------------------
+@node Examples, License, CsvField Annotation, Top
 @chapter Example Code
 
 @cindex examples of code
