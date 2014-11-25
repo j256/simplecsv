@@ -36,7 +36,7 @@ To release:
 7) Check to make sure it has been released:
 
 	- Click on 'Repositories' from left nav
-	- select Releases (not-bold) -> com -> j256 -> simplejmx
+	- select Releases (not-bold) -> com -> j256 -> simplecsv
 	- see if the release is there
 
 	mvn -P st release:perform -DconnectionUrl=scm:svn:scm:svn:https://svn.code.sf.net/p/simplecsv/code/tags/simplecsv-X.X
