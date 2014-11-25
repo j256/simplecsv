@@ -14,8 +14,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
@@ -68,8 +70,12 @@ public class CsvProcessor<T> {
 	 */
 	public CsvProcessor(Class<T> entityClass) throws IllegalArgumentException {
 		List<FieldInfo> fieldInfos = new ArrayList<FieldInfo>();
+		Set<Field> knownFields = new HashSet<Field>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : entityClass.getDeclaredFields()) {
+				if (!knownFields.add(field)) {
+					continue;
+				}
 				Converter<?, ?> converter = converterMap.get(field.getType());
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				@SuppressWarnings("unchecked")
@@ -541,25 +547,29 @@ public class CsvProcessor<T> {
 			@SuppressWarnings("unchecked")
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) fieldInfo.getConverter();
 			String str = castConverter.javaToString(fieldInfo, value);
-			// need to protect the column if it contains a quote
-			if (str.indexOf(columnQuote) >= 0) {
-				writeQuoted(sb, str);
-				continue;
-			}
 			boolean needsQuotes = fieldInfo.isNeedsQuotes();
-			if (!needsQuotes) {
-				for (int i = 0; i < str.length(); i++) {
-					char ch = str.charAt(i);
-					if (ch == columnSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
-						needsQuotes = true;
-						break;
+			if (str != null) {
+				// need to protect the column if it contains a quote
+				if (str.indexOf(columnQuote) >= 0) {
+					writeQuoted(sb, str);
+					continue;
+				}
+				if (!needsQuotes) {
+					for (int i = 0; i < str.length(); i++) {
+						char ch = str.charAt(i);
+						if (ch == columnSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
+							needsQuotes = true;
+							break;
+						}
 					}
 				}
 			}
 			if (needsQuotes) {
 				sb.append(columnQuote);
 			}
-			sb.append(str);
+			if (str != null) {
+				sb.append(str);
+			}
 			if (needsQuotes) {
 				sb.append(columnQuote);
 			}

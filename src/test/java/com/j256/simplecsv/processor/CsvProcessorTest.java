@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -203,6 +205,17 @@ public class CsvProcessorTest {
 		assertNull(entities);
 		assertEquals(1, errors.size());
 		assertEquals(ErrorType.INVALID_HEADER, errors.get(0).getErrorType());
+	}
+
+	@Test
+	public void testNulls() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		Basic basic = new Basic(1, null, 2, null);
+		StringWriter writer = new StringWriter();
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		processor.writeRow(bufferedWriter, basic, false);
+		bufferedWriter.flush();
+		assertEquals("1,\"\",2,", writer.toString());
 	}
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
