@@ -401,7 +401,8 @@ public class CsvProcessor<T> {
 					return null;
 				} else {
 					throw new ParseException("Problems parsing line at position " + linePos + " for type "
-							+ fieldInfo.getClass().getSimpleName() + " (" + localParseError + "): " + line, linePos);
+							+ fieldInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
+							linePos);
 				}
 			}
 			fieldCount++;
