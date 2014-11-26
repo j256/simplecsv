@@ -20,7 +20,12 @@ public class VoidConverter implements Converter<Void, Void> {
 
 	@Override
 	public boolean isNeedsQuotes(Void configInfo) {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isAlwaysTrimInput() {
+		return false;
 	}
 
 	@Override

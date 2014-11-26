@@ -67,6 +67,11 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return true;
+	}
+
+	@Override
 	public String javaToString(FieldInfo fieldInfo, Enum<?> value) {
 		if (value == null) {
 			return null;

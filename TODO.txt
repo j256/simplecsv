@@ -11,4 +11,3 @@ Used to maintain requested features or future work.
 	- no data, only header
 	- specify the version in the name of the column
 - pass in an optional Callable<T> which creates the entities if you can't force the public constructor
- 

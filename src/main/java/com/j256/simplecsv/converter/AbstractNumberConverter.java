@@ -35,6 +35,11 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return true;
+	}
+
+	@Override
 	public DecimalFormat configure(String format, long flags, Field field) {
 		if (format == null) {
 			return null;

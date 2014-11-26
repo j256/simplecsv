@@ -60,6 +60,11 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return false;
+	}
+
+	@Override
 	public String javaToString(FieldInfo fieldInfo, Date value) {
 		if (value == null) {
 			return null;

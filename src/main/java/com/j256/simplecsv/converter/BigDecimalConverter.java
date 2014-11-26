@@ -41,6 +41,11 @@ public class BigDecimalConverter implements Converter<BigDecimal, DecimalFormat>
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return true;
+	}
+
+	@Override
 	public String javaToString(FieldInfo fieldInfo, BigDecimal value) {
 		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
 		if (value == null) {

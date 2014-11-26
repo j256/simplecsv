@@ -46,6 +46,11 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return false;
+	}
+
+	@Override
 	public String javaToString(FieldInfo fieldInfo, Character value) {
 		if (value == null) {
 			return null;

@@ -284,6 +284,10 @@ public class CsvProcessorTest {
 			return false;
 		}
 		@Override
+		public boolean isAlwaysTrimInput() {
+			return false;
+		}
+		@Override
 		public String javaToString(FieldInfo fieldInfo, String value) {
 			return value;
 		}

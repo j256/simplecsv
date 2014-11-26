@@ -47,6 +47,11 @@ public interface Converter<T, C> {
 	public boolean isNeedsQuotes(C configInfo);
 
 	/**
+	 * Returns true if the field should always trim before it is processed.
+	 */
+	public boolean isAlwaysTrimInput();
+
+	/**
 	 * Converts from a Java representation to string.
 	 * 
 	 * @param fieldInfo

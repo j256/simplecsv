@@ -79,6 +79,11 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
+	public boolean isAlwaysTrimInput() {
+		return false;
+	}
+
+	@Override
 	public String javaToString(FieldInfo fieldInfo, Boolean value) {
 		if (value == null) {
 			return null;

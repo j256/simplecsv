@@ -54,6 +54,7 @@ public class CsvProcessor<T> {
 	private char columnQuote = DEFAULT_COLUMN_QUOTE;
 	private String lineTermination = DEFAULT_LINE_TERMINATION;
 	private boolean allowPartialLines;
+	private boolean alwaysTrimInput;
 
 	private final FieldInfo[] fieldInfos;
 	private final Constructor<T> constructor;
@@ -341,8 +342,8 @@ public class CsvProcessor<T> {
 				if (localParseError == parseError) {
 					return null;
 				} else {
-					throw new ParseException("Problems parsing line at position " + linePos + " (" + localParseError
-							+ "): " + line, linePos);
+					throw new ParseException("Problems parsing header line at position " + linePos + " ("
+							+ localParseError + "): " + line, linePos);
 				}
 			}
 			headerColumns[i] = sb.toString();
@@ -399,8 +400,8 @@ public class CsvProcessor<T> {
 					// parseError has the error information
 					return null;
 				} else {
-					throw new ParseException("Problems parsing line at position " + linePos + " (" + localParseError
-							+ "): " + line, linePos);
+					throw new ParseException("Problems parsing line at position " + linePos + " for type "
+							+ fieldInfo.getClass().getSimpleName() + " (" + localParseError + "): " + line, linePos);
 				}
 			}
 			fieldCount++;
@@ -610,6 +611,14 @@ public class CsvProcessor<T> {
 		this.allowPartialLines = allowPartialLines;
 	}
 
+	/**
+	 * Set to true to always call {@link String#trim()} on data input columns to remove any spaces from the start or
+	 * end.
+	 */
+	public void setAlwaysTrimInput(boolean alwaysTrimInput) {
+		this.alwaysTrimInput = alwaysTrimInput;
+	}
+
 	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 
@@ -756,7 +765,8 @@ public class CsvProcessor<T> {
 			Object target, ParseError parseError) {
 
 		String columnStr = line.substring(fieldStart, fieldEnd);
-		if (fieldInfo.isTrimInput()) {
+		Converter<?, ?> converter = fieldInfo.getConverter();
+		if (alwaysTrimInput || fieldInfo.isTrimInput() || converter.isAlwaysTrimInput()) {
 			columnStr = columnStr.trim();
 		}
 		if (columnStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
@@ -770,7 +780,7 @@ public class CsvProcessor<T> {
 		}
 
 		try {
-			return fieldInfo.getConverter().stringToJava(line, lineNumber, fieldInfo, columnStr, parseError);
+			return converter.stringToJava(line, lineNumber, fieldInfo, columnStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());
