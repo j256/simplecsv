@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -49,8 +49,8 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, T value) {
-		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
+	public String javaToString(ColumnInfo columnInfo, T value) {
+		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value == null) {
 			return null;
 		} else if (decimalFormat == null) {
@@ -61,9 +61,9 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public T stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+	public T stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException {
-		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
+		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.length() == 0) {
 			return null;
 		} else if (decimalFormat == null) {

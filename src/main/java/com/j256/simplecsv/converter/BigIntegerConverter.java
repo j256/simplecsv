@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -48,8 +48,8 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, BigInteger value) {
-		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
+	public String javaToString(ColumnInfo columnInfo, BigInteger value) {
+		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value == null) {
 			return null;
 		} else if (decimalFormat == null) {
@@ -60,9 +60,9 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public BigInteger stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+	public BigInteger stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException {
-		DecimalFormat decimalFormat = (DecimalFormat) fieldInfo.getConfigInfo();
+		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (decimalFormat == null) {

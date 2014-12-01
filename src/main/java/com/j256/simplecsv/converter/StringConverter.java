@@ -3,7 +3,7 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -55,11 +55,11 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, String value) {
+	public String javaToString(ColumnInfo columnInfo, String value) {
 		if (value == null) {
 			return null;
 		} else {
-			ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+			ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 			if (configInfo.trimOutput) {
 				return value.trim();
 			} else {
@@ -69,8 +69,8 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+	public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		if (value.isEmpty() && configInfo.blankIsNull) {
 			return null;
 		} else {

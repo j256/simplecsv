@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -65,22 +65,22 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, Date value) {
+	public String javaToString(ColumnInfo columnInfo, Date value) {
 		if (value == null) {
 			return null;
 		} else {
-			String datePattern = (String) fieldInfo.getConfigInfo();
+			String datePattern = (String) columnInfo.getConfigInfo();
 			return getDateFormatter(datePattern).format(value);
 		}
 	}
 
 	@Override
-	public Date stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+	public Date stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException {
 		if (value.isEmpty()) {
 			return null;
 		} else {
-			String datePattern = (String) fieldInfo.getConfigInfo();
+			String datePattern = (String) columnInfo.getConfigInfo();
 			return getDateFormatter(datePattern).parse(value);
 		}
 	}

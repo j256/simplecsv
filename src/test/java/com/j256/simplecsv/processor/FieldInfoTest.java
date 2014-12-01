@@ -15,8 +15,6 @@ import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.IntegerConverter;
 import com.j256.simplecsv.converter.LongConverter;
-import com.j256.simplecsv.processor.FieldInfo;
-import com.j256.simplecsv.processor.ParseError;
 
 public class FieldInfoTest {
 
@@ -24,49 +22,49 @@ public class FieldInfoTest {
 	public void testStuff() throws Exception {
 		String fieldName = "field";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
-		assertSame(field, fieldInfo.getField());
-		assertNull(fieldInfo.getDefaultValue());
-		assertEquals(fieldName, fieldInfo.getColumnName());
-		assertFalse(fieldInfo.isRequired());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		assertSame(field, columnInfo.getField());
+		assertNull(columnInfo.getDefaultValue());
+		assertEquals(fieldName, columnInfo.getColumnName());
+		assertFalse(columnInfo.isRequired());
 	}
 
 	@Test
 	public void testNameSet() throws Exception {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
-		assertEquals(MyClass.HAS_NAME_FIELD_NAME, fieldInfo.getColumnName());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		assertEquals(MyClass.HAS_NAME_FIELD_NAME, columnInfo.getColumnName());
 	}
 
 	@Test
 	public void testDefaultValue() throws Exception {
 		String fieldName = "defaultValue";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field, IntegerConverter.getSingleton());
-		assertEquals(fieldName, fieldInfo.getDefaultValue());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		assertEquals(fieldName, columnInfo.getDefaultValue());
 	}
 
 	@Test
 	public void testCustomConverter() throws Exception {
 		String fieldName = "specialString";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field, null);
-		assertTrue(fieldInfo.getConverter() instanceof MyConverter);
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, null);
+		assertTrue(columnInfo.getConverter() instanceof MyConverter);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
 		String fieldName = "number";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo fieldInfo = FieldInfo.fromField(field, LongConverter.getSingleton());
-		assertNotNull(fieldInfo.getConfigInfo());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton());
+		assertNotNull(columnInfo.getConfigInfo());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testNoConverter() throws Exception {
 		Field field = MyClass.class.getDeclaredField("defaultValue");
-		FieldInfo.fromField(field, null);
+		ColumnInfo.fromField(field, null);
 	}
 
 	private static class MyClass {
@@ -97,11 +95,12 @@ public class FieldInfoTest {
 			return false;
 		}
 		@Override
-		public String javaToString(FieldInfo fieldInfo, String value) {
+		public String javaToString(ColumnInfo columnInfo, String value) {
 			return value;
 		}
 		@Override
-		public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+				ParseError parseError) {
 			return value;
 		}
 	}

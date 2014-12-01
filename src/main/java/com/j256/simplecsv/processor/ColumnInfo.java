@@ -8,11 +8,11 @@ import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
- * Information about a particular field used internally to keep track of the CSV fields.
+ * Information about a particular column used internally to keep track of the CSV columns.
  * 
  * @author graywatson
  */
-public class FieldInfo {
+public class ColumnInfo {
 
 	private final Field field;
 	private final Converter<?, ?> converter;
@@ -23,7 +23,7 @@ public class FieldInfo {
 	private final boolean needsQuotes;
 	private final String defaultValue;
 
-	private FieldInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, boolean required,
+	private ColumnInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, boolean required,
 			boolean trimInput, boolean needsQuotes, String defaultValue) {
 		this.field = field;
 		this.converter = converter;
@@ -35,19 +35,30 @@ public class FieldInfo {
 		this.defaultValue = defaultValue;
 	}
 
+	/**
+	 * Returns the Java reflection Field associated with the column.
+	 */
 	public Field getField() {
 		return field;
 	}
 
+	/**
+	 * Returns the converter class associated with the column.
+	 */
 	public Converter<?, ?> getConverter() {
 		return converter;
 	}
 
+	/**
+	 * Returns the configuration information associated with the column, if any.
+	 */
 	public Object getConfigInfo() {
 		return configInfo;
 	}
 
 	/**
+	 * Returns whether the header name for this column.
+	 * 
 	 * @see CsvField#columnName()
 	 */
 	public String getColumnName() {
@@ -55,6 +66,8 @@ public class FieldInfo {
 	}
 
 	/**
+	 * Returns whether this column is required.
+	 * 
 	 * @see CsvField#required()
 	 */
 	public boolean isRequired() {
@@ -62,6 +75,8 @@ public class FieldInfo {
 	}
 
 	/**
+	 * Returns whether this column should be trimmed when read.
+	 * 
 	 * @see CsvField#trimInput()
 	 */
 	public boolean isTrimInput() {
@@ -69,13 +84,15 @@ public class FieldInfo {
 	}
 
 	/**
-	 * Returns whether this field should be surrounded by quotes or not.
+	 * Returns whether this column should be surrounded by quotes or not.
 	 */
 	public boolean isNeedsQuotes() {
 		return needsQuotes;
 	}
 
 	/**
+	 * Returns the default string for the column or null if none.
+	 * 
 	 * @see CsvField#defaultValue()
 	 */
 	public String getDefaultValue() {
@@ -83,9 +100,9 @@ public class FieldInfo {
 	}
 
 	/**
-	 * Make a field-info instance from a Java Field.
+	 * Make a column-info instance from a Java Field.
 	 */
-	public static FieldInfo fromField(Field field, Converter<?, ?> converter) {
+	public static ColumnInfo fromField(Field field, Converter<?, ?> converter) {
 		CsvField csvField = field.getAnnotation(CsvField.class);
 		if (csvField == null) {
 			return null;
@@ -123,14 +140,14 @@ public class FieldInfo {
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new FieldInfo(field, converter, configInfo, columnName, csvField.required(), csvField.trimInput(),
+		return new ColumnInfo(field, converter, configInfo, columnName, csvField.required(), csvField.trimInput(),
 				needsQuotes, defaultValue);
 	}
 
 	/**
 	 * For testing purposes.
 	 */
-	public static FieldInfo forTests(Converter<?, ?> converter, Object configInfo) {
-		return new FieldInfo(null, converter, configInfo, "name", false, false, false, null);
+	public static ColumnInfo forTests(Converter<?, ?> converter, Object configInfo) {
+		return new ColumnInfo(null, converter, configInfo, "name", false, false, false, null);
 	}
 }

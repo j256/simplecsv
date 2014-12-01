@@ -10,7 +10,7 @@ import java.text.ParseException;
 import org.junit.Test;
 
 import com.j256.simplecsv.converter.BooleanConverter.ConfigInfo;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class BooleanConverterTest extends AbstractConverterTest {
@@ -51,15 +51,15 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	public void testParseErrorOnBadValue() {
 		BooleanConverter converter = new BooleanConverter();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertEquals(false, converter.stringToJava("line", 1, fieldInfo, "unknown", parseError));
+		assertEquals(false, converter.stringToJava("line", 1, columnInfo, "unknown", parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE, null);
-		fieldInfo = FieldInfo.forTests(converter, configInfo);
+		columnInfo = ColumnInfo.forTests(converter, configInfo);
 		parseError.reset();
-		assertNull(converter.stringToJava("line", 1, fieldInfo, "unknown", parseError));
+		assertNull(converter.stringToJava("line", 1, columnInfo, "unknown", parseError));
 		assertTrue(parseError.isError());
 	}
 

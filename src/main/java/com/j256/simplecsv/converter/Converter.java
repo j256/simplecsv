@@ -3,7 +3,7 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -54,14 +54,14 @@ public interface Converter<T, C> {
 	/**
 	 * Converts from a Java representation to string.
 	 * 
-	 * @param fieldInfo
-	 *            Information about the field we are processing.
+	 * @param columnInfo
+	 *            Information about the column we are processing.
 	 * @param value
 	 *            Value of the field that we are converting.
 	 * 
 	 * @return The String equivalent object of the value parameter or null in which case nothing will be printed.
 	 */
-	public String javaToString(FieldInfo fieldInfo, T value);
+	public String javaToString(ColumnInfo columnInfo, T value);
 
 	/**
 	 * Converts from a string representation to Java.
@@ -70,8 +70,8 @@ public interface Converter<T, C> {
 	 *            Line we are processing for logging purposes.
 	 * @param lineNumber
 	 *            Number of the line we are processing for logging purposes.
-	 * @param fieldInfo
-	 *            Information about the field we are processing.
+	 * @param columnInfo
+	 *            Information about the column we are processing.
 	 * @param value
 	 *            Value of the field that we are converting.
 	 * @param parseError
@@ -84,6 +84,6 @@ public interface Converter<T, C> {
 	 *             If there was some sort of parse or other error. It is better to use the parseError argument instead.
 	 *             All RuntimeExceptions will be caught as well.
 	 */
-	public T stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError)
+	public T stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException;
 }

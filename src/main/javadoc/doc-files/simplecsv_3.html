@@ -20,19 +20,57 @@ Send bugs and suggestions to <texi2html-bug@nongnu.org>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style type="text/css">
 <!--
-a.summary-letter {text-decoration: none}
-blockquote.smallquotation {font-size: smaller}
-pre.display {font-family: serif}
-pre.format {font-family: serif}
-pre.menu-comment {font-family: serif}
-pre.menu-preformatted {font-family: serif}
-pre.smalldisplay {font-family: serif; font-size: smaller}
-pre.smallexample {font-size: smaller}
-pre.smallformat {font-family: serif; font-size: smaller}
-pre.smalllisp {font-size: smaller}
-span.roman {font-family:serif; font-weight:normal;}
-span.sansserif {font-family:sans-serif; font-weight:normal;}
-ul.toc {list-style: none}
+a.summary-letter {
+	text-decoration: none
+}
+
+blockquote.smallquotation {
+	font-size: smaller
+}
+
+pre.display {
+	font-family: serif
+}
+
+pre.format {
+	font-family: serif
+}
+
+pre.menu-comment {
+	font-family: serif
+}
+
+pre.menu-preformatted {
+	font-family: serif
+}
+
+pre.smalldisplay {
+	font-family: serif; font-size: smaller
+}
+
+pre.smallexample {
+	font-size: smaller
+}
+
+pre.smallformat {
+	font-family: serif; font-size: smaller
+}
+
+pre.smalllisp {
+	font-size: smaller
+}
+
+span.roman {
+	font-family: serif; font-weight: normal;
+}
+
+span.sansserif {
+	font-family: sans-serif; font-weight: normal;
+}
+
+ul.toc {
+	list-style: none
+}
 -->
 </style>
 
@@ -41,64 +79,87 @@ ul.toc {list-style: none}
 
 <body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
 
-<a name="Examples"></a>
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="simplecsv_2.html#CsvField-Annotation" title="Previous section in reading order"> &lt; </a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next section in reading order"> &gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="simplecsv_2.html#Using" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Up section"> Up </a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_5.html#Index-of-Concepts" title="Index">Index</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<a name="Example-Code"></a>
-<h1 class="chapter">3. Example Code</h1>
+	<a name="Examples"></a>
+	<table cellpadding="1" cellspacing="1" border="0">
+		<tr>
+			<td valign="middle" align="left">[<a href="simplecsv_2.html#CsvField-Annotation"
+				title="Previous section in reading order"> &lt; </a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next section in reading order">
+					&gt; </a>]
+			</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">[<a href="simplecsv_2.html#Using"
+				title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Up section"> Up </a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next chapter"> &gt;&gt; </a>]
+			</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Cover (top) of document">Top</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_toc.html#SEC_Contents" title="Table of contents">Contents</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_5.html#Index-of-Concepts" title="Index">Index</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_abt.html#SEC_About" title="About (help)"> ? </a>]
+			</td>
+		</tr>
+	</table>
+	<a name="Example-Code"></a>
+	<h1 class="chapter">3. Example Code</h1>
 
-<a name="index-examples-of-code"></a>
-<a name="index-code-examples"></a>
-<p>Here is some example code to help you get going with SimpleCSV.  I often find that code is the best documentation of how
-to get something working.  Please feel free to suggest additional example packages for inclusion here.  Source code submissions
-are welcome as long as you don&rsquo;t get piqued if we don&rsquo;t chose your&rsquo;s.
-</p>
-<dl compact="compact">
-<dd>
-<a name="index-simple-example"></a>
-</dd>
-<dt> Simple, basic</dt>
-<dd>
-<p>This is a simple application which publishes a single object.  See the
-<a href="http://256.com/sources/simplecsv/docs/example-simple">source code on github</a>.
-</p>
-</dd>
-</dl>
+	<a name="index-examples-of-code"></a>
+	<a name="index-code-examples"></a>
+	<p>Here is some example code to help you get going with SimpleCSV. I often find that code is the best documentation
+		of how to get something working. Please feel free to suggest additional example packages for inclusion here. Source
+		code submissions are welcome as long as you don&rsquo;t get piqued if we don&rsquo;t chose your&rsquo;s.</p>
+	<dl compact="compact">
+		<dd>
+			<a name="index-simple-example"></a>
+		</dd>
+		<dt>Simple, basic</dt>
+		<dd>
+			<p>
+				This is a simple application which publishes a single object. See the <a
+					href="http://256.com/sources/simplecsv/docs/example-simple">source code on github</a>.
+			</p>
+		</dd>
+	</dl>
 
-<hr size="6">
-<table cellpadding="1" cellspacing="1" border="0">
-<tr><td valign="middle" align="left">[<a href="simplecsv_2.html#Using" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next chapter"> &gt;&gt; </a>]</td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left"> &nbsp; </td>
-<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Cover (top) of document">Top</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_5.html#Index-of-Concepts" title="Index">Index</a>]</td>
-<td valign="middle" align="left">[<a href="simplecsv_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
-</tr></table>
-<p>
- <font size="-1">
-  This document was generated by <em>Gray Watson</em> on <em>November 25, 2014</em> using <a href="http://www.nongnu.org/texi2html/"><em>texi2html 1.82</em></a>.
- </font>
- <br>
+	<hr size="6">
+	<table cellpadding="1" cellspacing="1" border="0">
+		<tr>
+			<td valign="middle" align="left">[<a href="simplecsv_2.html#Using"
+				title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_4.html#License" title="Next chapter"> &gt;&gt; </a>]
+			</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">&nbsp;</td>
+			<td valign="middle" align="left">[<a href="simplecsv.html#Top" title="Cover (top) of document">Top</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_toc.html#SEC_Contents" title="Table of contents">Contents</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_5.html#Index-of-Concepts" title="Index">Index</a>]
+			</td>
+			<td valign="middle" align="left">[<a href="simplecsv_abt.html#SEC_About" title="About (help)"> ? </a>]
+			</td>
+		</tr>
+	</table>
+	<p>
+		<font size="-1"> This document was generated by <em>Gray Watson</em> on <em>November 25, 2014</em> using <a
+			href="http://www.nongnu.org/texi2html/"><em>texi2html 1.82</em></a>.
+		</font>
+		<br>
 
-</p>
+	</p>
 </body>
 </html>

@@ -3,7 +3,7 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -51,7 +51,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, Character value) {
+	public String javaToString(ColumnInfo columnInfo, Character value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -60,8 +60,8 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Character stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		Boolean parseErrorOnMoreThanOne = (Boolean) fieldInfo.getConfigInfo();
+	public Character stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+		Boolean parseErrorOnMoreThanOne = (Boolean) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (value.length() > 1 && parseErrorOnMoreThanOne) {

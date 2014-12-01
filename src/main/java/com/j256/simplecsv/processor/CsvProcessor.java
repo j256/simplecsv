@@ -56,7 +56,7 @@ public class CsvProcessor<T> {
 	private boolean allowPartialLines;
 	private boolean alwaysTrimInput;
 
-	private final FieldInfo[] fieldInfos;
+	private final ColumnInfo[] columnInfos;
 	private final Constructor<T> constructor;
 
 	private final Map<Class<?>, Converter<?, ?>> converterMap = new HashMap<Class<?>, Converter<?, ?>>();
@@ -70,7 +70,7 @@ public class CsvProcessor<T> {
 	 * entity-class must also define a public no-arg contructor so the processor can instantiate them using reflection.
 	 */
 	public CsvProcessor(Class<T> entityClass) throws IllegalArgumentException {
-		List<FieldInfo> fieldInfos = new ArrayList<FieldInfo>();
+		List<ColumnInfo> columnInfos = new ArrayList<ColumnInfo>();
 		Set<Field> knownFields = new HashSet<Field>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : entityClass.getDeclaredFields()) {
@@ -81,14 +81,14 @@ public class CsvProcessor<T> {
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				@SuppressWarnings("unchecked")
 				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
-				FieldInfo fieldInfo = FieldInfo.fromField(field, castConverter);
-				if (fieldInfo != null) {
-					fieldInfos.add(fieldInfo);
+				ColumnInfo columnInfo = ColumnInfo.fromField(field, castConverter);
+				if (columnInfo != null) {
+					columnInfos.add(columnInfo);
 					field.setAccessible(true);
 				}
 			}
 		}
-		this.fieldInfos = fieldInfos.toArray(new FieldInfo[fieldInfos.size()]);
+		this.columnInfos = columnInfos.toArray(new ColumnInfo[columnInfos.size()]);
 		try {
 			this.constructor = entityClass.getConstructor();
 		} catch (Exception e) {
@@ -287,19 +287,19 @@ public class CsvProcessor<T> {
 	 *             exception should be thrown.
 	 */
 	public boolean validateHeaderColumns(String[] columns, ParseError parseError) {
-		if (columns.length != fieldInfos.length) {
+		if (columns.length != columnInfos.length) {
 			if (parseError != null) {
 				parseError.setErrorType(ErrorType.INVALID_HEADER);
-				parseError.setMessage("got " + columns.length + " header columns, expected " + fieldInfos.length);
+				parseError.setMessage("got " + columns.length + " header columns, expected " + columnInfos.length);
 			}
 			return false;
 		}
 		for (int i = 0; i < columns.length; i++) {
-			if (columns[i] == null || !columns[i].equals(fieldInfos[i].getColumnName())) {
+			if (columns[i] == null || !columns[i].equals(columnInfos[i].getColumnName())) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
 					parseError.setMessage("got column name '" + columns[i] + "', expected '"
-							+ fieldInfos[i].getColumnName() + "'");
+							+ columnInfos[i].getColumnName() + "'");
 				}
 				return false;
 			}
@@ -322,14 +322,14 @@ public class CsvProcessor<T> {
 	 *             exception should be thrown.
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
-		String[] headerColumns = new String[fieldInfos.length];
+		String[] headerColumns = new String[columnInfos.length];
 		StringBuilder sb = new StringBuilder(32);
 		int linePos = 0;
 		ParseError localParseError = parseError;
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
-		for (int i = 0; i < fieldInfos.length; i++) {
+		for (int i = 0; i < columnInfos.length; i++) {
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			sb.setLength(0);
@@ -386,14 +386,14 @@ public class CsvProcessor<T> {
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
-		for (FieldInfo fieldInfo : fieldInfos) {
+		for (ColumnInfo columnInfo : columnInfos) {
 			// we have to do this because a blank column may be ok
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
-				linePos = processQuotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
+				linePos = processQuotedLine(line, 1, linePos, columnInfo, target, null, localParseError);
 			} else {
-				linePos = processUnquotedLine(line, 1, linePos, fieldInfo, target, null, localParseError);
+				linePos = processUnquotedLine(line, 1, linePos, columnInfo, target, null, localParseError);
 			}
 			if (localParseError.isError()) {
 				if (localParseError == parseError) {
@@ -401,7 +401,7 @@ public class CsvProcessor<T> {
 					return null;
 				} else {
 					throw new ParseException("Problems parsing line at position " + linePos + " for type "
-							+ fieldInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
+							+ columnInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
 							linePos);
 				}
 			}
@@ -411,8 +411,8 @@ public class CsvProcessor<T> {
 			}
 			// NOTE: we can't break here if we are at the end of line because might be blank field
 		}
-		if (fieldCount < fieldInfos.length && !allowPartialLines) {
-			throw new ParseException("Line does not have " + fieldInfos.length + " columns: " + line, linePos);
+		if (fieldCount < columnInfos.length && !allowPartialLines) {
+			throw new ParseException("Line does not have " + columnInfos.length + " columns: " + line, linePos);
 		}
 		if (linePos < line.length()) {
 			throw new ParseException("Line has extra information past last column: " + line, linePos);
@@ -502,13 +502,13 @@ public class CsvProcessor<T> {
 	public String buildHeaderLine(boolean appendLineTermination) {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (FieldInfo fieldInfo : fieldInfos) {
+		for (ColumnInfo columnInfo : columnInfos) {
 			if (first) {
 				first = false;
 			} else {
 				sb.append(columnSeparator);
 			}
-			String header = fieldInfo.getColumnName();
+			String header = columnInfo.getColumnName();
 			// need to protect the column if it contains a quote
 			if (header.indexOf(columnQuote) >= 0) {
 				writeQuoted(sb, header);
@@ -533,13 +533,13 @@ public class CsvProcessor<T> {
 	public String buildLine(T entity, boolean appendLineTermination) {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (FieldInfo fieldInfo : fieldInfos) {
+		for (ColumnInfo columnInfo : columnInfos) {
 			if (first) {
 				first = false;
 			} else {
 				sb.append(columnSeparator);
 			}
-			Field field = fieldInfo.getField();
+			Field field = columnInfo.getField();
 			Object value;
 			try {
 				value = field.get(entity);
@@ -547,9 +547,9 @@ public class CsvProcessor<T> {
 				throw new IllegalStateException("Could not get value from entity field: " + field);
 			}
 			@SuppressWarnings("unchecked")
-			Converter<Object, Object> castConverter = (Converter<Object, Object>) fieldInfo.getConverter();
-			String str = castConverter.javaToString(fieldInfo, value);
-			boolean needsQuotes = fieldInfo.isNeedsQuotes();
+			Converter<Object, Object> castConverter = (Converter<Object, Object>) columnInfo.getConverter();
+			String str = castConverter.javaToString(columnInfo, value);
+			boolean needsQuotes = columnInfo.isNeedsQuotes();
 			if (str != null) {
 				// need to protect the column if it contains a quote
 				if (str.indexOf(columnQuote) >= 0) {
@@ -620,7 +620,7 @@ public class CsvProcessor<T> {
 		this.alwaysTrimInput = alwaysTrimInput;
 	}
 
-	private int processQuotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
+	private int processQuotedLine(String line, int lineNumber, int linePos, ColumnInfo columnInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 
 		// linePos is pointing at the first quote, move past it
@@ -683,7 +683,7 @@ public class CsvProcessor<T> {
 
 		if (sb == null) {
 			if (headerSb == null) {
-				extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, target, parseError);
+				extractAndAssignValue(line, lineNumber, columnInfo, fieldStart, fieldEnd, target, parseError);
 			} else {
 				headerSb.append(line, fieldStart, fieldEnd);
 			}
@@ -691,7 +691,7 @@ public class CsvProcessor<T> {
 			sb.append(line, fieldStart, fieldEnd);
 			String str = sb.toString();
 			if (headerSb == null) {
-				extractAndAssignValue(str, lineNumber, fieldInfo, 0, str.length(), target, parseError);
+				extractAndAssignValue(str, lineNumber, columnInfo, 0, str.length(), target, parseError);
 			} else {
 				headerSb.append(sb);
 			}
@@ -699,7 +699,7 @@ public class CsvProcessor<T> {
 		return linePos;
 	}
 
-	private int processUnquotedLine(String line, int lineNumber, int linePos, FieldInfo fieldInfo, Object target,
+	private int processUnquotedLine(String line, int lineNumber, int linePos, ColumnInfo columnInfo, Object target,
 			StringBuilder headerSb, ParseError parseError) {
 		int fieldStart = linePos;
 		linePos = line.indexOf(columnSeparator, fieldStart);
@@ -708,7 +708,7 @@ public class CsvProcessor<T> {
 		}
 
 		if (headerSb == null) {
-			extractAndAssignValue(line, lineNumber, fieldInfo, fieldStart, linePos, target, parseError);
+			extractAndAssignValue(line, lineNumber, columnInfo, fieldStart, linePos, target, parseError);
 		} else {
 			headerSb.append(line, fieldStart, linePos);
 		}
@@ -742,15 +742,15 @@ public class CsvProcessor<T> {
 	/**
 	 * Extract a value from the line, convert it into its java equivalent, and assign it to our target object.
 	 */
-	private void extractAndAssignValue(String line, int lineNumber, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
+	private void extractAndAssignValue(String line, int lineNumber, ColumnInfo columnInfo, int fieldStart, int fieldEnd,
 			Object target, ParseError parseError) {
-		Object value = extractValue(line, lineNumber, fieldInfo, fieldStart, fieldEnd, target, parseError);
+		Object value = extractValue(line, lineNumber, columnInfo, fieldStart, fieldEnd, target, parseError);
 		if (value == null) {
 			// either error or no value
 			return;
 		}
 		try {
-			fieldInfo.getField().set(target, value);
+			columnInfo.getField().set(target, value);
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());
@@ -762,18 +762,18 @@ public class CsvProcessor<T> {
 	/**
 	 * Extract a value from the line and convert it into its java equivalent.
 	 */
-	private Object extractValue(String line, int lineNumber, FieldInfo fieldInfo, int fieldStart, int fieldEnd,
+	private Object extractValue(String line, int lineNumber, ColumnInfo columnInfo, int fieldStart, int fieldEnd,
 			Object target, ParseError parseError) {
 
 		String columnStr = line.substring(fieldStart, fieldEnd);
-		Converter<?, ?> converter = fieldInfo.getConverter();
-		if (alwaysTrimInput || fieldInfo.isTrimInput() || converter.isAlwaysTrimInput()) {
+		Converter<?, ?> converter = columnInfo.getConverter();
+		if (alwaysTrimInput || columnInfo.isTrimInput() || converter.isAlwaysTrimInput()) {
 			columnStr = columnStr.trim();
 		}
-		if (columnStr.isEmpty() && fieldInfo.getDefaultValue() != null) {
-			columnStr = fieldInfo.getDefaultValue();
+		if (columnStr.isEmpty() && columnInfo.getDefaultValue() != null) {
+			columnStr = columnInfo.getDefaultValue();
 		}
-		if (columnStr.isEmpty() && fieldInfo.isRequired()) {
+		if (columnStr.isEmpty() && columnInfo.isRequired()) {
 			parseError.setErrorType(ErrorType.NO_HEADER);
 			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(fieldStart);
@@ -781,7 +781,7 @@ public class CsvProcessor<T> {
 		}
 
 		try {
-			return converter.stringToJava(line, lineNumber, fieldInfo, columnStr, parseError);
+			return converter.stringToJava(line, lineNumber, columnInfo, columnStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());

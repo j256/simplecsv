@@ -144,9 +144,9 @@ The code works with Java 6 or later.
 
 @cindex CsvField annotation
 @cindex @@CsvField
-The @code{@@CsvField} annotation is used to mark the fields in your entity that you want to write to and read from CSV files.
-It also allows you to customize the output format and other details for the particular field instance.  The following
-fields can be used:
+The @code{@@CsvField} annotation is used to mark the fields in your entity that you want to write to and read from CSV files
+as a column.  It also allows you to customize the output format and other details for the particular field instance.  The
+following fields from the annotation can be used:
 
 @table @code
 

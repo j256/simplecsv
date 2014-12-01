@@ -8,7 +8,7 @@ import java.text.ParseException;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class IntegerConverterTest extends AbstractConverterTest {
@@ -31,9 +31,9 @@ public class IntegerConverterTest extends AbstractConverterTest {
 	public void testInvalidFormat() throws Exception {
 		IntegerConverter converter = new IntegerConverter();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertNull(converter.stringToJava("line", 1, fieldInfo, "notanumber", parseError));
+		assertNull(converter.stringToJava("line", 1, columnInfo, "notanumber", parseError));
 		assertTrue(parseError.isError());
 	}
 

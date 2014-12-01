@@ -288,11 +288,11 @@ public class CsvProcessorTest {
 			return false;
 		}
 		@Override
-		public String javaToString(FieldInfo fieldInfo, String value) {
+		public String javaToString(ColumnInfo columnInfo, String value) {
 			return value;
 		}
 		@Override
-		public String stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
 			return value;
 		}
 	}

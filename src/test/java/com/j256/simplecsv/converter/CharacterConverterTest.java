@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class CharacterConverterTest extends AbstractConverterTest {
@@ -29,18 +29,18 @@ public class CharacterConverterTest extends AbstractConverterTest {
 	public void testMoreThanOne() {
 		CharacterConverter converter = new CharacterConverter();
 		Boolean configInfo = converter.configure(null, 0, null);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
 		char one = '1';
 		char two = '2';
 		String columnVal = new String(new char[] { one, two });
-		assertEquals((Object) one, converter.stringToJava("line", 1, fieldInfo, columnVal, parseError));
+		assertEquals((Object) one, converter.stringToJava("line", 1, columnInfo, columnVal, parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, CharacterConverter.PARSE_ERROR_IF_MORE_THAN_ONE_CHAR, null);
-		fieldInfo = FieldInfo.forTests(converter, configInfo);
-		converter.stringToJava("line", 1, fieldInfo, columnVal, parseError);
+		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		converter.stringToJava("line", 1, columnInfo, columnVal, parseError);
 		assertTrue(parseError.isError());
 	}
 }

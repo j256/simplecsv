@@ -7,7 +7,7 @@ import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 import com.j256.simplecsv.converter.StringConverter.ConfigInfo;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class StringConverterTest extends AbstractConverterTest {
@@ -25,15 +25,15 @@ public class StringConverterTest extends AbstractConverterTest {
 	public void testBlankNull() throws Exception {
 		StringConverter converter = new StringConverter();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
-		assertEquals("", converter.stringToJava("line", 1, fieldInfo, "", parseError));
+		assertEquals("", converter.stringToJava("line", 1, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, StringConverter.BLANK_IS_NULL, null);
-		fieldInfo = FieldInfo.forTests(converter, configInfo);
-		assertNull(converter.stringToJava("line", 1, fieldInfo, "", parseError));
+		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		assertNull(converter.stringToJava("line", 1, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
 		testConverter(converter, configInfo, null);
@@ -43,14 +43,14 @@ public class StringConverterTest extends AbstractConverterTest {
 	public void testTrimOutput() {
 		StringConverter converter = new StringConverter();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		String ok = "ok";
 		String spacedOk = " " + ok + " ";
-		assertEquals(spacedOk, converter.javaToString(fieldInfo, spacedOk));
+		assertEquals(spacedOk, converter.javaToString(columnInfo, spacedOk));
 
 		configInfo = converter.configure(null, StringConverter.TRIM_OUTPUT, null);
-		fieldInfo = FieldInfo.forTests(converter, configInfo);
-		assertEquals(ok, converter.javaToString(fieldInfo, spacedOk));
+		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		assertEquals(ok, converter.javaToString(columnInfo, spacedOk));
 	}
 }

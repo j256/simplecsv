@@ -3,7 +3,7 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -39,7 +39,7 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, UUID value) {
+	public String javaToString(ColumnInfo columnInfo, UUID value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -48,7 +48,7 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
-	public UUID stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+	public UUID stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
 		if (value.isEmpty()) {
 			return null;
 		} else {

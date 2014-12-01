@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.EnumConverter.ConfigInfo;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class EnumConverterTest extends AbstractConverterTest {
@@ -33,9 +33,9 @@ public class EnumConverterTest extends AbstractConverterTest {
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		MyEnum unknownValue = MyEnum.RED;
 		ConfigInfo configInfo = converter.configure(unknownValue.name(), EnumConverter.FORMAT_IS_UNKNOWN_VALUE, field);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		Enum<?> converted = converter.stringToJava("line", 1, fieldInfo, "unknown-value", parseError);
+		Enum<?> converted = converter.stringToJava("line", 1, columnInfo, "unknown-value", parseError);
 		assertEquals(unknownValue, converted);
 		assertFalse(parseError.isError());
 	}
@@ -59,9 +59,9 @@ public class EnumConverterTest extends AbstractConverterTest {
 		EnumConverter converter = new EnumConverter();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		ConfigInfo configInfo = converter.configure(null, 0, field);
-		FieldInfo fieldInfo = FieldInfo.forTests(converter, configInfo);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertNull(converter.stringToJava("line", 1, fieldInfo, "unknown-value", parseError));
+		assertNull(converter.stringToJava("line", 1, columnInfo, "unknown-value", parseError));
 		assertTrue(parseError.isError());
 	}
 

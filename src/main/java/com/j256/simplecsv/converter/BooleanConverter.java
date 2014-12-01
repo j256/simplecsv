@@ -3,7 +3,7 @@ package com.j256.simplecsv.converter;
 import java.lang.reflect.Field;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -84,11 +84,11 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, Boolean value) {
+	public String javaToString(ColumnInfo columnInfo, Boolean value) {
 		if (value == null) {
 			return null;
 		}
-		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		if (value) {
 			return configInfo.trueString;
 		} else {
@@ -97,8 +97,8 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
-	public Boolean stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
-		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+	public Boolean stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
 		} else if (value.equals(configInfo.trueString)) {

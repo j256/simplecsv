@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.j256.simplecsv.common.CsvField;
-import com.j256.simplecsv.processor.FieldInfo;
+import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -72,7 +72,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
-	public String javaToString(FieldInfo fieldInfo, Enum<?> value) {
+	public String javaToString(ColumnInfo columnInfo, Enum<?> value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -81,11 +81,11 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
-	public Enum<?> stringToJava(String line, int lineNumber, FieldInfo fieldInfo, String value, ParseError parseError) {
+	public Enum<?> stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
 		if (value.isEmpty()) {
 			return null;
 		}
-		ConfigInfo configInfo = (ConfigInfo) fieldInfo.getConfigInfo();
+		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		Enum<?> enumValue = configInfo.enumStringMap.get(value);
 		if (enumValue != null) {
 			return enumValue;
