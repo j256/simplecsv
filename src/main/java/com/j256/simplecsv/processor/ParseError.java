@@ -7,7 +7,7 @@ import com.j256.simplecsv.converter.Converter;
  * 
  * <p>
  * To use in your {@link Converter} class, you should return null from
- * {@link Converter#stringToJava(String, int, FieldInfo, String, ParseError)} and set the error type to something other
+ * {@link Converter#stringToJava(String, int, ColumnInfo, String, ParseError)} and set the error type to something other
  * than {@link ErrorType#NONE}. The message can be null if there is no additional information about the error.
  * </p>
  * 
