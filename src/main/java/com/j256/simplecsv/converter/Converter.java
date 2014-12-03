@@ -81,8 +81,8 @@ public interface Converter<T, C> {
 	 * @return The Java equivalent object of the value parameter or null. Null can mean a null value or if the
 	 *         parseError type is set to something other than {@link ErrorType#NONE}.
 	 * @throws ParseException
-	 *             If there was some sort of parse or other error. It is better to use the parseError argument instead.
-	 *             All RuntimeExceptions will be caught as well.
+	 *             If there was some sort of parse or other error. It is better to return null and use the parseError
+	 *             argument instead. All RuntimeExceptions will be caught as well.
 	 */
 	public T stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException;

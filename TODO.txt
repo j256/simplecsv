@@ -11,3 +11,5 @@ Used to maintain requested features or future work.
 	- no data, only header
 	- specify the version in the name of the column
 - pass in an optional Callable<T> which creates the entities if you can't force the public constructor
+- flag on processor to ignore any unknown fields
+- flag on processor to allow columns to be moved around in which case their location is mapped

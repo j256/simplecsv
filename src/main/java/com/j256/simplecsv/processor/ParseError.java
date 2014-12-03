@@ -104,6 +104,8 @@ public class ParseError {
 		INVALID_HEADER("no valid header line"),
 		/** null value for this field is invalid */
 		INVALID_NULL("null value is invalid"),
+		/** field is required and no data specified */
+		REQUIRED("required field"),
 		/** internal error was encountered */
 		INTERNAL_ERROR("internal error"),
 		// end

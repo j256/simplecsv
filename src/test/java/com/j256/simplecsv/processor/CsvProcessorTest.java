@@ -13,11 +13,13 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.junit.Test;
 
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
+import com.j256.simplecsv.converter.IntegerConverter;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 public class CsvProcessorTest {
@@ -218,6 +220,194 @@ public class CsvProcessorTest {
 		assertEquals("1,\"\",2,", writer.toString());
 	}
 
+	@Test
+	public void testSubClass() throws Exception {
+		CsvProcessor<BasicSubclass> processor = new CsvProcessor<BasicSubclass>(BasicSubclass.class);
+		int intValue = 1;
+		String str = "\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		BasicSubclass basicSub = processor.processRow(line, null);
+		assertEquals(intValue, basicSub.getIntValue());
+		assertEquals(str, basicSub.getString());
+		assertEquals(longValue, basicSub.getLongValue());
+		assertEquals(unquoted, basicSub.getUnquoted());
+	}
+
+	@Test
+	public void testSubClassDupField() throws Exception {
+		CsvProcessor<BasicSubclassDupField> processor =
+				new CsvProcessor<BasicSubclassDupField>(BasicSubclassDupField.class);
+		int intValue = 1;
+		String str = "\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		BasicSubclassDupField basicSub = processor.processRow(line, null);
+		assertEquals(0, basicSub.getIntValue());
+		assertEquals(intValue, basicSub.intValue);
+		assertEquals(str, basicSub.getString());
+		assertEquals(longValue, basicSub.getLongValue());
+		assertEquals(unquoted, basicSub.getUnquoted());
+	}
+
+	@Test
+	public void testRegisterConverter() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.registerConverter(int.class, new IntPlusOneConverter());
+		int intValue = 1;
+		String str = "\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		Basic basic = processor.processRow(line, null);
+		// int value gets +1 in the [wierd] converter
+		assertEquals(intValue + 1, basic.getIntValue());
+		assertEquals(str, basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquoted());
+
+		processor = new CsvProcessor<Basic>(Basic.class);
+		processor.registerConverter(int.class, new IntPlusOneConverter());
+		// override it
+		processor.withConverter(int.class, new IntegerConverter());
+		basic = processor.processRow(line, null);
+		assertEquals(intValue, basic.getIntValue());
+	}
+
+	@Test
+	public void testDefaultValue() throws Exception {
+		CsvProcessor<DefaultValue> processor = new CsvProcessor<DefaultValue>(DefaultValue.class);
+		DefaultValue defaultValue = processor.processRow("", null);
+		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.defaultValue);
+	}
+
+	@Test
+	public void testCallableConstructor() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		Basic basic = processor.processRow(",,,", null);
+		// initially it is 0
+		assertEquals(0, basic.intValue);
+		processor = new CsvProcessor<Basic>(Basic.class);
+		final int value = 123213;
+		processor.setConstructorCallable(new Callable<CsvProcessorTest.Basic>() {
+			@Override
+			public Basic call() {
+				Basic basic = new Basic();
+				basic.intValue = value;
+				return basic;
+			}
+		});
+		basic = processor.processRow(",,,", null);
+		assertEquals(value, basic.intValue);
+
+		processor = new CsvProcessor<Basic>(Basic.class);
+		processor.setConstructorCallable(new Callable<CsvProcessorTest.Basic>() {
+			@Override
+			public Basic call() {
+				return null;
+			}
+		});
+		// make sure this resets the callable is reset
+		processor.withConstructorCallable(null);
+		basic = processor.processRow(",,,", null);
+		assertEquals(0, basic.intValue);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testCallableConstructorThrows() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.setConstructorCallable(new Callable<CsvProcessorTest.Basic>() {
+			@Override
+			public Basic call() {
+				throw new IllegalStateException("expected");
+			}
+		});
+		processor.processRow(",,,", null);
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testNoClass() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>();
+		processor.processRow("", null);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testRequired() throws Exception {
+		CsvProcessor<Required> processor = new CsvProcessor<Required>(Required.class);
+		processor.processRow("", null);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testInvalidMidFieldQuote() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.processRow("0,\"str\"ing\",1,unquoted", null);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testNoEndQuote() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.processRow("0,\"string,1,unquoted", null);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNoFields() {
+		CsvProcessor<Object> processor = new CsvProcessor<Object>(Object.class);
+		processor.initialize();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testNoConstructor() {
+		CsvProcessor<NoConstructor> processor = new CsvProcessor<NoConstructor>(NoConstructor.class);
+		processor.initialize();
+	}
+
+	@Test(expected = ParseException.class)
+	public void testInvalidStringValue() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withConverter(int.class, new IntThrowsConverter());
+		processor.processRow("notint,string,1,unquoted", null);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testConverterThrows() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withConverter(int.class, new IntThrowsConverter());
+		processor.processRow("0,string,1,unquoted", null);
+	}
+
+	@Test
+	public void testCoverage() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>();
+		processor.setEntityClass(Basic.class);
+		processor.withEntityClass(Basic.class);
+		processor.setAllowPartialLines(true);
+		processor.withAllowPartialLines(true);
+		processor.setAlwaysTrimInput(true);
+		processor.withAlwaysTrimInput(true);
+		char quote = '\'';
+		processor.setColumnQuote(quote);
+		processor.withColumnQuote(quote);
+		char sep = '|';
+		processor.setColumnSeparator(sep);
+		processor.withColumnSeparator(sep);
+		String lineTerm = "\r\n";
+		processor.setLineTermination(lineTerm);
+		processor.withLineTermination(lineTerm);
+		processor.initialize();
+		int intValue = 1;
+		String str = "\"";
+		long longValue = 2L;
+		String unquoted = "u";
+		String line = "" + intValue + sep + quote + str + quote + sep + longValue + sep + unquoted + lineTerm;
+		Basic basic = processor.processRow(line, null);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(str, basic.getString());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquoted, basic.getUnquoted());
+	}
+
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
 			throws ParseException {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
@@ -245,7 +435,6 @@ public class CsvProcessorTest {
 		@CsvField(converterClass = UnquotedStringConverter.class)
 		private String unquoted;
 
-		@SuppressWarnings("unused")
 		public Basic() {
 			// for simplecsv
 		}
@@ -274,6 +463,46 @@ public class CsvProcessorTest {
 		}
 	}
 
+	private static class BasicSubclass extends Basic {
+		@SuppressWarnings("unused")
+		public BasicSubclass() {
+			// for simplecsv
+		}
+	}
+
+	private static class BasicSubclassDupField extends Basic {
+		@CsvField
+		private int intValue;
+		@SuppressWarnings("unused")
+		public BasicSubclassDupField() {
+			// for simplecsv
+		}
+	}
+
+	private static class DefaultValue {
+		public static final String DEFAULT_VALUE = "1";
+		@CsvField(defaultValue = DEFAULT_VALUE)
+		private int defaultValue;
+		@SuppressWarnings("unused")
+		public DefaultValue() {
+			// for simplecsv
+		}
+	}
+
+	private static class Required {
+		@CsvField(required = true)
+		private int defaultValue;
+		@SuppressWarnings("unused")
+		public Required() {
+			// for simplecsv
+		}
+	}
+
+	private static class NoConstructor {
+		@CsvField
+		private int value;
+	}
+
 	public static class UnquotedStringConverter implements Converter<String, Void> {
 		@Override
 		public Void configure(String format, long flags, Field field) {
@@ -292,8 +521,59 @@ public class CsvProcessorTest {
 			return value;
 		}
 		@Override
-		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+				ParseError parseError) {
 			return value;
+		}
+	}
+
+	public static class IntPlusOneConverter implements Converter<Integer, Void> {
+		@Override
+		public Void configure(String format, long flags, Field field) {
+			return null;
+		}
+		@Override
+		public boolean isNeedsQuotes(Void configInfo) {
+			return false;
+		}
+		@Override
+		public boolean isAlwaysTrimInput() {
+			return false;
+		}
+		@Override
+		public String javaToString(ColumnInfo columnInfo, Integer value) {
+			return value.toString();
+		}
+		@Override
+		public Integer stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+				ParseError parseError) {
+			return Integer.parseInt(value) + 1;
+		}
+	}
+
+	public static class IntThrowsConverter implements Converter<Integer, Void> {
+		@Override
+		public Void configure(String format, long flags, Field field) {
+			return null;
+		}
+		@Override
+		public boolean isNeedsQuotes(Void configInfo) {
+			return false;
+		}
+		@Override
+		public boolean isAlwaysTrimInput() {
+			return false;
+		}
+		@Override
+		public String javaToString(ColumnInfo columnInfo, Integer value) {
+			return value.toString();
+		}
+		@Override
+		public Integer stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+				ParseError parseError) throws ParseException {
+			// this could throw a runtime exception
+			Integer.parseInt(value);
+			throw new ParseException("value should be an invalid int", 0);
 		}
 	}
 }

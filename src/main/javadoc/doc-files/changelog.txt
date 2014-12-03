@@ -1,3 +1,9 @@
+0.6: ??/??/2014
+	* Fixed the handling of subclasses.
+	* Fixed the registering of class converters.
+	* Added with...() type methods.
+	* Added manual and auto-config and better Spring wiring setup.
+
 0.5: 11/26/2014
 	* Added alwaysTrim to Converter and CsvProcessor.
 	* Tweaked the error output.
