@@ -109,8 +109,9 @@ public class CsvProcessor<T> {
 	 * This initializing the internal configuration information. It will self initialize if you start calling read/write
 	 * methods but this is here if you are using the class concurrently and need to force the initialization.
 	 */
-	public void initialize() {
+	public CsvProcessor<T> initialize() {
 		configureEntityClass();
+		return this;
 	}
 
 	/**
@@ -130,7 +131,7 @@ public class CsvProcessor<T> {
 	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
-	 *             an exception should be thrown.
+	 *             an exception should not be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -157,7 +158,7 @@ public class CsvProcessor<T> {
 	 * @return A list of entities read in or null if parseErrors is not null.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
-	 *             an exception should be thrown.
+	 *             an exception should not be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -204,15 +205,15 @@ public class CsvProcessor<T> {
 	 * 
 	 * @param bufferedReader
 	 *            Where to read the header from.
+	 * @param validate
+	 *            Validate the header after it is read. This will return null if the header is not valid.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
-	 * @param validate
-	 *            Validate the header after it is read. This will return null if the header is not valid.
 	 * @return Array of header column names or null on error.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -254,7 +255,7 @@ public class CsvProcessor<T> {
 	 *         EOF.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
@@ -279,7 +280,7 @@ public class CsvProcessor<T> {
 	 * @return true if the header matched the column names configured here otherwise false.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 */
 	public boolean validateHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
@@ -298,7 +299,7 @@ public class CsvProcessor<T> {
 	 * @return true if the header matched the column names configured here otherwise false.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 */
 	public boolean validateHeaderColumns(String[] columns, ParseError parseError) {
 		checkEntityConfig();
@@ -334,7 +335,7 @@ public class CsvProcessor<T> {
 	 *         array will be the same length as the number of configured columns so some elements may be null.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
@@ -384,7 +385,7 @@ public class CsvProcessor<T> {
 	 * @return Returns a processed entity or null if an error and parseError has been set.
 	 * @throws ParseException
 	 *             Thrown on any parsing problems. If parseError is not null then the error will be added there and an
-	 *             exception should be thrown.
+	 *             exception should not be thrown.
 	 */
 	public T processRow(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
