@@ -71,4 +71,14 @@ public @interface CsvField {
 	 * Default is the empty string.
 	 */
 	public String defaultValue() default DEFAULT_VALUE;
+
+	/**
+	 * Set to true if a column is optional and can be skipped in the input altogether. This is different from the
+	 * {@link #required()} field which is about whether the value can be _blank_ or not. If this is true then the column
+	 * doesn't have to be in the header or the lines at all. Default is false.
+	 * 
+	 * <b>WARNING:</b> If you are using optional ordering, the same CsvProcessor cannot be used with multiple files at
+	 * the same time since the column lists can be dynamic.
+	 */
+	public boolean optionalColumn() default false;
 }

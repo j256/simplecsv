@@ -40,9 +40,9 @@ public class CsvProcessorTest {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	@Test
@@ -56,9 +56,9 @@ public class CsvProcessorTest {
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
-		assertEquals("\"", basic.getString());
+		assertEquals("\"", basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	@Test
@@ -72,9 +72,9 @@ public class CsvProcessorTest {
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
-		assertEquals("\"wow\"", basic.getString());
+		assertEquals("\"wow\"", basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	@Test
@@ -87,7 +87,7 @@ public class CsvProcessorTest {
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
-		assertEquals("\"", basic.getString());
+		assertEquals("\"", basic.getStringValue());
 	}
 
 	@Test(expected = ParseException.class)
@@ -132,9 +132,9 @@ public class CsvProcessorTest {
 		String written = processor.buildLine(basic, false);
 		basic = processor.processRow(written, null);
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	@Test
@@ -166,22 +166,22 @@ public class CsvProcessorTest {
 		file.delete();
 		processor.writeAll(file, Collections.singletonList(basic), true);
 
-		List<Basic> entities = processor.readAll(file, true, true, null);
+		List<Basic> entities = processor.readAll(file, null);
 		assertNotNull(entities);
 		assertEquals(1, entities.size());
 		basic = entities.get(0);
 
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	@Test(expected = ParseException.class)
 	public void testReadNoHeaderFile() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		StringReader reader = new StringReader("");
-		List<Basic> entities = processor.readAll(reader, true, true, null);
+		List<Basic> entities = processor.readAll(reader, null);
 		assertNull(entities);
 	}
 
@@ -190,23 +190,153 @@ public class CsvProcessorTest {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		StringReader reader = new StringReader("");
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
-		List<Basic> entities = processor.readAll(reader, true, true, parseErrors);
+		List<Basic> entities = processor.readAll(reader, parseErrors);
 		assertNull(entities);
 		assertEquals(1, parseErrors.size());
 
 		reader = new StringReader("");
 		List<ParseError> errors = new ArrayList<ParseError>();
-		entities = processor.readAll(reader, true, true, errors);
+		entities = processor.readAll(reader, errors);
 		assertNull(entities);
 		assertEquals(1, errors.size());
 		assertEquals(ErrorType.NO_HEADER, errors.get(0).getErrorType());
 
 		reader = new StringReader("bad header\n");
 		errors.clear();
-		entities = processor.readAll(reader, true, true, errors);
+		entities = processor.readAll(reader, errors);
 		assertNull(entities);
 		assertEquals(1, errors.size());
 		assertEquals(ErrorType.INVALID_HEADER, errors.get(0).getErrorType());
+	}
+
+	@Test
+	public void testInvalidHeaderOrder() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("string,intValue,longValue,unquoted");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, parseErrors);
+		assertNull(entities);
+		assertEquals(1, parseErrors.size());
+		assertEquals(ErrorType.INVALID_HEADER, parseErrors.get(0).getErrorType());
+
+		processor.withFlexibleOrder(true);
+		reader = new StringReader("string,intValue,longValue,unquoted");
+		parseErrors.clear();
+		entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertNotNull(entities);
+		assertEquals(0, entities.size());
+	}
+
+	@Test
+	public void testOptionalHeaders() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("intValue,string,longValue");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, parseErrors);
+		assertNotNull(entities);
+		assertEquals(0, entities.size());
+		assertEquals(0, parseErrors.size());
+	}
+
+	@Test
+	public void testFlexibleOrderEntities() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withFlexibleOrder(true);
+		String strValue = "fjeofjewf";
+		int intValue = 123131;
+		long longValue = 123213213123L;
+		String unquotedValue = "fewopjfpewfjw";
+
+		// different order #1
+		StringReader reader = new StringReader("string,intValue,longValue,unquoted\n" //
+				+ strValue + "," + intValue + "," + longValue + "," + unquotedValue + "\n");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertEquals(1, entities.size());
+		Basic basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
+
+		// different order #2
+		reader = new StringReader("longValue,unquoted,intValue,string\n" //
+				+ longValue + "," + unquotedValue + "," + intValue + "," + strValue + "\n");
+		parseErrors.clear();
+		entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertEquals(1, entities.size());
+		basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
+	}
+
+	@Test
+	public void testColumnNameMatcher() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withColumnNameMatcher(new ColumnNameMatcher() {
+			@Override
+			public boolean matchesColumnName(String definitionName, String csvName) {
+				return csvName.startsWith(definitionName);
+			}
+		});
+		String strValue = "fjeofjewf";
+		int intValue = 123131;
+		long longValue = 123213213123L;
+		String unquotedValue = "fewopjfpewfjw";
+
+		// column names with suffixes
+		StringReader reader = new StringReader("intValue*,string1,longValue2,unquoted\n" //
+				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + "\n");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertEquals(1, entities.size());
+		Basic basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
+	}
+
+	@Test
+	public void testIgnoreUnknownColumns() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withIgnoreUnknownColumns(true);
+		String strValue = "fjeofjewf";
+		int intValue = 123131;
+		long longValue = 123213213123L;
+		String unquotedValue = "fewopjfpewfjw";
+
+		// unknown field at the end
+		StringReader reader = new StringReader("intValue,string,longValue,unquoted,unknown\n" //
+				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + ",unknownValue\n");
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		List<Basic> entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertEquals(1, entities.size());
+		Basic basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
+
+		// unknown field in the middle
+		reader = new StringReader("intValue,string,unknown,longValue,unquoted\n" //
+				+ intValue + "," + strValue + ",unknownValue," + longValue + "," + unquotedValue + "\n");
+		parseErrors = new ArrayList<ParseError>();
+		entities = processor.readAll(reader, parseErrors);
+		assertEquals(0, parseErrors.size());
+		assertEquals(1, entities.size());
+		basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
 	}
 
 	@Test
@@ -230,9 +360,9 @@ public class CsvProcessorTest {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
 		BasicSubclass basicSub = processor.processRow(line, null);
 		assertEquals(intValue, basicSub.getIntValue());
-		assertEquals(str, basicSub.getString());
+		assertEquals(str, basicSub.getStringValue());
 		assertEquals(longValue, basicSub.getLongValue());
-		assertEquals(unquoted, basicSub.getUnquoted());
+		assertEquals(unquoted, basicSub.getUnquotedValue());
 	}
 
 	@Test
@@ -247,9 +377,9 @@ public class CsvProcessorTest {
 		BasicSubclassDupField basicSub = processor.processRow(line, null);
 		assertEquals(0, basicSub.getIntValue());
 		assertEquals(intValue, basicSub.intValue);
-		assertEquals(str, basicSub.getString());
+		assertEquals(str, basicSub.getStringValue());
 		assertEquals(longValue, basicSub.getLongValue());
-		assertEquals(unquoted, basicSub.getUnquoted());
+		assertEquals(unquoted, basicSub.getUnquotedValue());
 	}
 
 	@Test
@@ -264,9 +394,9 @@ public class CsvProcessorTest {
 		Basic basic = processor.processRow(line, null);
 		// int value gets +1 in the [wierd] converter
 		assertEquals(intValue + 1, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 
 		processor = new CsvProcessor<Basic>(Basic.class);
 		processor.registerConverter(int.class, new IntPlusOneConverter());
@@ -278,6 +408,13 @@ public class CsvProcessorTest {
 
 	@Test
 	public void testDefaultValue() throws Exception {
+		CsvProcessor<DefaultValue> processor = new CsvProcessor<DefaultValue>(DefaultValue.class);
+		DefaultValue defaultValue = processor.processRow("", null);
+		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.defaultValue);
+	}
+
+	@Test
+	public void testBlankLastField() throws Exception {
 		CsvProcessor<DefaultValue> processor = new CsvProcessor<DefaultValue>(DefaultValue.class);
 		DefaultValue defaultValue = processor.processRow("", null);
 		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.defaultValue);
@@ -403,9 +540,9 @@ public class CsvProcessorTest {
 		String line = "" + intValue + sep + quote + str + quote + sep + longValue + sep + unquoted + lineTerm;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
@@ -413,16 +550,16 @@ public class CsvProcessorTest {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 
 		String written = processor.buildLine(basic, false);
 		basic = processor.processRow(written, null);
 		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getString());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquoted());
+		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
 	private static class Basic {
@@ -432,7 +569,7 @@ public class CsvProcessorTest {
 		private String string;
 		@CsvField
 		private long longValue;
-		@CsvField(converterClass = UnquotedStringConverter.class)
+		@CsvField(converterClass = UnquotedStringConverter.class, optionalColumn = true)
 		private String unquoted;
 
 		public Basic() {
@@ -450,7 +587,7 @@ public class CsvProcessorTest {
 			return intValue;
 		}
 
-		public String getString() {
+		public String getStringValue() {
 			return string;
 		}
 
@@ -458,7 +595,7 @@ public class CsvProcessorTest {
 			return longValue;
 		}
 
-		public String getUnquoted() {
+		public String getUnquotedValue() {
 			return unquoted;
 		}
 	}

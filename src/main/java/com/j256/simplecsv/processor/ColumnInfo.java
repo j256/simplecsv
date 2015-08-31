@@ -18,21 +18,25 @@ public class ColumnInfo {
 	private final Converter<?, ?> converter;
 	private final Object configInfo;
 	private final String columnName;
+	private final int position;
 	private final boolean required;
 	private final boolean trimInput;
 	private final boolean needsQuotes;
 	private final String defaultValue;
+	private final boolean optionalColumn;
 
-	private ColumnInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, boolean required,
-			boolean trimInput, boolean needsQuotes, String defaultValue) {
+	private ColumnInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, int position,
+			boolean required, boolean trimInput, boolean needsQuotes, String defaultValue, boolean optionalColumn) {
 		this.field = field;
 		this.converter = converter;
 		this.configInfo = configInfo;
 		this.columnName = columnName;
+		this.position = position;
 		this.required = required;
 		this.trimInput = trimInput;
 		this.needsQuotes = needsQuotes;
 		this.defaultValue = defaultValue;
+		this.optionalColumn = optionalColumn;
 	}
 
 	/**
@@ -63,6 +67,13 @@ public class ColumnInfo {
 	 */
 	public String getColumnName() {
 		return columnName;
+	}
+
+	/**
+	 * Position the column appears in the file.
+	 */
+	public int getPosition() {
+		return position;
 	}
 
 	/**
@@ -100,9 +111,18 @@ public class ColumnInfo {
 	}
 
 	/**
+	 * Returns whether the column is optional or not.
+	 * 
+	 * @see CsvField#optionalColumn()
+	 */
+	public boolean isOptionalColumn() {
+		return optionalColumn;
+	}
+
+	/**
 	 * Make a column-info instance from a Java Field.
 	 */
-	public static ColumnInfo fromField(Field field, Converter<?, ?> converter) {
+	public static ColumnInfo fromField(Field field, Converter<?, ?> converter, int columnCount) {
 		CsvField csvField = field.getAnnotation(CsvField.class);
 		if (csvField == null) {
 			return null;
@@ -140,14 +160,14 @@ public class ColumnInfo {
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new ColumnInfo(field, converter, configInfo, columnName, csvField.required(), csvField.trimInput(),
-				needsQuotes, defaultValue);
+		return new ColumnInfo(field, converter, configInfo, columnName, columnCount, csvField.required(),
+				csvField.trimInput(), needsQuotes, defaultValue, csvField.optionalColumn());
 	}
 
 	/**
 	 * For testing purposes.
 	 */
 	public static ColumnInfo forTests(Converter<?, ?> converter, Object configInfo) {
-		return new ColumnInfo(null, converter, configInfo, "name", false, false, false, null);
+		return new ColumnInfo(null, converter, configInfo, "name", 0, false, false, false, null, false);
 	}
 }

@@ -44,8 +44,7 @@ public class BasicExample {
 		System.out.println();
 
 		// now read in the accounts
-		List<Account> readAccounts =
-				csvProcessor.readAll(csvFile, true /* read in header */, true /* validate header */, null);
+		List<Account> readAccounts = csvProcessor.readAll(csvFile, null);
 
 		// print out our read in accounts
 		printAccounts(readAccounts);

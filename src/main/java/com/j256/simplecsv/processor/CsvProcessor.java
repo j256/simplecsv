@@ -58,18 +58,32 @@ public class CsvProcessor<T> {
 	 */
 	public static final String DEFAULT_LINE_TERMINATION = System.getProperty("line.separator");
 
+	private static ColumnNameMatcher stringEqualsColumnNameMatcher = new ColumnNameMatcher() {
+		@Override
+		public boolean matchesColumnName(String definitionName, String csvName) {
+			return definitionName.equals(csvName);
+		}
+	};
+
 	private char columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 	private char columnQuote = DEFAULT_COLUMN_QUOTE;
 	private String lineTermination = DEFAULT_LINE_TERMINATION;
 	private boolean allowPartialLines;
 	private boolean alwaysTrimInput;
+	private boolean headerValidation = true;
+	private boolean firstLineHeader = true;
+	private boolean flexibleOrder;
+	private boolean ignoreUnknownColumns;
+	private ColumnNameMatcher columnNameMatcher = stringEqualsColumnNameMatcher;
 
 	private Class<T> entityClass;
-	private ColumnInfo[] columnInfos;
 	private Constructor<T> constructor;
 	private Callable<T> constructorCallable;
 
 	private final Map<Class<?>, Converter<?, ?>> converterMap = new HashMap<Class<?>, Converter<?, ?>>();
+
+	private List<ColumnInfo> allColumnInfos;
+	private Map<Integer, ColumnInfo> columnPositionInfoMap;
 
 	{
 		ConverterUtils.addInternalConverters(converterMap);
@@ -121,9 +135,6 @@ public class CsvProcessor<T> {
 	 *            Where to read the header and entities from. It will be closed when the method returns.
 	 * @param firstLineHeader
 	 *            Set to true to ignore the first line as the header.
-	 * @param validateHeader
-	 *            Set to true if the first line will be read and validated. If the first line header does not match what
-	 *            it should then null will be returned.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
 	 *            is true and the header does not match then no additional lines will be returned. If this is null then
@@ -135,10 +146,9 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public List<T> readAll(File file, boolean firstLineHeader, boolean validateHeader,
-			Collection<ParseError> parseErrors) throws IOException, ParseException {
+	public List<T> readAll(File file, Collection<ParseError> parseErrors) throws IOException, ParseException {
 		checkEntityConfig();
-		return readAll(new FileReader(file), firstLineHeader, validateHeader, parseErrors);
+		return readAll(new FileReader(file), parseErrors);
 	}
 
 	/**
@@ -146,11 +156,6 @@ public class CsvProcessor<T> {
 	 * 
 	 * @param reader
 	 *            Where to read the header and entities from. It will be closed when the method returns.
-	 * @param firstLineHeader
-	 *            Set to true to ignore the first line as the header.
-	 * @param validateHeader
-	 *            Set to true if the first line will be read and validated. If the first line header does not match what
-	 *            it should then null will be returned.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
 	 *            is true and the header does not match then no additional lines will be returned. If this is null then
@@ -162,17 +167,17 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public List<T> readAll(Reader reader, boolean firstLineHeader, boolean validateHeader,
-			Collection<ParseError> parseErrors) throws IOException, ParseException {
+	public List<T> readAll(Reader reader, Collection<ParseError> parseErrors) throws IOException, ParseException {
 		checkEntityConfig();
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		try {
 			ParseError parseError = null;
+			// we do this to reuse the parse error objects if we can
 			if (parseErrors != null) {
 				parseError = new ParseError();
 			}
 			if (firstLineHeader) {
-				if (readHeader(bufferedReader, validateHeader, parseError) == null) {
+				if (readHeader(bufferedReader, parseError) == null) {
 					if (parseError != null && parseError.isError()) {
 						parseErrors.add(parseError);
 					}
@@ -190,6 +195,8 @@ public class CsvProcessor<T> {
 				} else if (parseError != null && parseError.isError()) {
 					// if there was an error then add it to the list
 					parseErrors.add(parseError);
+					// once we use it, we need to create another one
+					parseError = new ParseError();
 				} else {
 					// if no error (and no exception) then EOF
 					return results;
@@ -217,8 +224,7 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public String[] readHeader(BufferedReader bufferedReader, boolean validate, ParseError parseError)
-			throws ParseException, IOException {
+	public String[] readHeader(BufferedReader bufferedReader, ParseError parseError) throws ParseException, IOException {
 		checkEntityConfig();
 		String header = bufferedReader.readLine();
 		if (header == null) {
@@ -233,7 +239,7 @@ public class CsvProcessor<T> {
 		String[] columns = processHeader(header, parseError);
 		if (columns == null) {
 			return null;
-		} else if (validate && !validateHeaderColumns(columns, parseError)) {
+		} else if (headerValidation && !validateHeaderColumns(columns, parseError)) {
 			if (parseError == null) {
 				throw new ParseException("header line is not valid: " + header, 0);
 			} else {
@@ -303,24 +309,74 @@ public class CsvProcessor<T> {
 	 */
 	public boolean validateHeaderColumns(String[] columns, ParseError parseError) {
 		checkEntityConfig();
-		if (columns.length != columnInfos.length) {
-			if (parseError != null) {
-				parseError.setErrorType(ErrorType.INVALID_HEADER);
-				parseError.setMessage("got " + columns.length + " header columns, expected " + columnInfos.length);
-			}
-			return false;
+		boolean result = true;
+
+		Map<String, ColumnInfo> columnNameToInfoMap = new HashMap<String, ColumnInfo>();
+		for (ColumnInfo columnInfo : allColumnInfos) {
+			columnNameToInfoMap.put(columnInfo.getColumnName(), columnInfo);
 		}
+
+		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
+		int lastColumnInfoPosition = -1;
 		for (int i = 0; i < columns.length; i++) {
-			if (columns[i] == null || !columns[i].equals(columnInfos[i].getColumnName())) {
+			ColumnInfo matchedColumnInfo = null;
+			if (columnNameMatcher == null) {
+				matchedColumnInfo = columnNameToInfoMap.get(columns[i]);
+			} else {
+				// have to do a N^2 search
+				for (ColumnInfo columnInfo : allColumnInfos) {
+					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), columns[i])) {
+						matchedColumnInfo = columnInfo;
+						break;
+					}
+				}
+			}
+
+			if (matchedColumnInfo == null) {
+				if (!ignoreUnknownColumns) {
+					if (parseError != null) {
+						parseError.setErrorType(ErrorType.INVALID_HEADER);
+						parseError.setMessage("column name '" + columns[i] + "' is unknown");
+					}
+					result = false;
+				}
+			} else {
+				if (!flexibleOrder && matchedColumnInfo.getPosition() <= lastColumnInfoPosition) {
+					if (parseError != null) {
+						parseError.setErrorType(ErrorType.INVALID_HEADER);
+						parseError.setMessage("column name '" + columns[i] + "' is not in the proper order");
+					}
+					result = false;
+				} else {
+					lastColumnInfoPosition = matchedColumnInfo.getPosition();
+				}
+				// remove it from the map once we've matched with it
+				columnNameToInfoMap.remove(matchedColumnInfo.getColumnName());
+				columnPositionInfoMap.put(i, matchedColumnInfo);
+			}
+		}
+		// did the column position information change
+		if (!columnPositionInfoMap.equals(this.columnPositionInfoMap)) {
+			this.columnPositionInfoMap = columnPositionInfoMap;
+		}
+
+		// now look for non-optional columns
+		for (ColumnInfo columnInfo : columnNameToInfoMap.values()) {
+			if (!columnInfo.isOptionalColumn()) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
-					parseError.setMessage("got column name '" + columns[i] + "', expected '"
-							+ columnInfos[i].getColumnName() + "'");
+					parseError.setMessage("column '" + columnInfo.getColumnName()
+							+ "' is not optional and must be suppled");
 				}
-				return false;
+				result = false;
 			}
 		}
-		return true;
+
+		// if we have an error then reset the columnCount
+		if (!result) {
+			resetColumnPositionInfoMap();
+		}
+		return result;
 	}
 
 	/**
@@ -339,14 +395,14 @@ public class CsvProcessor<T> {
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		String[] headerColumns = new String[columnInfos.length];
 		StringBuilder sb = new StringBuilder(32);
 		int linePos = 0;
 		ParseError localParseError = parseError;
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
-		for (int i = 0; i < columnInfos.length; i++) {
+		List<String> headerColumns = new ArrayList<String>();
+		while (true) {
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
 			sb.setLength(0);
@@ -357,21 +413,22 @@ public class CsvProcessor<T> {
 			}
 			if (localParseError.isError()) {
 				if (localParseError == parseError) {
+					// if we pass in an error then it gets set and we return null
 					return null;
 				} else {
+					// if no error passed in then we throw
 					throw new ParseException("Problems parsing header line at position " + linePos + " ("
 							+ localParseError + "): " + line, linePos);
 				}
 			}
-			headerColumns[i] = sb.toString();
+			if (sb.length() > 0) {
+				headerColumns.add(sb.toString());
+			}
 			if (atEnd) {
 				break;
 			}
 		}
-		if (linePos < line.length()) {
-			throw new ParseException("Line has extra information past last column: " + line, linePos);
-		}
-		return headerColumns;
+		return headerColumns.toArray(new String[headerColumns.size()]);
 	}
 
 	/**
@@ -389,14 +446,15 @@ public class CsvProcessor<T> {
 	 */
 	public T processRow(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		int columnCount = 0;
 		T target = constructEntity();
 		int linePos = 0;
 		ParseError localParseError = parseError;
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
-		for (ColumnInfo columnInfo : columnInfos) {
+		int columnCount = 0;
+		while (true) {
+			ColumnInfo columnInfo = columnPositionInfoMap.get(columnCount);
 			// we have to do this because a blank column may be ok
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
@@ -421,10 +479,11 @@ public class CsvProcessor<T> {
 			}
 			// NOTE: we can't break here if we are at the end of line because might be blank column
 		}
-		if (columnCount < columnInfos.length && !allowPartialLines) {
-			throw new ParseException("Line does not have " + columnInfos.length + " columns: " + line, linePos);
+		if (columnCount < columnPositionInfoMap.size() && !allowPartialLines) {
+			throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
+					linePos);
 		}
-		if (linePos < line.length()) {
+		if (linePos < line.length() && !ignoreUnknownColumns) {
 			throw new ParseException(
 					"Line has extra information past last column at position " + linePos + ": " + line, linePos);
 		}
@@ -517,7 +576,7 @@ public class CsvProcessor<T> {
 		checkEntityConfig();
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (ColumnInfo columnInfo : columnInfos) {
+		for (ColumnInfo columnInfo : allColumnInfos) {
 			if (first) {
 				first = false;
 			} else {
@@ -549,7 +608,7 @@ public class CsvProcessor<T> {
 		checkEntityConfig();
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (ColumnInfo columnInfo : columnInfos) {
+		for (ColumnInfo columnInfo : allColumnInfos) {
 			if (first) {
 				first = false;
 			} else {
@@ -712,6 +771,55 @@ public class CsvProcessor<T> {
 		return this;
 	}
 
+	/**
+	 * Set to false to not validate the header when it is read in. Default is true.
+	 */
+	public CsvProcessor<T> withHeaderValidation(boolean headerValidation) {
+		this.headerValidation = headerValidation;
+		return this;
+	}
+
+	/**
+	 * Set to false if the first line is a header line to be processed. Default is true.
+	 */
+	public CsvProcessor<T> withFirstLineHeader(boolean firstLineHeader) {
+		this.firstLineHeader = firstLineHeader;
+		return this;
+	}
+
+	/**
+	 * Set the column name matcher class which will be used to see if the column from the CSV file matches the
+	 * definition name. This can be used if you have optional suffix characters such as "*" or something. Default is
+	 * {@link String#equals(String)}.
+	 */
+	public CsvProcessor<T> withColumnNameMatcher(ColumnNameMatcher columnNameMatcher) {
+		this.columnNameMatcher = columnNameMatcher;
+		return this;
+	}
+
+	/**
+	 * Set to true if the order of the input columns is flexible and does not have to match the order of the definition
+	 * fields in the entity. The order is determined by the header columns so their must be a header. Default is false.
+	 * 
+	 * <b>WARNING:</b> If you are using flexible ordering, this CsvProcessor cannot be used with multiple files at the
+	 * same time since the column orders are dynamic.
+	 */
+	public CsvProcessor<T> withFlexibleOrder(boolean flexibleOrder) {
+		this.flexibleOrder = flexibleOrder;
+		return this;
+	}
+
+	/**
+	 * Set to true to ignore columns that are not know to the configuration. Default is to raise an error.
+	 * 
+	 * <b>WARNING:</b> If you are using unknown columns, this CsvProcessor cannot be used with multiple files at the
+	 * same time since the column position is dynamic.
+	 */
+	public CsvProcessor<T> withIgnoreUnknownColumns(boolean ignoreUnknownColumns) {
+		this.ignoreUnknownColumns = ignoreUnknownColumns;
+		return this;
+	}
+
 	private T constructEntity() throws ParseException {
 		try {
 			if (constructorCallable == null) {
@@ -727,7 +835,7 @@ public class CsvProcessor<T> {
 	}
 
 	private void checkEntityConfig() {
-		if (columnInfos == null) {
+		if (allColumnInfos == null) {
 			configureEntityClass();
 		}
 	}
@@ -738,6 +846,7 @@ public class CsvProcessor<T> {
 		}
 		List<ColumnInfo> columnInfos = new ArrayList<ColumnInfo>();
 		Set<String> knownFields = new HashSet<String>();
+		int fieldCount = 0;
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : clazz.getDeclaredFields()) {
 				if (!knownFields.add(field.getName())) {
@@ -747,7 +856,7 @@ public class CsvProcessor<T> {
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				@SuppressWarnings("unchecked")
 				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
-				ColumnInfo columnInfo = ColumnInfo.fromField(field, castConverter);
+				ColumnInfo columnInfo = ColumnInfo.fromField(field, castConverter, fieldCount++);
 				if (columnInfo != null) {
 					columnInfos.add(columnInfo);
 					field.setAccessible(true);
@@ -757,7 +866,8 @@ public class CsvProcessor<T> {
 		if (columnInfos.isEmpty()) {
 			throw new IllegalArgumentException("Could not find any exposed CSV fields in: " + entityClass);
 		}
-		this.columnInfos = columnInfos.toArray(new ColumnInfo[columnInfos.size()]);
+		this.allColumnInfos = columnInfos;
+		resetColumnPositionInfoMap();
 		if (constructorCallable == null) {
 			try {
 				this.constructor = entityClass.getConstructor();
@@ -766,6 +876,16 @@ public class CsvProcessor<T> {
 						"No callable configured or could not find public no-arg constructor for: " + entityClass);
 			}
 		}
+	}
+
+	private void resetColumnPositionInfoMap() {
+		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
+		int columnCount = 0;
+		for (ColumnInfo columnInfo : allColumnInfos) {
+			columnPositionInfoMap.put(columnCount, columnInfo);
+			columnCount++;
+		}
+		this.columnPositionInfoMap = columnPositionInfoMap;
 	}
 
 	private int processQuotedColumn(String line, int lineNumber, int linePos, ColumnInfo columnInfo, Object target,
@@ -833,7 +953,9 @@ public class CsvProcessor<T> {
 		if (sb == null) {
 			if (headerSb == null) {
 				String columnStr = line.substring(sectionStart, sectionEnd);
-				extractAndAssignValue(line, lineNumber, columnInfo, columnStr, columnStart, target, parseError);
+				if (columnInfo != null) {
+					extractAndAssignValue(line, lineNumber, columnInfo, columnStr, columnStart, target, parseError);
+				}
 			} else {
 				headerSb.append(line, sectionStart, sectionEnd);
 			}
@@ -841,7 +963,9 @@ public class CsvProcessor<T> {
 			sb.append(line, sectionStart, sectionEnd);
 			String str = sb.toString();
 			if (headerSb == null) {
-				extractAndAssignValue(str, lineNumber, columnInfo, str, columnStart, target, parseError);
+				if (columnInfo != null) {
+					extractAndAssignValue(str, lineNumber, columnInfo, str, columnStart, target, parseError);
+				}
 			} else {
 				headerSb.append(str);
 			}
@@ -859,7 +983,9 @@ public class CsvProcessor<T> {
 
 		if (headerSb == null) {
 			String columnStr = line.substring(columnStart, linePos);
-			extractAndAssignValue(line, lineNumber, columnInfo, columnStr, columnStart, target, parseError);
+			if (columnInfo != null) {
+				extractAndAssignValue(line, lineNumber, columnInfo, columnStr, columnStart, target, parseError);
+			}
 		} else {
 			headerSb.append(line, columnStart, linePos);
 		}

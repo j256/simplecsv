@@ -22,7 +22,7 @@ public class FieldInfoTest {
 	public void testStuff() throws Exception {
 		String fieldName = "field";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertSame(field, columnInfo.getField());
 		assertNull(columnInfo.getDefaultValue());
 		assertEquals(fieldName, columnInfo.getColumnName());
@@ -33,7 +33,7 @@ public class FieldInfoTest {
 	public void testNameSet() throws Exception {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertEquals(MyClass.HAS_NAME_FIELD_NAME, columnInfo.getColumnName());
 	}
 
@@ -41,7 +41,7 @@ public class FieldInfoTest {
 	public void testDefaultValue() throws Exception {
 		String fieldName = "defaultValue";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertEquals(fieldName, columnInfo.getDefaultValue());
 	}
 
@@ -49,7 +49,7 @@ public class FieldInfoTest {
 	public void testCustomConverter() throws Exception {
 		String fieldName = "specialString";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, null);
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, null, 0);
 		assertTrue(columnInfo.getConverter() instanceof MyConverter);
 	}
 
@@ -57,14 +57,14 @@ public class FieldInfoTest {
 	public void testFormat() throws Exception {
 		String fieldName = "number";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton());
+		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
 		assertNotNull(columnInfo.getConfigInfo());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testNoConverter() throws Exception {
 		Field field = MyClass.class.getDeclaredField("defaultValue");
-		ColumnInfo.fromField(field, null);
+		ColumnInfo.fromField(field, null, 0);
 	}
 
 	private static class MyClass {
