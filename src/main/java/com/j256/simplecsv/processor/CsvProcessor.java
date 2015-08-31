@@ -133,8 +133,6 @@ public class CsvProcessor<T> {
 	 * 
 	 * @param file
 	 *            Where to read the header and entities from. It will be closed when the method returns.
-	 * @param firstLineHeader
-	 *            Set to true to ignore the first line as the header.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
 	 *            is true and the header does not match then no additional lines will be returned. If this is null then
@@ -212,8 +210,6 @@ public class CsvProcessor<T> {
 	 * 
 	 * @param bufferedReader
 	 *            Where to read the header from.
-	 * @param validate
-	 *            Validate the header after it is read. This will return null if the header is not valid.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
@@ -790,7 +786,7 @@ public class CsvProcessor<T> {
 	/**
 	 * Set the column name matcher class which will be used to see if the column from the CSV file matches the
 	 * definition name. This can be used if you have optional suffix characters such as "*" or something. Default is
-	 * {@link String#equals(String)}.
+	 * {@link String#equals(Object)}.
 	 */
 	public CsvProcessor<T> withColumnNameMatcher(ColumnNameMatcher columnNameMatcher) {
 		this.columnNameMatcher = columnNameMatcher;
