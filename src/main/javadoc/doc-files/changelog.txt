@@ -5,6 +5,7 @@
 	* Added support for column-name-matcher to match column names using external business logic.
 	* Added support for flexible column name ordering based on the header order.
 	* Added support for ignoring unknown columns in the data.
+	* Fixed the line numbers specified in the errors.
 
 0.6: 12/3/2014
 	* Fixed the handling of subclasses.

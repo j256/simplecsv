@@ -94,6 +94,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 		} else {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(value);
+			parseError.setLineNumber(lineNumber);
 			return null;
 		}
 	}

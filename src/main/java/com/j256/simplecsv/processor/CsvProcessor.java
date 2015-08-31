@@ -167,7 +167,7 @@ public class CsvProcessor<T> {
 	 */
 	public List<T> readAll(Reader reader, Collection<ParseError> parseErrors) throws IOException, ParseException {
 		checkEntityConfig();
-		BufferedReader bufferedReader = new BufferedReader(reader);
+		BufferedReader bufferedReader = new BufferedReaderLineCounter(reader);
 		try {
 			ParseError parseError = null;
 			// we do this to reuse the parse error objects if we can
@@ -228,14 +228,14 @@ public class CsvProcessor<T> {
 				throw new ParseException("no header line read", 0);
 			} else {
 				parseError.setErrorType(ErrorType.NO_HEADER);
-				parseError.setLineNumber(1);
+				setLineNumber(bufferedReader, parseError);
 				return null;
 			}
 		}
-		String[] columns = processHeader(header, parseError);
+		String[] columns = processHeader(header, parseError, getLineNumber(bufferedReader));
 		if (columns == null) {
 			return null;
-		} else if (headerValidation && !validateHeaderColumns(columns, parseError)) {
+		} else if (headerValidation && !validateHeaderColumns(columns, parseError, getLineNumber(bufferedReader))) {
 			if (parseError == null) {
 				throw new ParseException("header line is not valid: " + header, 0);
 			} else {
@@ -267,7 +267,7 @@ public class CsvProcessor<T> {
 		if (line == null) {
 			return null;
 		} else {
-			return processRow(line, parseError);
+			return processRow(line, parseError, getLineNumber(bufferedReader));
 		}
 	}
 
@@ -287,7 +287,7 @@ public class CsvProcessor<T> {
 	public boolean validateHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
 		String[] columns = processHeader(line, parseError);
-		return validateHeaderColumns(columns, parseError);
+		return validateHeaderColumns(columns, parseError, 1);
 	}
 
 	/**
@@ -305,74 +305,7 @@ public class CsvProcessor<T> {
 	 */
 	public boolean validateHeaderColumns(String[] columns, ParseError parseError) {
 		checkEntityConfig();
-		boolean result = true;
-
-		Map<String, ColumnInfo> columnNameToInfoMap = new HashMap<String, ColumnInfo>();
-		for (ColumnInfo columnInfo : allColumnInfos) {
-			columnNameToInfoMap.put(columnInfo.getColumnName(), columnInfo);
-		}
-
-		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
-		int lastColumnInfoPosition = -1;
-		for (int i = 0; i < columns.length; i++) {
-			ColumnInfo matchedColumnInfo = null;
-			if (columnNameMatcher == null) {
-				matchedColumnInfo = columnNameToInfoMap.get(columns[i]);
-			} else {
-				// have to do a N^2 search
-				for (ColumnInfo columnInfo : allColumnInfos) {
-					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), columns[i])) {
-						matchedColumnInfo = columnInfo;
-						break;
-					}
-				}
-			}
-
-			if (matchedColumnInfo == null) {
-				if (!ignoreUnknownColumns) {
-					if (parseError != null) {
-						parseError.setErrorType(ErrorType.INVALID_HEADER);
-						parseError.setMessage("column name '" + columns[i] + "' is unknown");
-					}
-					result = false;
-				}
-			} else {
-				if (!flexibleOrder && matchedColumnInfo.getPosition() <= lastColumnInfoPosition) {
-					if (parseError != null) {
-						parseError.setErrorType(ErrorType.INVALID_HEADER);
-						parseError.setMessage("column name '" + columns[i] + "' is not in the proper order");
-					}
-					result = false;
-				} else {
-					lastColumnInfoPosition = matchedColumnInfo.getPosition();
-				}
-				// remove it from the map once we've matched with it
-				columnNameToInfoMap.remove(matchedColumnInfo.getColumnName());
-				columnPositionInfoMap.put(i, matchedColumnInfo);
-			}
-		}
-		// did the column position information change
-		if (!columnPositionInfoMap.equals(this.columnPositionInfoMap)) {
-			this.columnPositionInfoMap = columnPositionInfoMap;
-		}
-
-		// now look for non-optional columns
-		for (ColumnInfo columnInfo : columnNameToInfoMap.values()) {
-			if (!columnInfo.isOptionalColumn()) {
-				if (parseError != null) {
-					parseError.setErrorType(ErrorType.INVALID_HEADER);
-					parseError.setMessage("column '" + columnInfo.getColumnName()
-							+ "' is not optional and must be suppled");
-				}
-				result = false;
-			}
-		}
-
-		// if we have an error then reset the columnCount
-		if (!result) {
-			resetColumnPositionInfoMap();
-		}
-		return result;
+		return validateHeaderColumns(columns, parseError, 1);
 	}
 
 	/**
@@ -391,40 +324,7 @@ public class CsvProcessor<T> {
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		StringBuilder sb = new StringBuilder(32);
-		int linePos = 0;
-		ParseError localParseError = parseError;
-		if (localParseError == null) {
-			localParseError = new ParseError();
-		}
-		List<String> headerColumns = new ArrayList<String>();
-		while (true) {
-			boolean atEnd = (linePos == line.length());
-			localParseError.reset();
-			sb.setLength(0);
-			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
-				linePos = processQuotedColumn(line, 1, linePos, null, null, sb, localParseError);
-			} else {
-				linePos = processUnquotedColumn(line, 1, linePos, null, null, sb, localParseError);
-			}
-			if (localParseError.isError()) {
-				if (localParseError == parseError) {
-					// if we pass in an error then it gets set and we return null
-					return null;
-				} else {
-					// if no error passed in then we throw
-					throw new ParseException("Problems parsing header line at position " + linePos + " ("
-							+ localParseError + "): " + line, linePos);
-				}
-			}
-			if (sb.length() > 0) {
-				headerColumns.add(sb.toString());
-			}
-			if (atEnd) {
-				break;
-			}
-		}
-		return headerColumns.toArray(new String[headerColumns.size()]);
+		return processHeader(line, parseError, 1);
 	}
 
 	/**
@@ -442,48 +342,7 @@ public class CsvProcessor<T> {
 	 */
 	public T processRow(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		T target = constructEntity();
-		int linePos = 0;
-		ParseError localParseError = parseError;
-		if (localParseError == null) {
-			localParseError = new ParseError();
-		}
-		int columnCount = 0;
-		while (true) {
-			ColumnInfo columnInfo = columnPositionInfoMap.get(columnCount);
-			// we have to do this because a blank column may be ok
-			boolean atEnd = (linePos == line.length());
-			localParseError.reset();
-			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
-				linePos = processQuotedColumn(line, 1, linePos, columnInfo, target, null, localParseError);
-			} else {
-				linePos = processUnquotedColumn(line, 1, linePos, columnInfo, target, null, localParseError);
-			}
-			if (localParseError.isError()) {
-				if (localParseError == parseError) {
-					// parseError has the error information
-					return null;
-				} else {
-					throw new ParseException("Problems parsing line at position " + linePos + " for type "
-							+ columnInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
-							linePos);
-				}
-			}
-			columnCount++;
-			if (atEnd) {
-				break;
-			}
-			// NOTE: we can't break here if we are at the end of line because might be blank column
-		}
-		if (columnCount < columnPositionInfoMap.size() && !allowPartialLines) {
-			throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
-					linePos);
-		}
-		if (linePos < line.length() && !ignoreUnknownColumns) {
-			throw new ParseException(
-					"Line has extra information past last column at position " + linePos + ": " + line, linePos);
-		}
-		return target;
+		return processRow(line, parseError, 1);
 	}
 
 	/**
@@ -816,6 +675,162 @@ public class CsvProcessor<T> {
 		return this;
 	}
 
+	private boolean validateHeaderColumns(String[] columns, ParseError parseError, int lineNumber) {
+		boolean result = true;
+
+		Map<String, ColumnInfo> columnNameToInfoMap = new HashMap<String, ColumnInfo>();
+		for (ColumnInfo columnInfo : allColumnInfos) {
+			columnNameToInfoMap.put(columnInfo.getColumnName(), columnInfo);
+		}
+
+		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
+		int lastColumnInfoPosition = -1;
+		for (int i = 0; i < columns.length; i++) {
+			ColumnInfo matchedColumnInfo = null;
+			if (columnNameMatcher == null) {
+				matchedColumnInfo = columnNameToInfoMap.get(columns[i]);
+			} else {
+				// have to do a N^2 search
+				for (ColumnInfo columnInfo : allColumnInfos) {
+					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), columns[i])) {
+						matchedColumnInfo = columnInfo;
+						break;
+					}
+				}
+			}
+
+			if (matchedColumnInfo == null) {
+				if (!ignoreUnknownColumns) {
+					if (parseError != null) {
+						parseError.setErrorType(ErrorType.INVALID_HEADER);
+						parseError.setMessage("column name '" + columns[i] + "' is unknown");
+						parseError.setLineNumber(lineNumber);
+					}
+					result = false;
+				}
+			} else {
+				if (!flexibleOrder && matchedColumnInfo.getPosition() <= lastColumnInfoPosition) {
+					if (parseError != null) {
+						parseError.setErrorType(ErrorType.INVALID_HEADER);
+						parseError.setMessage("column name '" + columns[i] + "' is not in the proper order");
+						parseError.setLineNumber(lineNumber);
+					}
+					result = false;
+				} else {
+					lastColumnInfoPosition = matchedColumnInfo.getPosition();
+				}
+				// remove it from the map once we've matched with it
+				columnNameToInfoMap.remove(matchedColumnInfo.getColumnName());
+				columnPositionInfoMap.put(i, matchedColumnInfo);
+			}
+		}
+		// did the column position information change
+		if (!columnPositionInfoMap.equals(this.columnPositionInfoMap)) {
+			this.columnPositionInfoMap = columnPositionInfoMap;
+		}
+
+		// now look for non-optional columns
+		for (ColumnInfo columnInfo : columnNameToInfoMap.values()) {
+			if (!columnInfo.isOptionalColumn()) {
+				if (parseError != null) {
+					parseError.setErrorType(ErrorType.INVALID_HEADER);
+					parseError.setMessage("column '" + columnInfo.getColumnName()
+							+ "' is not optional and must be suppled");
+					parseError.setLineNumber(lineNumber);
+				}
+				result = false;
+			}
+		}
+
+		// if we have an error then reset the columnCount
+		if (!result) {
+			resetColumnPositionInfoMap();
+		}
+		return result;
+	}
+
+	private String[] processHeader(String line, ParseError parseError, int lineNumber) throws ParseException {
+		StringBuilder sb = new StringBuilder(32);
+		int linePos = 0;
+		ParseError localParseError = parseError;
+		if (localParseError == null) {
+			localParseError = new ParseError();
+		}
+		List<String> headerColumns = new ArrayList<String>();
+		while (true) {
+			boolean atEnd = (linePos == line.length());
+			localParseError.reset();
+			sb.setLength(0);
+			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
+				linePos = processQuotedColumn(line, lineNumber, linePos, null, null, sb, localParseError);
+			} else {
+				linePos = processUnquotedColumn(line, lineNumber, linePos, null, null, sb, localParseError);
+			}
+			if (localParseError.isError()) {
+				if (localParseError == parseError) {
+					// if we pass in an error then it gets set and we return null
+					return null;
+				} else {
+					// if no error passed in then we throw
+					throw new ParseException("Problems parsing header line at position " + linePos + " ("
+							+ localParseError + "): " + line, linePos);
+				}
+			}
+			if (sb.length() > 0) {
+				headerColumns.add(sb.toString());
+			}
+			if (atEnd) {
+				break;
+			}
+		}
+		return headerColumns.toArray(new String[headerColumns.size()]);
+	}
+
+	private T processRow(String line, ParseError parseError, int lineNumber) throws ParseException {
+		T target = constructEntity();
+		int linePos = 0;
+		ParseError localParseError = parseError;
+		if (localParseError == null) {
+			localParseError = new ParseError();
+		}
+		int columnCount = 0;
+		while (true) {
+			ColumnInfo columnInfo = columnPositionInfoMap.get(columnCount);
+			// we have to do this because a blank column may be ok
+			boolean atEnd = (linePos == line.length());
+			localParseError.reset();
+			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
+				linePos = processQuotedColumn(line, lineNumber, linePos, columnInfo, target, null, localParseError);
+			} else {
+				linePos = processUnquotedColumn(line, lineNumber, linePos, columnInfo, target, null, localParseError);
+			}
+			if (localParseError.isError()) {
+				if (localParseError == parseError) {
+					// parseError has the error information
+					return null;
+				} else {
+					throw new ParseException("Problems parsing line at position " + linePos + " for type "
+							+ columnInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
+							linePos);
+				}
+			}
+			columnCount++;
+			if (atEnd) {
+				break;
+			}
+			// NOTE: we can't break here if we are at the end of line because might be blank column
+		}
+		if (columnCount < columnPositionInfoMap.size() && !allowPartialLines) {
+			throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
+					linePos);
+		}
+		if (linePos < line.length() && !ignoreUnknownColumns) {
+			throw new ParseException(
+					"Line has extra information past last column at position " + linePos + ": " + line, linePos);
+		}
+		return target;
+	}
+
 	private T constructEntity() throws ParseException {
 		try {
 			if (constructorCallable == null) {
@@ -1066,6 +1081,38 @@ public class CsvProcessor<T> {
 			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;
+		}
+	}
+
+	private void setLineNumber(BufferedReader bufferedReader, ParseError parseError) {
+		if (bufferedReader instanceof BufferedReaderLineCounter) {
+			parseError.setLineNumber(((BufferedReaderLineCounter) bufferedReader).lineCount);
+		} else {
+			parseError.setLineNumber(1);
+		}
+	}
+
+	private int getLineNumber(BufferedReader bufferedReader) {
+		if (bufferedReader instanceof BufferedReaderLineCounter) {
+			return ((BufferedReaderLineCounter) bufferedReader).lineCount;
+		} else {
+			return 1;
+		}
+	}
+
+	private static class BufferedReaderLineCounter extends BufferedReader {
+
+		int lineCount;
+
+		public BufferedReaderLineCounter(Reader reader) {
+			super(reader);
+		}
+
+		@Override
+		public String readLine() throws IOException {
+			String line = super.readLine();
+			lineCount++;
+			return line;
 		}
 	}
 }

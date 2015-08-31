@@ -107,6 +107,7 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 			return false;
 		} else if (configInfo.parseErrorOnInvalid) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
+			parseError.setLineNumber(lineNumber);
 			return null;
 		} else {
 			return false;

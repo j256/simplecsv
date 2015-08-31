@@ -423,7 +423,7 @@ public class CsvProcessorTest {
 	@Test
 	public void testCallableConstructor() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		Basic basic = processor.processRow(",,,", null);
+		Basic basic = processor.processRow(",str,,", null);
 		// initially it is 0
 		assertEquals(0, basic.intValue);
 		processor = new CsvProcessor<Basic>(Basic.class);
@@ -436,7 +436,7 @@ public class CsvProcessorTest {
 				return basic;
 			}
 		});
-		basic = processor.processRow(",,,", null);
+		basic = processor.processRow(",str,,", null);
 		assertEquals(value, basic.intValue);
 
 		processor = new CsvProcessor<Basic>(Basic.class);
@@ -448,7 +448,7 @@ public class CsvProcessorTest {
 		});
 		// make sure this resets the callable is reset
 		processor.withConstructorCallable(null);
-		basic = processor.processRow(",,,", null);
+		basic = processor.processRow(",str,,", null);
 		assertEquals(0, basic.intValue);
 	}
 
@@ -545,6 +545,42 @@ public class CsvProcessorTest {
 		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
+	@Test
+	public void testErrors() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+
+		// column names with suffixes
+		StringReader reader = new StringReader("intValue,string,bad,unquoted\n" //
+				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "\n" //
+				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "\n" //
+				+ 1 + "," + "str" + "," + "notlong" + "," + "unq" + "\n" //
+		);
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		processor.readAll(reader, parseErrors);
+		assertEquals(1, parseErrors.size());
+		ParseError error = parseErrors.get(0);
+		assertEquals(1, error.getLineNumber());
+		assertEquals(ErrorType.INVALID_HEADER, error.getErrorType());
+
+		// column names with suffixes
+		reader = new StringReader("intValue,string,longValue,unquoted\n" //
+				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "\n" //
+				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "\n" //
+				+ 1 + "," + "" + "," + "notlong" + "," + "unq" + "\n" //
+		);
+		parseErrors = new ArrayList<ParseError>();
+		processor.readAll(reader, parseErrors);
+		assertEquals(2, parseErrors.size());
+		error = parseErrors.get(0);
+		assertEquals(3, error.getLineNumber());
+		assertEquals(0, error.getLinePos());
+		assertEquals(ErrorType.INVALID_FORMAT, error.getErrorType());
+		error = parseErrors.get(1);
+		assertEquals(4, error.getLineNumber());
+		assertEquals(2, error.getLinePos());
+		assertEquals(ErrorType.REQUIRED, error.getErrorType());
+	}
+
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
 			throws ParseException {
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
@@ -565,7 +601,7 @@ public class CsvProcessorTest {
 	private static class Basic {
 		@CsvField
 		private int intValue;
-		@CsvField
+		@CsvField(required = true)
 		private String string;
 		@CsvField
 		private long longValue;

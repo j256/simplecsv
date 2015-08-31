@@ -72,6 +72,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 			} catch (NumberFormatException nfe) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage(nfe.getMessage());
+				parseError.setLineNumber(lineNumber);
 				return null;
 			}
 		} else {
