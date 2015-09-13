@@ -184,6 +184,11 @@ public class ColumnInfo {
 	 */
 	@SuppressWarnings("deprecation")
 	private static boolean fieldMustBeSupplied(CsvField csvField) {
-		return (!csvField.optionalColumn() || csvField.mustBeSupplied());
+		// we are explicit here because if the use must-be-suppled we have to take that value
+		if (!csvField.mustBeSupplied() || csvField.optionalColumn()) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
