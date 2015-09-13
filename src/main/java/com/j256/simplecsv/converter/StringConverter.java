@@ -78,6 +78,9 @@ public class StringConverter implements Converter<String, StringConverter.Config
 		}
 	}
 
+	/**
+	 * Exposed for testing purposes. 
+	 */
 	static class ConfigInfo {
 		final boolean trimOutput;
 		final boolean blankIsNull;
@@ -85,6 +88,5 @@ public class StringConverter implements Converter<String, StringConverter.Config
 			this.trimOutput = trimOutput;
 			this.blankIsNull = blankIsNull;
 		}
-
 	}
 }

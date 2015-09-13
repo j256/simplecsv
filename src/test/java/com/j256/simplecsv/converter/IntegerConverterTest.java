@@ -15,21 +15,21 @@ public class IntegerConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		IntegerConverter converter = new IntegerConverter();
+		IntegerConverter converter = IntegerConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		testNumbers(converter, configInfo);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
-		IntegerConverter converter = new IntegerConverter();
+		IntegerConverter converter = IntegerConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure("###,##0", 0, null);
 		testNumbers(converter, configInfo);
 	}
 
 	@Test
 	public void testInvalidFormat() throws Exception {
-		IntegerConverter converter = new IntegerConverter();
+		IntegerConverter converter = IntegerConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();

@@ -14,7 +14,7 @@ public class StringConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		StringConverter converter = new StringConverter();
+		StringConverter converter = StringConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
 		testConverter(converter, configInfo, "");
 		testConverter(converter, configInfo, "one");
@@ -23,7 +23,7 @@ public class StringConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testBlankNull() throws Exception {
-		StringConverter converter = new StringConverter();
+		StringConverter converter = StringConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
@@ -41,7 +41,7 @@ public class StringConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testTrimOutput() {
-		StringConverter converter = new StringConverter();
+		StringConverter converter = StringConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 

@@ -1,5 +1,7 @@
 package com.j256.simplecsv.converter;
 
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -10,19 +12,26 @@ public class BigDecimalConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws ParseException {
-		BigDecimalConverter converter = new BigDecimalConverter();
+		BigDecimalConverter converter = BigDecimalConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		testNumbers(converter, configInfo);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
-		BigDecimalConverter converter = new BigDecimalConverter();
+		BigDecimalConverter converter = BigDecimalConverter.getSingleton();
 		DecimalFormat configInfo =
 				converter.configure(
 						"###,##0.0##########################################################################################",
 						0, null);
 		testNumbers(converter, configInfo);
+	}
+
+	@Test
+	public void testConverage() {
+		BigDecimalConverter converter = BigDecimalConverter.getSingleton();
+		assertTrue(converter.isNeedsQuotes(null));
+		assertTrue(converter.isAlwaysTrimInput());
 	}
 
 	private void testNumbers(BigDecimalConverter converter, DecimalFormat configInfo) throws ParseException {

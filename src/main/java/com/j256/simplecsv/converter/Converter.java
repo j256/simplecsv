@@ -19,9 +19,9 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * @param <T>
  *            The Java type that we are converting from/to.
  * @param <C>
- *            The configuration information object (or null if none) that we use to share state so we can use this
- *            converter with multiple entities. If your converter has no config-info then you can use Void here and
- *            return null from {@link #configure(String, long, Field)}.
+ *            The configuration information object that we use to share state so we can use this converter with multiple
+ *            entities. If your converter has no config-info then you can use Void here and return null from
+ *            {@link #configure(String, long, Field)}.
  * 
  * @author graywatson
  */

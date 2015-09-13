@@ -29,10 +29,10 @@ public @interface CsvField {
 	public String columnName() default DEFAULT_VALUE;
 
 	/**
-	 * Set to true if a value in the column is required. This means that it cannot be empty when it is being read in and
-	 * a parse error or exception will be generated.
+	 * Set to true if a value in the column cannot be empty when it is being read in and a parse error or exception will
+	 * be generated.
 	 */
-	public boolean required() default false;
+	public boolean mustNotBeBlank() default false;
 
 	/**
 	 * Set to true if you want the column read from the line to be trimmed (using {@link String#trim()}) before it is
@@ -73,12 +73,23 @@ public @interface CsvField {
 	public String defaultValue() default DEFAULT_VALUE;
 
 	/**
-	 * Set to true if a column is optional and can be skipped in the input altogether. This is different from the
-	 * {@link #required()} field which is about whether the value can be _blank_ or not. If this is true then the column
-	 * doesn't have to be in the header or the lines at all. Default is false.
+	 * Set to false if a column is optional and can be skipped in the input altogether. If this is false then the column
+	 * doesn't have to be in the header or the lines at all. Default is true.
 	 * 
 	 * <b>WARNING:</b> If you are using optional ordering, the same CsvProcessor cannot be used with multiple files at
-	 * the same time since the column lists can be dynamic.
+	 * the same time since the column lists can be dynamic depending on the input file being read.
 	 */
+	public boolean mustBeSupplied() default true;
+
+	/**
+	 * @deprecated Should use {@link #mustBeSupplied()} instead.
+	 */
+	@Deprecated
 	public boolean optionalColumn() default false;
+
+	/**
+	 * @deprecated Should use {@link #mustNotBeBlank()} instead.
+	 */
+	@Deprecated
+	public boolean required() default false;
 }

@@ -19,24 +19,24 @@ public class ColumnInfo {
 	private final Object configInfo;
 	private final String columnName;
 	private final int position;
-	private final boolean required;
+	private final boolean mustNotBeBlank;
 	private final boolean trimInput;
 	private final boolean needsQuotes;
 	private final String defaultValue;
-	private final boolean optionalColumn;
+	private final boolean mustBeSupplied;
 
 	private ColumnInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, int position,
-			boolean required, boolean trimInput, boolean needsQuotes, String defaultValue, boolean optionalColumn) {
+			boolean mustNotBeBlank, boolean trimInput, boolean needsQuotes, String defaultValue, boolean mustBeSupplied) {
 		this.field = field;
 		this.converter = converter;
 		this.configInfo = configInfo;
 		this.columnName = columnName;
 		this.position = position;
-		this.required = required;
+		this.mustNotBeBlank = mustNotBeBlank;
 		this.trimInput = trimInput;
 		this.needsQuotes = needsQuotes;
 		this.defaultValue = defaultValue;
-		this.optionalColumn = optionalColumn;
+		this.mustBeSupplied = mustBeSupplied;
 	}
 
 	/**
@@ -79,10 +79,10 @@ public class ColumnInfo {
 	/**
 	 * Returns whether this column is required.
 	 * 
-	 * @see CsvField#required()
+	 * @see CsvField#mustNotBeBlank()
 	 */
-	public boolean isRequired() {
-		return required;
+	public boolean isMustNotBeBlank() {
+		return mustNotBeBlank;
 	}
 
 	/**
@@ -113,16 +113,16 @@ public class ColumnInfo {
 	/**
 	 * Returns whether the column is optional or not.
 	 * 
-	 * @see CsvField#optionalColumn()
+	 * @see CsvField#mustBeSupplied()
 	 */
-	public boolean isOptionalColumn() {
-		return optionalColumn;
+	public boolean isMustBeSupplied() {
+		return mustBeSupplied;
 	}
 
 	/**
 	 * Make a column-info instance from a Java Field.
 	 */
-	public static ColumnInfo fromField(Field field, Converter<?, ?> converter, int columnCount) {
+	public static ColumnInfo fromField(Field field, Converter<?, ?> converter, int position) {
 		CsvField csvField = field.getAnnotation(CsvField.class);
 		if (csvField == null) {
 			return null;
@@ -160,8 +160,8 @@ public class ColumnInfo {
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new ColumnInfo(field, converter, configInfo, columnName, columnCount, csvField.required(),
-				csvField.trimInput(), needsQuotes, defaultValue, csvField.optionalColumn());
+		return new ColumnInfo(field, converter, configInfo, columnName, position, fieldMustNotBeBlank(csvField),
+				csvField.trimInput(), needsQuotes, defaultValue, fieldMustBeSupplied(csvField));
 	}
 
 	/**
@@ -169,5 +169,21 @@ public class ColumnInfo {
 	 */
 	public static ColumnInfo forTests(Converter<?, ?> converter, Object configInfo) {
 		return new ColumnInfo(null, converter, configInfo, "name", 0, false, false, false, null, false);
+	}
+
+	/**
+	 * To isolate the suppress warnings.
+	 */
+	@SuppressWarnings("deprecation")
+	private static boolean fieldMustNotBeBlank(CsvField csvField) {
+		return (csvField.required() || csvField.mustNotBeBlank());
+	}
+
+	/**
+	 * To isolate the suppress warnings.
+	 */
+	@SuppressWarnings("deprecation")
+	private static boolean fieldMustBeSupplied(CsvField csvField) {
+		return (!csvField.optionalColumn() || csvField.mustBeSupplied());
 	}
 }

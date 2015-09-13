@@ -18,7 +18,7 @@ public class EnumConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		EnumConverter converter = new EnumConverter();
+		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		ConfigInfo configInfo = converter.configure(null, 0, field);
 		testConverter(converter, configInfo, MyEnum.RED);
@@ -29,7 +29,7 @@ public class EnumConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testUnknown() throws Exception {
-		EnumConverter converter = new EnumConverter();
+		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		MyEnum unknownValue = MyEnum.RED;
 		ConfigInfo configInfo = converter.configure(unknownValue.name(), EnumConverter.FORMAT_IS_UNKNOWN_VALUE, field);
@@ -42,27 +42,34 @@ public class EnumConverterTest extends AbstractConverterTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testNotEnum() throws Exception {
-		EnumConverter converter = new EnumConverter();
+		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("notEnum");
 		converter.configure(null, 0, field);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testUnknownUnknown() throws Exception {
-		EnumConverter converter = new EnumConverter();
+		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		converter.configure("unknownenumvalue", EnumConverter.FORMAT_IS_UNKNOWN_VALUE, field);
 	}
 
 	@Test
 	public void testUnknownAndNoUnknown() throws Exception {
-		EnumConverter converter = new EnumConverter();
+		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		ConfigInfo configInfo = converter.configure(null, 0, field);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		assertNull(converter.stringToJava("line", 1, columnInfo, "unknown-value", parseError));
 		assertTrue(parseError.isError());
+	}
+
+	@Test
+	public void testConverage() {
+		EnumConverter converter = EnumConverter.getSingleton();
+		assertTrue(converter.isNeedsQuotes(null));
+		assertTrue(converter.isAlwaysTrimInput());
 	}
 
 	private enum MyEnum {

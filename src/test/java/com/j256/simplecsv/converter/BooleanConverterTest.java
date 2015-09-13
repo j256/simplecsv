@@ -17,7 +17,7 @@ public class BooleanConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws ParseException {
-		BooleanConverter converter = new BooleanConverter();
+		BooleanConverter converter = BooleanConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
 		testConverter(converter, configInfo, true);
 		testConverter(converter, configInfo, false);
@@ -31,20 +31,35 @@ public class BooleanConverterTest extends AbstractConverterTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadFormat() {
-		BooleanConverter converter = new BooleanConverter();
+		BooleanConverter converter = BooleanConverter.getSingleton();
 		converter.configure("1", 0, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testEmptyTrue() {
-		BooleanConverter converter = new BooleanConverter();
+		BooleanConverter converter = BooleanConverter.getSingleton();
 		converter.configure(",F", 0, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testEmptyFalse() {
-		BooleanConverter converter = new BooleanConverter();
+		BooleanConverter converter = BooleanConverter.getSingleton();
 		converter.configure("T,", 0, null);
+	}
+
+	@Test
+	public void testNeedsQuotes() {
+		BooleanConverter converter = BooleanConverter.getSingleton();
+		ConfigInfo configInfo = converter.configure("1,0", 0, null);
+		assertFalse(converter.isNeedsQuotes(configInfo));
+	}
+
+	@Test
+	public void testConverage() {
+		BooleanConverter converter = BooleanConverter.getSingleton();
+		ConfigInfo configInfo = converter.configure(null, 0, null);
+		assertTrue(converter.isNeedsQuotes(configInfo));
+		assertFalse(converter.isAlwaysTrimInput());
 	}
 
 	@Test

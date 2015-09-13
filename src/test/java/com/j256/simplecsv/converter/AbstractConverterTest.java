@@ -2,9 +2,12 @@ package com.j256.simplecsv.converter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
 
+import com.j256.simplecsv.converter.StringConverter.ConfigInfo;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
@@ -21,6 +24,16 @@ public abstract class AbstractConverterTest {
 		assertFalse(parseError.isError());
 		System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
 		assertEquals(value, converted);
+		if (converter instanceof StringConverter) {
+			String val = (String) converter.stringToJava("", 1, columnInfo, "", parseError);
+			if (((ConfigInfo) configInfo).blankIsNull) {
+				assertNull(val);
+			} else {
+				assertTrue(val.isEmpty());
+			}
+		} else {
+			assertNull(converter.stringToJava("", 1, columnInfo, "", parseError));
+		}
 		return strVal;
 	}
 }

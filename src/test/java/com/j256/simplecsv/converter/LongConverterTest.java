@@ -9,14 +9,14 @@ public class LongConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		LongConverter converter = new LongConverter();
+		LongConverter converter = LongConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		testNumbers(converter, configInfo);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
-		LongConverter converter = new LongConverter();
+		LongConverter converter = LongConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure("###,##0", 0, null);
 		testNumbers(converter, configInfo);
 	}

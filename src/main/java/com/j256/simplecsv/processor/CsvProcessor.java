@@ -657,7 +657,7 @@ public class CsvProcessor<T> {
 	 * fields in the entity. The order is determined by the header columns so their must be a header. Default is false.
 	 * 
 	 * <b>WARNING:</b> If you are using flexible ordering, this CsvProcessor cannot be used with multiple files at the
-	 * same time since the column orders are dynamic.
+	 * same time since the column orders are dynamic depending on the input file being read.
 	 */
 	public CsvProcessor<T> withFlexibleOrder(boolean flexibleOrder) {
 		this.flexibleOrder = flexibleOrder;
@@ -668,7 +668,7 @@ public class CsvProcessor<T> {
 	 * Set to true to ignore columns that are not know to the configuration. Default is to raise an error.
 	 * 
 	 * <b>WARNING:</b> If you are using unknown columns, this CsvProcessor cannot be used with multiple files at the
-	 * same time since the column position is dynamic.
+	 * same time since the column position is dynamic depending on the input file being read.
 	 */
 	public CsvProcessor<T> withIgnoreUnknownColumns(boolean ignoreUnknownColumns) {
 		this.ignoreUnknownColumns = ignoreUnknownColumns;
@@ -729,13 +729,13 @@ public class CsvProcessor<T> {
 			this.columnPositionInfoMap = columnPositionInfoMap;
 		}
 
-		// now look for non-optional columns
+		// now look for must-be-supplied columns
 		for (ColumnInfo columnInfo : columnNameToInfoMap.values()) {
-			if (!columnInfo.isOptionalColumn()) {
+			if (columnInfo.isMustBeSupplied()) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
 					parseError.setMessage("column '" + columnInfo.getColumnName()
-							+ "' is not optional and must be suppled");
+							+ "' must be suppled and was not specified");
 					parseError.setLineNumber(lineNumber);
 				}
 				result = false;
@@ -1060,8 +1060,8 @@ public class CsvProcessor<T> {
 		if (columnStr.isEmpty() && columnInfo.getDefaultValue() != null) {
 			columnStr = columnInfo.getDefaultValue();
 		}
-		if (columnStr.isEmpty() && columnInfo.isRequired()) {
-			parseError.setErrorType(ErrorType.REQUIRED);
+		if (columnStr.isEmpty() && columnInfo.isMustNotBeBlank()) {
+			parseError.setErrorType(ErrorType.MUST_NOT_BE_BLANK);
 			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;

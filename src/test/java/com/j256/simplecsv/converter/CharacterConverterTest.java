@@ -13,7 +13,7 @@ public class CharacterConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		CharacterConverter converter = new CharacterConverter();
+		CharacterConverter converter = CharacterConverter.getSingleton();
 		Boolean configInfo = converter.configure(null, 0, null);
 
 		testConverter(converter, configInfo, '1');
@@ -27,7 +27,7 @@ public class CharacterConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testMoreThanOne() {
-		CharacterConverter converter = new CharacterConverter();
+		CharacterConverter converter = CharacterConverter.getSingleton();
 		Boolean configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
@@ -42,5 +42,12 @@ public class CharacterConverterTest extends AbstractConverterTest {
 		columnInfo = ColumnInfo.forTests(converter, configInfo);
 		converter.stringToJava("line", 1, columnInfo, columnVal, parseError);
 		assertTrue(parseError.isError());
+	}
+
+	@Test
+	public void testConverage() {
+		CharacterConverter converter = CharacterConverter.getSingleton();
+		assertTrue(converter.isNeedsQuotes(null));
+		assertFalse(converter.isAlwaysTrimInput());
 	}
 }

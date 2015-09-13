@@ -9,14 +9,14 @@ public class ByteConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		ByteConverter converter = new ByteConverter();
+		ByteConverter converter = ByteConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		testNumbers(converter, configInfo);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
-		ByteConverter converter = new ByteConverter();
+		ByteConverter converter = ByteConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure("###,##0", 0, null);
 		testNumbers(converter, configInfo);
 	}

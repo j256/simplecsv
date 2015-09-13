@@ -9,7 +9,7 @@ public class FloatConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws Exception {
-		FloatConverter converter = new FloatConverter();
+		FloatConverter converter = FloatConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		testNumbers(converter, configInfo);
 		testConverter(converter, configInfo, Float.MIN_VALUE);
@@ -18,7 +18,7 @@ public class FloatConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testFormat() throws Exception {
-		FloatConverter converter = new FloatConverter();
+		FloatConverter converter = FloatConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure("###,##0.0################", 0, null);
 		testNumbers(converter, configInfo);
 	}

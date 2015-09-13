@@ -3,7 +3,9 @@ package com.j256.simplecsv.processor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.StringReader;
@@ -23,6 +25,11 @@ import com.j256.simplecsv.converter.IntegerConverter;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 public class CsvProcessorTest {
+
+	private static final String QUOTE_IN_HEADER_BEFORE = "has";
+	private static final String QUOTE_IN_HEADER_AFTER = "quote";
+	private static final String QUOTE_IN_HEADER = QUOTE_IN_HEADER_BEFORE + '\"' + QUOTE_IN_HEADER_AFTER;
+	private static final String QUOTE_IN_HEADER_QUOTED = QUOTE_IN_HEADER_BEFORE + "\"\"" + QUOTE_IN_HEADER_AFTER;
 
 	@Test
 	public void testBasic() throws ParseException {
@@ -392,7 +399,7 @@ public class CsvProcessorTest {
 		String unquoted = "u";
 		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
-		// int value gets +1 in the [wierd] converter
+		// int value gets +1 in the [weird] converter
 		assertEquals(intValue + 1, basic.getIntValue());
 		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
@@ -410,14 +417,14 @@ public class CsvProcessorTest {
 	public void testDefaultValue() throws Exception {
 		CsvProcessor<DefaultValue> processor = new CsvProcessor<DefaultValue>(DefaultValue.class);
 		DefaultValue defaultValue = processor.processRow("", null);
-		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.defaultValue);
+		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.value);
 	}
 
 	@Test
 	public void testBlankLastField() throws Exception {
 		CsvProcessor<DefaultValue> processor = new CsvProcessor<DefaultValue>(DefaultValue.class);
 		DefaultValue defaultValue = processor.processRow("", null);
-		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.defaultValue);
+		assertEquals(Integer.parseInt(DefaultValue.DEFAULT_VALUE), defaultValue.value);
 	}
 
 	@Test
@@ -471,8 +478,8 @@ public class CsvProcessorTest {
 	}
 
 	@Test(expected = ParseException.class)
-	public void testRequired() throws Exception {
-		CsvProcessor<Required> processor = new CsvProcessor<Required>(Required.class);
+	public void testMustBeSupplied() throws Exception {
+		CsvProcessor<MustNotBeBlank> processor = new CsvProcessor<MustNotBeBlank>(MustNotBeBlank.class);
 		processor.processRow("", null);
 	}
 
@@ -578,8 +585,116 @@ public class CsvProcessorTest {
 		error = parseErrors.get(1);
 		assertEquals(4, error.getLineNumber());
 		assertEquals(2, error.getLinePos());
-		assertEquals(ErrorType.REQUIRED, error.getErrorType());
+		assertEquals(ErrorType.MUST_NOT_BE_BLANK, error.getErrorType());
 	}
+
+	@Test
+	public void testBadHeader() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("\"bad header\n");
+		ParseError parseError = new ParseError();
+		assertNull(processor.readHeader(new BufferedReader(reader), parseError));
+		assertTrue(parseError.isError());
+
+		processor.withHeaderValidation(false);
+		reader = new StringReader("bad header\n");
+		assertNotNull(processor.readHeader(new BufferedReader(reader), parseError));
+	}
+
+	@Test
+	public void testBlankHeader() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("\"\n");
+		ParseError parseError = new ParseError();
+		assertNull(processor.readHeader(new BufferedReader(reader), parseError));
+		assertTrue(parseError.isError());
+	}
+
+	@Test(expected = ParseException.class)
+	public void testBadQuotedHeaderThrows() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("\"bad header\n");
+		assertNull(processor.readHeader(new BufferedReader(reader), null));
+	}
+
+	@Test(expected = ParseException.class)
+	public void testBadHeaderThrows() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		StringReader reader = new StringReader("bad header\n");
+		assertNull(processor.readHeader(new BufferedReader(reader), null));
+	}
+
+	@Test
+	public void testValidateHeaderString() throws Exception {
+		String header = "intValue,string,bad,unquoted";
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.validateHeader(header, null);
+	}
+
+	@Test
+	public void testValidateHeaderColumns() {
+		String[] headers = new String[] { "intValue", "string", "bad", "unquoted" };
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.validateHeaderColumns(headers, null);
+	}
+
+	@Test
+	public void testNoHeader() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withFirstLineHeader(false);
+
+		String strValue = "fjeofjewf";
+		int intValue = 123131;
+		long longValue = 123213213123L;
+		String unquotedValue = "fewopjfpewfjw";
+
+		// unknown field at the end
+		StringReader reader =
+				new StringReader(intValue + "," + strValue + "," + longValue + "," + unquotedValue + ",unknownValue\n");
+		List<Basic> entities = processor.readAll(reader, null);
+		assertEquals(1, entities.size());
+		Basic basic = entities.get(0);
+		assertEquals(intValue, basic.getIntValue());
+		assertEquals(strValue, basic.getStringValue());
+		assertEquals(longValue, basic.getLongValue());
+		assertEquals(unquotedValue, basic.getUnquotedValue());
+	}
+
+	@Test
+	public void testDontWriteHeader() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		processor.withFirstLineHeader(false);
+
+		String strValue = "fjeofjewf";
+		int intValue = 123131;
+		long longValue = 123213213123L;
+		String unquotedValue = "fewopjfpewfjw";
+		Basic basic = new Basic();
+		basic.intValue = intValue;
+		basic.string = strValue;
+		basic.longValue = longValue;
+		basic.unquoted = unquotedValue;
+
+		StringWriter writer = new StringWriter();
+		processor.writeAll(writer, Collections.singletonList(basic), false);
+
+		String expectedLine = intValue + ",\"" + strValue + "\"," + longValue + "," + unquotedValue + "\n";
+		String line = writer.toString();
+		assertEquals(expectedLine, line);
+	}
+
+	@Test
+	public void testQuoteInHeader() throws Exception {
+		CsvProcessor<QuoteInColumnHeader> processor = new CsvProcessor<QuoteInColumnHeader>(QuoteInColumnHeader.class);
+
+		StringWriter writer = new StringWriter();
+		processor.writeAll(writer, Collections.<QuoteInColumnHeader> emptyList(), true);
+
+		String line = writer.toString();
+		assertEquals("\"" + QUOTE_IN_HEADER_QUOTED + "\"\n", line);
+	}
+
+	/* ================================================================================================= */
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
 			throws ParseException {
@@ -598,14 +713,16 @@ public class CsvProcessorTest {
 		assertEquals(unquoted, basic.getUnquotedValue());
 	}
 
+	/* ================================================================================================= */
+
 	private static class Basic {
 		@CsvField
 		private int intValue;
-		@CsvField(required = true)
+		@CsvField(mustNotBeBlank = true)
 		private String string;
 		@CsvField
 		private long longValue;
-		@CsvField(converterClass = UnquotedStringConverter.class, optionalColumn = true)
+		@CsvField(converterClass = UnquotedStringConverter.class, mustBeSupplied = false)
 		private String unquoted;
 
 		public Basic() {
@@ -655,18 +772,18 @@ public class CsvProcessorTest {
 	private static class DefaultValue {
 		public static final String DEFAULT_VALUE = "1";
 		@CsvField(defaultValue = DEFAULT_VALUE)
-		private int defaultValue;
+		private int value;
 		@SuppressWarnings("unused")
 		public DefaultValue() {
 			// for simplecsv
 		}
 	}
 
-	private static class Required {
-		@CsvField(required = true)
-		private int defaultValue;
+	private static class MustNotBeBlank {
+		@CsvField(mustNotBeBlank = true)
+		private int value;
 		@SuppressWarnings("unused")
-		public Required() {
+		public MustNotBeBlank() {
 			// for simplecsv
 		}
 	}
@@ -674,6 +791,15 @@ public class CsvProcessorTest {
 	private static class NoConstructor {
 		@CsvField
 		private int value;
+	}
+
+	private static class QuoteInColumnHeader {
+		@CsvField(columnName = QUOTE_IN_HEADER)
+		private int value;
+		@SuppressWarnings("unused")
+		public QuoteInColumnHeader() {
+			// for simplecsv
+		}
 	}
 
 	public static class UnquotedStringConverter implements Converter<String, Void> {

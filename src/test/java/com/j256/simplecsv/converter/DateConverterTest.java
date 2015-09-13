@@ -1,5 +1,8 @@
 package com.j256.simplecsv.converter;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,7 +13,7 @@ public class DateConverterTest extends AbstractConverterTest {
 
 	@Test
 	public void testStuff() throws ParseException {
-		DateConverter converter = new DateConverter();
+		DateConverter converter = DateConverter.getSingleton();
 		String configInfo = converter.configure(null, 0, null);
 		testConverter(converter, configInfo, makeDate(2014, 11, 23));
 		testConverter(converter, configInfo, makeDate(2014, 1, 1));
@@ -18,7 +21,7 @@ public class DateConverterTest extends AbstractConverterTest {
 		testConverter(converter, configInfo, makeDate(2014, 12, 31));
 		testConverter(converter, configInfo, null);
 
-		converter = new DateConverter();
+		converter = DateConverter.getSingleton();
 		configInfo = converter.configure("yyyyMMdd", 0, null);
 		testConverter(converter, configInfo, makeDate(2014, 11, 23));
 		testConverter(converter, configInfo, makeDate(2014, 1, 1));
@@ -29,8 +32,15 @@ public class DateConverterTest extends AbstractConverterTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testInvalidPattern() {
-		DateConverter converter = new DateConverter();
+		DateConverter converter = DateConverter.getSingleton();
 		converter.configure("notagoodpattern", 0, null);
+	}
+
+	@Test
+	public void testConverage() {
+		DateConverter converter = DateConverter.getSingleton();
+		assertTrue(converter.isNeedsQuotes(null));
+		assertFalse(converter.isAlwaysTrimInput());
 	}
 
 	private Date makeDate(int year, int month, int day) {
