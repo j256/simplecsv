@@ -122,11 +122,12 @@ For more extensive instructions, @pxref{Using}.
 @cindex using SimpleCSV
 @menu
 * Downloading ::                Downloading the SimpleCSV jar.
+* Maven ::                      How to use with Maven
 * CsvField Annotation ::        Details about the @@CsvField annotation.
 @end menu
 
 @c ----------------------------------------------------------------
-@node Downloading, CsvField Annotation, Using, Using
+@node Downloading, Maven, Using, Using
 @section Downloading Jar
 
 @cindex how to download the jars
@@ -139,7 +140,23 @@ central maven repository}.
 The code works with Java 6 or later.
 
 @c ----------------------------------------------------------------
-@node CsvField Annotation, Examples, Downloading, Using
+@node Maven, CsvField Annotation, Using, Using
+@section Using With Maven
+
+@cindex Maven, use with
+@cindex pom.xml dependency
+To use SimpleCSV with maven, include the following dependency in your @file{pom.xml} file:
+
+@example
+<dependency>
+	<groupId>com.j256.simplecsv</groupId>
+	<artifactId>simplecsv</artifactId>
+	<version>@value{simplecsv_version}</version>
+</dependency>
+@end example 
+
+@c ----------------------------------------------------------------
+@node CsvField Annotation, Examples, Maven, Using
 @section CsvField Annotation
 
 @cindex CsvField annotation

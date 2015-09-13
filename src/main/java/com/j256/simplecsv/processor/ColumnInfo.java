@@ -176,7 +176,7 @@ public class ColumnInfo {
 	 */
 	@SuppressWarnings("deprecation")
 	private static boolean fieldMustNotBeBlank(CsvField csvField) {
-		return (csvField.required() || csvField.mustNotBeBlank());
+		return (csvField.mustNotBeBlank() || csvField.required());
 	}
 
 	/**
@@ -184,11 +184,7 @@ public class ColumnInfo {
 	 */
 	@SuppressWarnings("deprecation")
 	private static boolean fieldMustBeSupplied(CsvField csvField) {
-		// we are explicit here because if the use must-be-suppled we have to take that value
-		if (!csvField.mustBeSupplied() || csvField.optionalColumn()) {
-			return false;
-		} else {
-			return true;
-		}
+		// must-be-suppled default true but optionalColumn default was false
+		return (csvField.mustBeSupplied() && !csvField.optionalColumn());
 	}
 }
