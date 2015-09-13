@@ -82,14 +82,14 @@ public @interface CsvField {
 	public boolean mustBeSupplied() default true;
 
 	/**
-	 * @deprecated Should use {@link #mustBeSupplied()} instead.
-	 */
-	@Deprecated
-	public boolean optionalColumn() default false;
-
-	/**
 	 * @deprecated Should use {@link #mustNotBeBlank()} instead.
 	 */
 	@Deprecated
 	public boolean required() default false;
+
+	/**
+	 * @deprecated Should use {@link #mustBeSupplied()} instead.
+	 */
+	@Deprecated
+	public boolean optionalColumn() default false;
 }
