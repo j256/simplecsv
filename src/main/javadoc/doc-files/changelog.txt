@@ -1,4 +1,9 @@
-0.7: 8/31/2014
+0.8: 9/13/2015
+	* Renamed CsvField.required to be mustNotBeBlank to be more explicit.
+	* Renamed CsvField.optionalColumn to be mustBeSupplied and reverted the polarity to be more explicit.
+	* Improved test coverage.
+
+0.7: 8/31/2015
 	* Fixed the errors from line problems.
 	* Changed the way the header-validation is set from argument to .withHeaderValidation(...).
 	* Changed the way the first-line-header is set from argument to .withFirstLineHeader(...).
