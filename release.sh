@@ -88,6 +88,14 @@ if [ "$release" != "$ver" ]; then
 	exit 1
 fi
 
+ver=`grep '^@set simplecsv_version' src/main/doc/simplecsv.texi | cut -f3 -d' '`
+if [ "$release" != "$ver" ]; then
+	/bin/echo "simplecsv.texi version seems wrong:"
+	grep '^@set simplecsv_version' src/main/doc/simplecsv.texi
+	/bin/echo "Press control-c to quit otherwise return.  [ok] "
+	read cont
+fi
+
 #############################################################
 # releasing to sonatype
 
