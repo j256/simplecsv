@@ -60,7 +60,8 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Character stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+	public Character stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+			ParseError parseError) {
 		Boolean parseErrorOnMoreThanOne = (Boolean) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;

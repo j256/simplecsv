@@ -79,7 +79,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	/**
-	 * Exposed for testing purposes. 
+	 * Exposed for testing purposes.
 	 */
 	static class ConfigInfo {
 		final boolean trimOutput;

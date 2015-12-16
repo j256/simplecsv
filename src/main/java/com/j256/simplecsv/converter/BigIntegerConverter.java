@@ -60,8 +60,8 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public BigInteger stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
-			throws ParseException {
+	public BigInteger stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+			ParseError parseError) throws ParseException {
 		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;
