@@ -30,7 +30,12 @@ public class DateConverter implements Converter<Date, String> {
 	/*
 	 * We need to do this because SimpleDateFormat is not thread safe.
 	 */
-	private final ThreadLocal<SimpleDateFormat> threadLocal = new ThreadLocal<SimpleDateFormat>();
+	private final ThreadLocal<OurDateFormatter> threadLocal = new ThreadLocal<OurDateFormatter>() {
+		@Override
+		protected OurDateFormatter initialValue() {
+			return new OurDateFormatter();
+		}
+	};
 
 	private static final DateConverter singleton = new DateConverter();
 
@@ -70,7 +75,7 @@ public class DateConverter implements Converter<Date, String> {
 			return null;
 		} else {
 			String datePattern = (String) columnInfo.getConfigInfo();
-			return getDateFormatter(datePattern).format(value);
+			return threadLocal.get().format(datePattern, value);
 		}
 	}
 
@@ -81,17 +86,40 @@ public class DateConverter implements Converter<Date, String> {
 			return null;
 		} else {
 			String datePattern = (String) columnInfo.getConfigInfo();
-			return getDateFormatter(datePattern).parse(value);
+			try {
+				return threadLocal.get().parse(datePattern, value);
+			} catch (ParseException pe) {
+				ParseException wrappedPe =
+						new ParseException("Problem when using date-pattern: " + datePattern, pe.getErrorOffset());
+				wrappedPe.initCause(pe);
+				throw wrappedPe;
+			}
 		}
 	}
 
-	private SimpleDateFormat getDateFormatter(String format) {
-		// we do this because we can't use the initValue() method
-		SimpleDateFormat formatter = threadLocal.get();
-		if (formatter == null) {
-			formatter = new SimpleDateFormat(format);
-			threadLocal.set(formatter);
+	/**
+	 * Formatter which saves a single SimpleDateFormat object in a thread-local.
+	 */
+	private static class OurDateFormatter {
+
+		private String format;
+		private SimpleDateFormat formatter;
+
+		public Date parse(String format, String dateString) throws ParseException {
+			return checkFormatter(format).parse(dateString);
 		}
-		return formatter;
+
+		public String format(String format, Date date) {
+			return checkFormatter(format).format(date);
+		}
+
+		private SimpleDateFormat checkFormatter(String format) {
+			// if we have no format or the format doesn't matched the cached one
+			if (this.format == null || !this.format.equals(format)) {
+				this.formatter = new SimpleDateFormat(format);
+				this.format = format;
+			}
+			return this.formatter;
+		}
 	}
 }
