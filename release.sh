@@ -61,7 +61,7 @@ if [ "$release" != "$ver" ]; then
 	exit 1
 fi
 
-var="$LIBRARY_version"
+var="${LIBRARY}_version"
 ver=`grep "^@set $var" src/main/doc/$LIBRARY.texi | cut -f3 -d' '`
 if [ "$release" != "$ver" ]; then
 	/bin/echo "$LIBRARY.texi version seems wrong:"
