@@ -1,4 +1,4 @@
-1.0: 1/22/2016
+1.1: 1/22/2016
 	* Fixed a problem with the Date converter and multiple dates per item.
 
 0.8: 9/13/2015
