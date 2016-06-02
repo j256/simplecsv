@@ -13,3 +13,4 @@ Used to maintain requested features or future work.
 - pass in an optional Callable<T> which creates the entities if you can't force the public constructor
 - flag on processor to ignore any unknown fields
 - flag on processor to allow columns to be moved around in which case their location is mapped
+- VALIDATE_HEADER should have a better line position
