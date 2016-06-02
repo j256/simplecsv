@@ -1,3 +1,9 @@
+1.2: 6/2/2016
+	* Changed the Converter.stringToJava() method to include the line-position for better error messages.
+	* Added a CASE_SENSITIVE and NEEDS_QUOTES flags to the BooleanConverter.  It now is case-insensitive by default.
+	* Better processing of enum fields.
+	* Exposed the BufferedReaderLineCounter class to be used externally to track line numbers.
+
 1.1: 1/22/2016
 	* Fixed a problem with the Date converter and multiple dates per item.
 

@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import org.junit.Test;
 
 import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.converter.BooleanConverter;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.IntegerConverter;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
@@ -110,9 +111,10 @@ public class CsvProcessorTest {
 		String str = "strwow";
 		long longValue = 341442323234552L;
 		String unquoted = "fewpofjwe";
-		Basic basic = new Basic(intValue, str, longValue, unquoted);
+		boolean bool = true;
+		Basic basic = new Basic(intValue, str, longValue, unquoted, bool);
 		String line = processor.buildLine(basic, false);
-		assertEquals(intValue + ",\"" + str + "\"," + longValue + "," + unquoted, line);
+		assertEquals(intValue + ",\"" + str + "\"," + longValue + "," + unquoted + "," + bool, line);
 	}
 
 	@Test
@@ -123,9 +125,12 @@ public class CsvProcessorTest {
 		String afterQuote = "wow";
 		long longValue = 3452L;
 		String unquoted = "fewdqwpofjwe";
-		Basic basic = new Basic(intValue, beforeQuote + "\"" + afterQuote, longValue, unquoted);
+		boolean bool = false;
+		Basic basic = new Basic(intValue, beforeQuote + "\"" + afterQuote, longValue, unquoted, bool);
 		String line = processor.buildLine(basic, false);
-		assertEquals(intValue + ",\"" + beforeQuote + "\"\"" + afterQuote + "\"," + longValue + "," + unquoted, line);
+		assertEquals(
+				intValue + ",\"" + beforeQuote + "\"\"" + afterQuote + "\"," + longValue + "," + unquoted + "," + bool,
+				line);
 	}
 
 	@Test
@@ -135,13 +140,15 @@ public class CsvProcessorTest {
 		String str = "has,comma";
 		long longValue = 3452L;
 		String unquoted = "u,q";
-		Basic basic = new Basic(intValue, str, longValue, unquoted);
+		boolean bool = true;
+		Basic basic = new Basic(intValue, str, longValue, unquoted, true);
 		String written = processor.buildLine(basic, false);
 		basic = processor.processRow(written, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+		assertEquals(bool, basic.isBool());
 	}
 
 	@Test
@@ -167,7 +174,8 @@ public class CsvProcessorTest {
 		String str = "has,comma";
 		long longValue = 3452L;
 		String unquoted = "u,q";
-		Basic basic = new Basic(intValue, str, longValue, unquoted);
+		boolean bool = false;
+		Basic basic = new Basic(intValue, str, longValue, unquoted, bool);
 
 		File file = new File("target/" + getClass().getSimpleName());
 		file.delete();
@@ -182,6 +190,7 @@ public class CsvProcessorTest {
 		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+		assertEquals(bool, basic.isBool());
 	}
 
 	@Test(expected = ParseException.class)
@@ -227,7 +236,7 @@ public class CsvProcessorTest {
 		assertEquals(ErrorType.INVALID_HEADER, parseErrors.get(0).getErrorType());
 
 		processor.withFlexibleOrder(true);
-		reader = new StringReader("string,intValue,longValue,unquoted");
+		reader = new StringReader("string,intValue,longValue,unquoted,bool");
 		parseErrors.clear();
 		entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -238,7 +247,7 @@ public class CsvProcessorTest {
 	@Test
 	public void testOptionalHeaders() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		StringReader reader = new StringReader("intValue,string,longValue");
+		StringReader reader = new StringReader("intValue,string,longValue,bool");
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
 		List<Basic> entities = processor.readAll(reader, parseErrors);
 		assertNotNull(entities);
@@ -254,10 +263,11 @@ public class CsvProcessorTest {
 		int intValue = 123131;
 		long longValue = 123213213123L;
 		String unquotedValue = "fewopjfpewfjw";
+		boolean bool = true;
 
 		// different order #1
-		StringReader reader = new StringReader("string,intValue,longValue,unquoted\n" //
-				+ strValue + "," + intValue + "," + longValue + "," + unquotedValue + "\n");
+		StringReader reader = new StringReader("string,intValue,longValue,unquoted,bool\n" //
+				+ strValue + "," + intValue + "," + longValue + "," + unquotedValue + "," + bool + "\n");
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
 		List<Basic> entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -269,8 +279,8 @@ public class CsvProcessorTest {
 		assertEquals(unquotedValue, basic.getUnquotedValue());
 
 		// different order #2
-		reader = new StringReader("longValue,unquoted,intValue,string\n" //
-				+ longValue + "," + unquotedValue + "," + intValue + "," + strValue + "\n");
+		reader = new StringReader("longValue,unquoted,intValue,string,bool\n" //
+				+ longValue + "," + unquotedValue + "," + intValue + "," + strValue + "," + bool + "\n");
 		parseErrors.clear();
 		entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -295,10 +305,11 @@ public class CsvProcessorTest {
 		int intValue = 123131;
 		long longValue = 123213213123L;
 		String unquotedValue = "fewopjfpewfjw";
+		boolean bool = false;
 
 		// column names with suffixes
-		StringReader reader = new StringReader("intValue*,string1,longValue2,unquoted\n" //
-				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + "\n");
+		StringReader reader = new StringReader("intValue*,string1,longValue2,unquoted,bool\n" //
+				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + "," + bool + "\n");
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
 		List<Basic> entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -318,10 +329,11 @@ public class CsvProcessorTest {
 		int intValue = 123131;
 		long longValue = 123213213123L;
 		String unquotedValue = "fewopjfpewfjw";
+		boolean bool = true;
 
 		// unknown field at the end
-		StringReader reader = new StringReader("intValue,string,longValue,unquoted,unknown\n" //
-				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + ",unknownValue\n");
+		StringReader reader = new StringReader("intValue,string,longValue,unquoted,bool,unknown\n" //
+				+ intValue + "," + strValue + "," + longValue + "," + unquotedValue + "," + bool + ",unknownValue\n");
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
 		List<Basic> entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -333,8 +345,8 @@ public class CsvProcessorTest {
 		assertEquals(unquotedValue, basic.getUnquotedValue());
 
 		// unknown field in the middle
-		reader = new StringReader("intValue,string,unknown,longValue,unquoted\n" //
-				+ intValue + "," + strValue + ",unknownValue," + longValue + "," + unquotedValue + "\n");
+		reader = new StringReader("intValue,string,unknown,longValue,unquoted,bool\n" //
+				+ intValue + "," + strValue + ",unknownValue," + longValue + "," + unquotedValue + "," + bool + "\n");
 		parseErrors = new ArrayList<ParseError>();
 		entities = processor.readAll(reader, parseErrors);
 		assertEquals(0, parseErrors.size());
@@ -349,12 +361,12 @@ public class CsvProcessorTest {
 	@Test
 	public void testNulls() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		Basic basic = new Basic(1, null, 2, null);
+		Basic basic = new Basic(1, null, 2, null, false);
 		StringWriter writer = new StringWriter();
 		BufferedWriter bufferedWriter = new BufferedWriter(writer);
 		processor.writeRow(bufferedWriter, basic, false);
 		bufferedWriter.flush();
-		assertEquals("1,\"\",2,", writer.toString());
+		assertEquals("1,\"\",2,,false", writer.toString());
 	}
 
 	@Test
@@ -430,7 +442,7 @@ public class CsvProcessorTest {
 	@Test
 	public void testCallableConstructor() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
-		Basic basic = processor.processRow(",str,,", null);
+		Basic basic = processor.processRow(",str,,,", null);
 		// initially it is 0
 		assertEquals(0, basic.intValue);
 		processor = new CsvProcessor<Basic>(Basic.class);
@@ -443,7 +455,7 @@ public class CsvProcessorTest {
 				return basic;
 			}
 		});
-		basic = processor.processRow(",str,,", null);
+		basic = processor.processRow(",str,,,", null);
 		assertEquals(value, basic.intValue);
 
 		processor = new CsvProcessor<Basic>(Basic.class);
@@ -455,7 +467,7 @@ public class CsvProcessorTest {
 		});
 		// make sure this resets the callable is reset
 		processor.withConstructorCallable(null);
-		basic = processor.processRow(",str,,", null);
+		basic = processor.processRow(",str,,,", null);
 		assertEquals(0, basic.intValue);
 	}
 
@@ -557,10 +569,10 @@ public class CsvProcessorTest {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 
 		// column names with suffixes
-		StringReader reader = new StringReader("intValue,string,bad,unquoted\n" //
-				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "\n" //
-				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "\n" //
-				+ 1 + "," + "str" + "," + "notlong" + "," + "unq" + "\n" //
+		StringReader reader = new StringReader("intValue,string,bad,unquoted,bool\n" //
+				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "," + "true" + "\n" //
+				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "," + "true" + "\n" //
+				+ 1 + "," + "str" + "," + "notlong" + "," + "unq" + "," + "true" + "\n" //
 		);
 		List<ParseError> parseErrors = new ArrayList<ParseError>();
 		processor.readAll(reader, parseErrors);
@@ -570,10 +582,10 @@ public class CsvProcessorTest {
 		assertEquals(ErrorType.INVALID_HEADER, error.getErrorType());
 
 		// column names with suffixes
-		reader = new StringReader("intValue,string,longValue,unquoted\n" //
-				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "\n" //
-				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "\n" //
-				+ 1 + "," + "" + "," + "notlong" + "," + "unq" + "\n" //
+		reader = new StringReader("intValue,string,longValue,unquoted,bool\n" //
+				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "," + "true" + "\n" //
+				+ "notint" + "," + "str" + "," + 2 + "," + "unq" + "," + "true" + "\n" //
+				+ 1 + "," + "" + "," + "notlong" + "," + "unq" + "," + "true" + "\n" //
 		);
 		parseErrors = new ArrayList<ParseError>();
 		processor.readAll(reader, parseErrors);
@@ -586,6 +598,23 @@ public class CsvProcessorTest {
 		assertEquals(4, error.getLineNumber());
 		assertEquals(2, error.getLinePos());
 		assertEquals(ErrorType.MUST_NOT_BE_BLANK, error.getErrorType());
+	}
+
+	@Test
+	public void testBooleanLinePos() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+
+		// column names with suffixes
+		StringReader reader = new StringReader("intValue,string,longValue,unquoted,bool\n" //
+				+ 1 + "," + "str" + "," + 2 + "," + "unq" + "," + "somestrangevalue" + "\n" //
+		);
+		List<ParseError> parseErrors = new ArrayList<ParseError>();
+		processor.readAll(reader, parseErrors);
+		assertEquals(1, parseErrors.size());
+		ParseError error = parseErrors.get(0);
+		assertEquals(ErrorType.INVALID_FORMAT, error.getErrorType());
+		assertEquals(2, error.getLineNumber());
+		assertEquals(12, error.getLinePos());
 	}
 
 	@Test
@@ -647,10 +676,11 @@ public class CsvProcessorTest {
 		int intValue = 123131;
 		long longValue = 123213213123L;
 		String unquotedValue = "fewopjfpewfjw";
+		boolean bool = true;
 
 		// unknown field at the end
-		StringReader reader =
-				new StringReader(intValue + "," + strValue + "," + longValue + "," + unquotedValue + ",unknownValue\n");
+		StringReader reader = new StringReader(
+				intValue + "," + strValue + "," + longValue + "," + unquotedValue + "," + bool + ",unknownValue\n");
 		List<Basic> entities = processor.readAll(reader, null);
 		assertEquals(1, entities.size());
 		Basic basic = entities.get(0);
@@ -669,16 +699,19 @@ public class CsvProcessorTest {
 		int intValue = 123131;
 		long longValue = 123213213123L;
 		String unquotedValue = "fewopjfpewfjw";
+		boolean bool = true;
+
 		Basic basic = new Basic();
 		basic.intValue = intValue;
 		basic.string = strValue;
 		basic.longValue = longValue;
 		basic.unquoted = unquotedValue;
+		basic.bool = bool;
 
 		StringWriter writer = new StringWriter();
 		processor.writeAll(writer, Collections.singletonList(basic), false);
 
-		String expectedLine = intValue + ",\"" + strValue + "\"," + longValue + "," + unquotedValue + "\n";
+		String expectedLine = intValue + ",\"" + strValue + "\"," + longValue + "," + unquotedValue + "," + bool + "\n";
 		String line = writer.toString();
 		assertEquals(expectedLine, line);
 	}
@@ -724,16 +757,19 @@ public class CsvProcessorTest {
 		private long longValue;
 		@CsvField(converterClass = UnquotedStringConverter.class, mustBeSupplied = false)
 		private String unquoted;
+		@CsvField(converterFlags = BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE)
+		private boolean bool;
 
 		public Basic() {
 			// for simplecsv
 		}
 
-		public Basic(int intValue, String string, long longValue, String specialString) {
+		public Basic(int intValue, String string, long longValue, String specialString, boolean bool) {
 			this.intValue = intValue;
 			this.string = string;
 			this.longValue = longValue;
 			this.unquoted = specialString;
+			this.bool = bool;
 		}
 
 		public int getIntValue() {
@@ -751,6 +787,10 @@ public class CsvProcessorTest {
 		public String getUnquotedValue() {
 			return unquoted;
 		}
+
+		public boolean isBool() {
+			return bool;
+		}
 	}
 
 	private static class BasicSubclass extends Basic {
@@ -763,6 +803,7 @@ public class CsvProcessorTest {
 	private static class BasicSubclassDupField extends Basic {
 		@CsvField
 		private int intValue;
+
 		@SuppressWarnings("unused")
 		public BasicSubclassDupField() {
 			// for simplecsv
@@ -773,6 +814,7 @@ public class CsvProcessorTest {
 		public static final String DEFAULT_VALUE = "1";
 		@CsvField(defaultValue = DEFAULT_VALUE)
 		private int value;
+
 		@SuppressWarnings("unused")
 		public DefaultValue() {
 			// for simplecsv
@@ -782,6 +824,7 @@ public class CsvProcessorTest {
 	private static class MustNotBeBlank {
 		@CsvField(mustNotBeBlank = true)
 		private int value;
+
 		@SuppressWarnings("unused")
 		public MustNotBeBlank() {
 			// for simplecsv
@@ -796,6 +839,7 @@ public class CsvProcessorTest {
 	private static class QuoteInColumnHeader {
 		@CsvField(columnName = QUOTE_IN_HEADER)
 		private int value;
+
 		@SuppressWarnings("unused")
 		public QuoteInColumnHeader() {
 			// for simplecsv
@@ -807,20 +851,24 @@ public class CsvProcessorTest {
 		public Void configure(String format, long flags, Field field) {
 			return null;
 		}
+
 		@Override
 		public boolean isNeedsQuotes(Void configInfo) {
 			return false;
 		}
+
 		@Override
 		public boolean isAlwaysTrimInput() {
 			return false;
 		}
+
 		@Override
 		public String javaToString(ColumnInfo columnInfo, String value) {
 			return value;
 		}
+
 		@Override
-		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 				ParseError parseError) {
 			return value;
 		}
@@ -831,20 +879,24 @@ public class CsvProcessorTest {
 		public Void configure(String format, long flags, Field field) {
 			return null;
 		}
+
 		@Override
 		public boolean isNeedsQuotes(Void configInfo) {
 			return false;
 		}
+
 		@Override
 		public boolean isAlwaysTrimInput() {
 			return false;
 		}
+
 		@Override
 		public String javaToString(ColumnInfo columnInfo, Integer value) {
 			return value.toString();
 		}
+
 		@Override
-		public Integer stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 				ParseError parseError) {
 			return Integer.parseInt(value) + 1;
 		}
@@ -855,20 +907,24 @@ public class CsvProcessorTest {
 		public Void configure(String format, long flags, Field field) {
 			return null;
 		}
+
 		@Override
 		public boolean isNeedsQuotes(Void configInfo) {
 			return false;
 		}
+
 		@Override
 		public boolean isAlwaysTrimInput() {
 			return false;
 		}
+
 		@Override
 		public String javaToString(ColumnInfo columnInfo, Integer value) {
 			return value.toString();
 		}
+
 		@Override
-		public Integer stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 				ParseError parseError) throws ParseException {
 			// this could throw a runtime exception
 			Integer.parseInt(value);

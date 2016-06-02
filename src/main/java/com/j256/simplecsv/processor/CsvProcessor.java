@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
+import com.j256.simplecsv.converter.EnumConverter;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 /**
@@ -182,24 +183,7 @@ public class CsvProcessor<T> {
 					return null;
 				}
 			}
-			List<T> results = new ArrayList<T>();
-			while (true) {
-				if (parseError != null) {
-					parseError.reset();
-				}
-				T result = readRow(bufferedReader, parseError);
-				if (result != null) {
-					results.add(result);
-				} else if (parseError != null && parseError.isError()) {
-					// if there was an error then add it to the list
-					parseErrors.add(parseError);
-					// once we use it, we need to create another one
-					parseError = new ParseError();
-				} else {
-					// if no error (and no exception) then EOF
-					return results;
-				}
-			}
+			return readRows(bufferedReader, parseErrors);
 		} finally {
 			bufferedReader.close();
 		}
@@ -209,7 +193,8 @@ public class CsvProcessor<T> {
 	 * Read in a line and process it as a CSV header.
 	 * 
 	 * @param bufferedReader
-	 *            Where to read the header from.
+	 *            Where to read the header from. It needs to be closed by the caller. Consider using
+	 *            {@link BufferedReaderLineCounter} to populate the line-number for parse errors.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
@@ -220,7 +205,8 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public String[] readHeader(BufferedReader bufferedReader, ParseError parseError) throws ParseException, IOException {
+	public String[] readHeader(BufferedReader bufferedReader, ParseError parseError)
+			throws ParseException, IOException {
 		checkEntityConfig();
 		String header = bufferedReader.readLine();
 		if (header == null) {
@@ -228,7 +214,7 @@ public class CsvProcessor<T> {
 				throw new ParseException("no header line read", 0);
 			} else {
 				parseError.setErrorType(ErrorType.NO_HEADER);
-				setLineNumber(bufferedReader, parseError);
+				parseError.setLineNumber(getLineNumber(bufferedReader));
 				return null;
 			}
 		}
@@ -246,10 +232,56 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Read in all of the entities in the reader passed in but without the header.
+	 * 
+	 * @param bufferedReader
+	 *            Where to read the entries from. It needs to be closed by the caller. Consider using
+	 *            {@link BufferedReaderLineCounter} to populate the line-number for parse errors.
+	 * @param parseErrors
+	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
+	 *            is true and the header does not match then no additional lines will be returned. If this is null then
+	 *            a ParseException will be thrown on parsing problems.
+	 * @return A list of entities read in or null if parseErrors is not null.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
+	 *             an exception should not be thrown.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when reading.
+	 */
+	public List<T> readRows(BufferedReader bufferedReader, Collection<ParseError> parseErrors)
+			throws IOException, ParseException {
+		checkEntityConfig();
+		ParseError parseError = null;
+		// we do this to reuse the parse error objects if we can
+		if (parseErrors != null) {
+			parseError = new ParseError();
+		}
+		List<T> results = new ArrayList<T>();
+		while (true) {
+			if (parseError != null) {
+				parseError.reset();
+			}
+			T result = readRow(bufferedReader, parseError);
+			if (result != null) {
+				results.add(result);
+			} else if (parseError != null && parseError.isError()) {
+				// if there was an error then add it to the list
+				parseErrors.add(parseError);
+				// once we use it, we need to create another one
+				parseError = new ParseError();
+			} else {
+				// if no result and no error then EOF
+				return results;
+			}
+		}
+	}
+
+	/**
 	 * Read an entity line from the reader.
 	 * 
 	 * @param bufferedReader
-	 *            Where to read the row from.
+	 *            Where to read the row from. It needs to be closed by the caller. Consider using
+	 *            {@link BufferedReaderLineCounter} to populate the line-number for parse errors.
 	 * @param parseError
 	 *            If not null, this will be set with the first parse error and it will return null. If this is null then
 	 *            a ParseException will be thrown instead.
@@ -272,7 +304,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Process a header row and return the associated entity.
+	 * Validate the header row against the configured header columns.
 	 * 
 	 * @param line
 	 *            Line to process to get our validate our header.
@@ -309,7 +341,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Process a line and divide it up into a series of quoted columns.
+	 * Process a header line and divide it up into a series of quoted columns.
 	 * 
 	 * @param line
 	 *            Line to process looking for header.
@@ -734,8 +766,8 @@ public class CsvProcessor<T> {
 			if (columnInfo.isMustBeSupplied()) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
-					parseError.setMessage("column '" + columnInfo.getColumnName()
-							+ "' must be suppled and was not specified");
+					parseError.setMessage(
+							"column '" + columnInfo.getColumnName() + "' must be suppled and was not specified");
 					parseError.setLineNumber(lineNumber);
 				}
 				result = false;
@@ -825,8 +857,8 @@ public class CsvProcessor<T> {
 					linePos);
 		}
 		if (linePos < line.length() && !ignoreUnknownColumns) {
-			throw new ParseException(
-					"Line has extra information past last column at position " + linePos + ": " + line, linePos);
+			throw new ParseException("Line has extra information past last column at position " + linePos + ": " + line,
+					linePos);
 		}
 		return target;
 	}
@@ -864,6 +896,10 @@ public class CsvProcessor<T> {
 					continue;
 				}
 				Converter<?, ?> converter = converterMap.get(field.getType());
+				// test for the enum converter specifically
+				if (converter == null && field.getType().isEnum()) {
+					converter = EnumConverter.getSingleton();
+				}
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				@SuppressWarnings("unchecked")
 				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
@@ -932,8 +968,8 @@ public class CsvProcessor<T> {
 			// must have a quote following a quote if there wasn't a columnSeparator
 			if (line.charAt(linePos) != columnQuote) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
-				parseError.setMessage("quote '" + columnQuote + "' is not followed up separator '" + columnSeparator
-						+ "'");
+				parseError.setMessage(
+						"quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
 				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return linePos;
@@ -1068,7 +1104,7 @@ public class CsvProcessor<T> {
 		}
 
 		try {
-			return converter.stringToJava(line, lineNumber, columnInfo, columnStr, parseError);
+			return converter.stringToJava(line, lineNumber, linePos, columnInfo, columnStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());
@@ -1084,35 +1120,11 @@ public class CsvProcessor<T> {
 		}
 	}
 
-	private void setLineNumber(BufferedReader bufferedReader, ParseError parseError) {
-		if (bufferedReader instanceof BufferedReaderLineCounter) {
-			parseError.setLineNumber(((BufferedReaderLineCounter) bufferedReader).lineCount);
-		} else {
-			parseError.setLineNumber(1);
-		}
-	}
-
 	private int getLineNumber(BufferedReader bufferedReader) {
 		if (bufferedReader instanceof BufferedReaderLineCounter) {
-			return ((BufferedReaderLineCounter) bufferedReader).lineCount;
+			return ((BufferedReaderLineCounter) bufferedReader).getLineCount();
 		} else {
 			return 1;
-		}
-	}
-
-	private static class BufferedReaderLineCounter extends BufferedReader {
-
-		int lineCount;
-
-		public BufferedReaderLineCounter(Reader reader) {
-			super(reader);
-		}
-
-		@Override
-		public String readLine() throws IOException {
-			String line = super.readLine();
-			lineCount++;
-			return line;
 		}
 	}
 }
