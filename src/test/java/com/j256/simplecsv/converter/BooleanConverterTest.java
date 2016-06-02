@@ -29,6 +29,25 @@ public class BooleanConverterTest extends AbstractConverterTest {
 		testConverter(converter, configInfo, null);
 	}
 
+	@Test
+	public void testCaseSensitive() {
+		BooleanConverter converter = BooleanConverter.getSingleton();
+		ConfigInfo configInfo = converter.configure(null, BooleanConverter.CASE_SENSITIVE, null);
+		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ParseError parseError = new ParseError();
+		assertTrue(converter.stringToJava("line", 1, 2, columnInfo, "true", parseError));
+		assertFalse(converter.stringToJava("line", 1, 2, columnInfo, "True", parseError));
+		assertFalse(converter.stringToJava("line", 1, 2, columnInfo, "TRUE", parseError));
+		assertFalse(converter.stringToJava("line", 1, 2, columnInfo, "wrong", parseError));
+
+		configInfo = converter.configure(null, 0, null);
+		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		assertTrue(converter.stringToJava("line", 1, 2, columnInfo, "true", parseError));
+		assertTrue(converter.stringToJava("line", 1, 2, columnInfo, "True", parseError));
+		assertTrue(converter.stringToJava("line", 1, 2, columnInfo, "TRUE", parseError));
+		assertFalse(converter.stringToJava("line", 1, 2, columnInfo, "wrong", parseError));
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadFormat() {
 		BooleanConverter converter = BooleanConverter.getSingleton();
@@ -58,7 +77,7 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	public void testConverage() {
 		BooleanConverter converter = BooleanConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		assertTrue(converter.isNeedsQuotes(configInfo));
+		assertFalse(converter.isNeedsQuotes(configInfo));
 		assertFalse(converter.isAlwaysTrimInput());
 	}
 
@@ -68,14 +87,18 @@ public class BooleanConverterTest extends AbstractConverterTest {
 		ConfigInfo configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertEquals(false, converter.stringToJava("line", 1, columnInfo, "unknown", parseError));
+		assertEquals(false, converter.stringToJava("line", 1, 2, columnInfo, "unknown", parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE, null);
 		columnInfo = ColumnInfo.forTests(converter, configInfo);
 		parseError.reset();
-		assertNull(converter.stringToJava("line", 1, columnInfo, "unknown", parseError));
+		int lineNum = 2131;
+		int linePos = 123213;
+		assertNull(converter.stringToJava("line", lineNum, linePos, columnInfo, "unknown", parseError));
 		assertTrue(parseError.isError());
+		assertEquals(lineNum, parseError.getLineNumber());
+		assertEquals(linePos, parseError.getLinePos());
 	}
 
 	@Test
