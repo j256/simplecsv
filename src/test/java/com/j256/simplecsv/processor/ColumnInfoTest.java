@@ -138,20 +138,24 @@ public class ColumnInfoTest {
 		public Void configure(String format, long flags, Field field) {
 			return null;
 		}
+
 		@Override
 		public boolean isNeedsQuotes(Void configInfo) {
 			return false;
 		}
+
 		@Override
 		public boolean isAlwaysTrimInput() {
 			return false;
 		}
+
 		@Override
 		public String javaToString(ColumnInfo columnInfo, String value) {
 			return value;
 		}
+
 		@Override
-		public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 				ParseError parseError) {
 			return value;
 		}

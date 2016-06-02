@@ -53,8 +53,8 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 		if ((flags & FORMAT_IS_UNKNOWN_VALUE) != 0) {
 			unknownValue = enumStringMap.get(format);
 			if (unknownValue == null) {
-				throw new IllegalArgumentException("Format string '" + format + "' is not a valid enum value for "
-						+ field.getType());
+				throw new IllegalArgumentException(
+						"Format string '" + format + "' is not a valid enum value for " + field.getType());
 			}
 		}
 
@@ -81,7 +81,8 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
-	public Enum<?> stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+	public Enum<?> stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) {
 		if (value.isEmpty()) {
 			return null;
 		}
@@ -95,6 +96,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(value);
 			parseError.setLineNumber(lineNumber);
+			parseError.setLinePos(linePos);
 			return null;
 		}
 	}
@@ -102,6 +104,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	static class ConfigInfo {
 		final Map<String, Enum<?>> enumStringMap;
 		final Enum<?> unknownValue;
+
 		private ConfigInfo(Map<String, Enum<?>> enumStringMap, Enum<?> unknownValue) {
 			this.enumStringMap = enumStringMap;
 			this.unknownValue = unknownValue;

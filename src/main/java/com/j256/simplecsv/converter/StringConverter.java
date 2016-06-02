@@ -69,7 +69,8 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public String stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+	public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) {
 		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		if (value.isEmpty() && configInfo.blankIsNull) {
 			return null;
@@ -84,6 +85,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	static class ConfigInfo {
 		final boolean trimOutput;
 		final boolean blankIsNull;
+
 		private ConfigInfo(boolean trimOutput, boolean blankIsNull) {
 			this.trimOutput = trimOutput;
 			this.blankIsNull = blankIsNull;

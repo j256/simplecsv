@@ -33,7 +33,7 @@ public class IntegerConverterTest extends AbstractConverterTest {
 		DecimalFormat configInfo = converter.configure(null, 0, null);
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
-		assertNull(converter.stringToJava("line", 1, columnInfo, "notanumber", parseError));
+		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "notanumber", parseError));
 		assertTrue(parseError.isError());
 	}
 

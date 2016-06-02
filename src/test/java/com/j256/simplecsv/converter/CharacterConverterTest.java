@@ -35,12 +35,12 @@ public class CharacterConverterTest extends AbstractConverterTest {
 		char one = '1';
 		char two = '2';
 		String columnVal = new String(new char[] { one, two });
-		assertEquals((Object) one, converter.stringToJava("line", 1, columnInfo, columnVal, parseError));
+		assertEquals((Object) one, converter.stringToJava("line", 1, 2, columnInfo, columnVal, parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, CharacterConverter.PARSE_ERROR_IF_MORE_THAN_ONE_CHAR, null);
 		columnInfo = ColumnInfo.forTests(converter, configInfo);
-		converter.stringToJava("line", 1, columnInfo, columnVal, parseError);
+		converter.stringToJava("line", 1, 2, columnInfo, columnVal, parseError);
 		assertTrue(parseError.isError());
 	}
 

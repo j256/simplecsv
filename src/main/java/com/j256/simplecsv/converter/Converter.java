@@ -70,6 +70,8 @@ public interface Converter<T, C> {
 	 *            Line we are processing for logging purposes.
 	 * @param lineNumber
 	 *            Number of the line we are processing for logging purposes.
+	 * @param linePos
+	 *            Position in the line that we are converting to identify what part of the line contains the value.
 	 * @param columnInfo
 	 *            Information about the column we are processing.
 	 * @param value
@@ -84,6 +86,6 @@ public interface Converter<T, C> {
 	 *             If there was some sort of parse or other error. It is better to return null and use the parseError
 	 *             argument instead. All RuntimeExceptions will be caught as well.
 	 */
-	public T stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
-			throws ParseException;
+	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) throws ParseException;
 }

@@ -60,7 +60,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Character stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+	public Character stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 			ParseError parseError) {
 		Boolean parseErrorOnMoreThanOne = (Boolean) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
@@ -69,6 +69,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage("More than one character specified");
 			parseError.setLineNumber(lineNumber);
+			parseError.setLinePos(linePos);
 			return null;
 		} else {
 			return value.charAt(0);

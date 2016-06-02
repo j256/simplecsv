@@ -28,12 +28,12 @@ public class StringConverterTest extends AbstractConverterTest {
 		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
-		assertEquals("", converter.stringToJava("line", 1, columnInfo, "", parseError));
+		assertEquals("", converter.stringToJava("line", 1, 2, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
 		configInfo = converter.configure(null, StringConverter.BLANK_IS_NULL, null);
 		columnInfo = ColumnInfo.forTests(converter, configInfo);
-		assertNull(converter.stringToJava("line", 1, columnInfo, "", parseError));
+		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
 		testConverter(converter, configInfo, null);

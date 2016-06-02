@@ -34,7 +34,8 @@ public class VoidConverter implements Converter<Void, Void> {
 	}
 
 	@Override
-	public Void stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+	public Void stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) {
 		return null;
 	}
 }

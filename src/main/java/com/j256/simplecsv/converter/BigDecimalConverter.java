@@ -58,7 +58,7 @@ public class BigDecimalConverter implements Converter<BigDecimal, DecimalFormat>
 	}
 
 	@Override
-	public BigDecimal stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value,
+	public BigDecimal stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
 			ParseError parseError) throws ParseException {
 		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {

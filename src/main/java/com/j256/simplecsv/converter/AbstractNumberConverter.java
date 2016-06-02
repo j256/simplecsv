@@ -61,7 +61,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public T stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
+	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value, ParseError parseError)
 			throws ParseException {
 		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.length() == 0) {
@@ -73,6 +73,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage(nfe.getMessage());
 				parseError.setLineNumber(lineNumber);
+				parseError.setLinePos(linePos);
 				return null;
 			}
 		} else {

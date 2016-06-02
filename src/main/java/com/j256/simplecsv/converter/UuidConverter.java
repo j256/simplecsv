@@ -48,7 +48,8 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
-	public UUID stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError) {
+	public UUID stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) {
 		if (value.isEmpty()) {
 			return null;
 		} else {

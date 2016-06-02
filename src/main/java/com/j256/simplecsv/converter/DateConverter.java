@@ -80,20 +80,19 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public Date stringToJava(String line, int lineNumber, ColumnInfo columnInfo, String value, ParseError parseError)
-			throws ParseException {
+	public Date stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+			ParseError parseError) throws ParseException {
 		if (value.isEmpty()) {
 			return null;
-		} else {
-			String datePattern = (String) columnInfo.getConfigInfo();
-			try {
-				return threadLocal.get().parse(datePattern, value);
-			} catch (ParseException pe) {
-				ParseException wrappedPe =
-						new ParseException("Problem when using date-pattern: " + datePattern, pe.getErrorOffset());
-				wrappedPe.initCause(pe);
-				throw wrappedPe;
-			}
+		}
+		String datePattern = (String) columnInfo.getConfigInfo();
+		try {
+			return threadLocal.get().parse(datePattern, value);
+		} catch (ParseException pe) {
+			ParseException wrappedPe =
+					new ParseException("Problem when using date-pattern: " + datePattern, pe.getErrorOffset());
+			wrappedPe.initCause(pe);
+			throw wrappedPe;
 		}
 	}
 

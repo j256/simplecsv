@@ -12,7 +12,7 @@ public class VoidConverterTest {
 		VoidConverter converter = new VoidConverter();
 		converter.configure(null, 0, null);
 		assertNull(converter.javaToString(null, null));
-		assertNull(converter.stringToJava(null, 0, null, null, null));
+		assertNull(converter.stringToJava(null, 0, 0, null, null, null));
 	}
 
 	@Test
