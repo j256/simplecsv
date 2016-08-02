@@ -93,11 +93,9 @@ public class BooleanConverterTest extends AbstractConverterTest {
 		configInfo = converter.configure(null, BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE, null);
 		columnInfo = ColumnInfo.forTests(converter, configInfo);
 		parseError.reset();
-		int lineNum = 2131;
 		int linePos = 123213;
-		assertNull(converter.stringToJava("line", lineNum, linePos, columnInfo, "unknown", parseError));
+		assertNull(converter.stringToJava("line", 0, linePos, columnInfo, "unknown", parseError));
 		assertTrue(parseError.isError());
-		assertEquals(lineNum, parseError.getLineNumber());
 		assertEquals(linePos, parseError.getLinePos());
 	}
 
