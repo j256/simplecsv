@@ -1,3 +1,8 @@
+1.3: 8/2/2016
+	* Fixed a couple of places where exceptions were being thrown instead of setting ParseError
+	* Better standard ways of reporting on line-number, line, and message in ParseError.
+	* Added a couple more ParseError ErrorType enum values.
+
 1.2: 6/2/2016
 	* Changed the Converter.stringToJava() method to include the line-position for better error messages.
 	* Added a CASE_SENSITIVE and NEEDS_QUOTES flags to the BooleanConverter.  It now is case-insensitive by default.

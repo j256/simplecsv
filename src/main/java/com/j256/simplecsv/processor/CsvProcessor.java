@@ -819,6 +819,22 @@ public class CsvProcessor<T> {
 	}
 
 	private T processRow(String line, ParseError parseError, int lineNumber) throws ParseException {
+		T entity = processRowInner(line, parseError, lineNumber);
+		if (parseError != null && parseError.isError()) {
+			if (parseError.getLine() == null) {
+				parseError.setLine(line);
+			}
+			if (parseError.getLineNumber() == 0) {
+				parseError.setLineNumber(lineNumber);
+			}
+			if (parseError.getMessage() == null) {
+				parseError.setMessage(parseError.getErrorType().getTypeMessage());
+			}
+		}
+		return entity;
+	}
+
+	private T processRowInner(String line, ParseError parseError, int lineNumber) throws ParseException {
 		T target = constructEntity();
 		int linePos = 0;
 		ParseError localParseError = parseError;
@@ -828,6 +844,10 @@ public class CsvProcessor<T> {
 		int columnCount = 0;
 		while (true) {
 			ColumnInfo columnInfo = columnPositionInfoMap.get(columnCount);
+			if (columnInfo == null && !ignoreUnknownColumns) {
+				break;
+			}
+
 			// we have to do this because a blank column may be ok
 			boolean atEnd = (linePos == line.length());
 			localParseError.reset();
@@ -853,12 +873,26 @@ public class CsvProcessor<T> {
 			// NOTE: we can't break here if we are at the end of line because might be blank column
 		}
 		if (columnCount < columnPositionInfoMap.size() && !allowPartialLines) {
-			throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
-					linePos);
+			if (parseError == null) {
+				throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
+						linePos);
+			} else {
+				parseError.setErrorType(ErrorType.TRUNCATED_LINE);
+				parseError.setMessage("Line does not have " + columnPositionInfoMap.size() + " columns");
+				parseError.setLinePos(linePos);
+				return null;
+			}
 		}
 		if (linePos < line.length() && !ignoreUnknownColumns) {
-			throw new ParseException("Line has extra information past last column at position " + linePos + ": " + line,
-					linePos);
+			if (parseError == null) {
+				throw new ParseException(
+						"Line has extra information past last column at position " + linePos + ": " + line, linePos);
+			} else {
+				parseError.setErrorType(ErrorType.TOO_MANY_COLUMNS);
+				parseError.setMessage("Line has extra information past last column at position " + linePos);
+				parseError.setLinePos(linePos);
+				return null;
+			}
 		}
 		return target;
 	}
@@ -950,9 +984,8 @@ public class CsvProcessor<T> {
 			// look for the next quote
 			sectionEnd = line.indexOf(columnQuote, linePos);
 			if (sectionEnd < 0) {
-				parseError.setErrorType(ErrorType.TRUNCATED_VALUE);
+				parseError.setErrorType(ErrorType.TRUNCATED_COLUMN);
 				parseError.setMessage("Column not terminated with quote '" + columnQuote + "'");
-				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return line.length();
 			}
@@ -970,7 +1003,6 @@ public class CsvProcessor<T> {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage(
 						"quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
-				parseError.setLineNumber(lineNumber);
 				parseError.setLinePos(linePos);
 				return linePos;
 			}
@@ -1078,7 +1110,6 @@ public class CsvProcessor<T> {
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());
-			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 		}
 	}
@@ -1098,7 +1129,6 @@ public class CsvProcessor<T> {
 		}
 		if (columnStr.isEmpty() && columnInfo.isMustNotBeBlank()) {
 			parseError.setErrorType(ErrorType.MUST_NOT_BE_BLANK);
-			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;
 		}
@@ -1108,13 +1138,11 @@ public class CsvProcessor<T> {
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(e.getMessage());
-			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());
-			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;
 		}

@@ -94,10 +94,10 @@ public class ParseError {
 	public enum ErrorType {
 		/** no error */
 		NONE("none"),
-		/** line is in an invalid format */
+		/** column is in an invalid format */
 		INVALID_FORMAT("invalid format"),
-		/** line seems to be truncated */
-		TRUNCATED_VALUE("truncated value"),
+		/** column seems to be truncated */
+		TRUNCATED_COLUMN("truncated column"),
 		/** no header line read */
 		NO_HEADER("no header line"),
 		/** header line seems to be invalid */
@@ -108,6 +108,10 @@ public class ParseError {
 		MUST_NOT_BE_BLANK("field must not be blank"),
 		/** internal error was encountered */
 		INTERNAL_ERROR("internal error"),
+		/** line seems to be truncated */
+		TRUNCATED_LINE("line is truncated"),
+		/** line seems to have extra columns */
+		TOO_MANY_COLUMNS("too many columns"),
 		// end
 		;
 

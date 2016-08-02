@@ -678,9 +678,8 @@ public class CsvProcessorTest {
 		String unquotedValue = "fewopjfpewfjw";
 		boolean bool = true;
 
-		// unknown field at the end
-		StringReader reader = new StringReader(
-				intValue + "," + strValue + "," + longValue + "," + unquotedValue + "," + bool + ",unknownValue\n");
+		StringReader reader =
+				new StringReader(intValue + "," + strValue + "," + longValue + "," + unquotedValue + "," + bool + "\n");
 		List<Basic> entities = processor.readAll(reader, null);
 		assertEquals(1, entities.size());
 		Basic basic = entities.get(0);
@@ -725,6 +724,40 @@ public class CsvProcessorTest {
 
 		String line = writer.toString();
 		assertEquals("\"" + QUOTE_IN_HEADER_QUOTED + "\"\n", line);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testTruncatedLine() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		String line = "1,\"hello\",2\n";
+		processor.processRow(line, null);
+	}
+
+	@Test
+	public void testTruncatedLineError() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		String line = "1,\"hello\",2\n";
+		ParseError error = new ParseError();
+		assertNull(processor.processRow(line, error));
+		assertTrue(error.isError());
+		assertTrue(error.getMessage(), error.getMessage().startsWith("Line does not have"));
+	}
+
+	@Test(expected = ParseException.class)
+	public void testExtraStuff() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		String line = "1,\"hello\",2,wow,true,extra\n";
+		processor.processRow(line, null);
+	}
+
+	@Test
+	public void testExtraStuffError() throws ParseException {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
+		String line = "1,\"hello\",2,wow,true,extra\n";
+		ParseError error = new ParseError();
+		assertNull(processor.processRow(line, error));
+		assertTrue(error.isError());
+		assertTrue(error.getMessage(), error.getMessage().startsWith("Line has extra information"));
 	}
 
 	/* ================================================================================================= */

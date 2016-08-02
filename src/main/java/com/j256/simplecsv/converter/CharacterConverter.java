@@ -68,7 +68,6 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 		} else if (value.length() > 1 && parseErrorOnMoreThanOne) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage("More than one character specified");
-			parseError.setLineNumber(lineNumber);
 			parseError.setLinePos(linePos);
 			return null;
 		} else {
