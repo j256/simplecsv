@@ -112,6 +112,8 @@ public class ParseError {
 		TRUNCATED_LINE("line is truncated"),
 		/** line seems to have extra columns */
 		TOO_MANY_COLUMNS("too many columns"),
+		/** entity validation failed */
+		INVALID_ENTITY("entity validation failed"),
 		// end
 		;
 

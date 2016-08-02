@@ -75,6 +75,7 @@ public class CsvProcessor<T> {
 	private boolean firstLineHeader = true;
 	private boolean flexibleOrder;
 	private boolean ignoreUnknownColumns;
+	private RowValidator<T> rowValidator;
 	private ColumnNameMatcher columnNameMatcher = stringEqualsColumnNameMatcher;
 
 	private Class<T> entityClass;
@@ -661,9 +662,23 @@ public class CsvProcessor<T> {
 	/**
 	 * Set to false to not validate the header when it is read in. Default is true.
 	 */
+	public void setHeaderValidation(boolean headerValidation) {
+		this.headerValidation = headerValidation;
+	}
+
+	/**
+	 * Set to false to not validate the header when it is read in. Default is true.
+	 */
 	public CsvProcessor<T> withHeaderValidation(boolean headerValidation) {
 		this.headerValidation = headerValidation;
 		return this;
+	}
+
+	/**
+	 * Set to false if the first line is a header line to be processed. Default is true.
+	 */
+	public void setFirstLineHeader(boolean firstLineHeader) {
+		this.firstLineHeader = firstLineHeader;
 	}
 
 	/**
@@ -679,9 +694,29 @@ public class CsvProcessor<T> {
 	 * definition name. This can be used if you have optional suffix characters such as "*" or something. Default is
 	 * {@link String#equals(Object)}.
 	 */
+	public void setColumnNameMatcher(ColumnNameMatcher columnNameMatcher) {
+		this.columnNameMatcher = columnNameMatcher;
+	}
+
+	/**
+	 * Set the column name matcher class which will be used to see if the column from the CSV file matches the
+	 * definition name. This can be used if you have optional suffix characters such as "*" or something. Default is
+	 * {@link String#equals(Object)}.
+	 */
 	public CsvProcessor<T> withColumnNameMatcher(ColumnNameMatcher columnNameMatcher) {
 		this.columnNameMatcher = columnNameMatcher;
 		return this;
+	}
+
+	/**
+	 * Set to true if the order of the input columns is flexible and does not have to match the order of the definition
+	 * fields in the entity. The order is determined by the header columns so their must be a header. Default is false.
+	 * 
+	 * <b>WARNING:</b> If you are using flexible ordering, this CsvProcessor cannot be used with multiple files at the
+	 * same time since the column orders are dynamic depending on the input file being read.
+	 */
+	public void setFlexibleOrder(boolean flexibleOrder) {
+		this.flexibleOrder = flexibleOrder;
 	}
 
 	/**
@@ -702,8 +737,33 @@ public class CsvProcessor<T> {
 	 * <b>WARNING:</b> If you are using unknown columns, this CsvProcessor cannot be used with multiple files at the
 	 * same time since the column position is dynamic depending on the input file being read.
 	 */
+	public void setIgnoreUnknownColumns(boolean ignoreUnknownColumns) {
+		this.ignoreUnknownColumns = ignoreUnknownColumns;
+	}
+
+	/**
+	 * Set to true to ignore columns that are not know to the configuration. Default is to raise an error.
+	 * 
+	 * <b>WARNING:</b> If you are using unknown columns, this CsvProcessor cannot be used with multiple files at the
+	 * same time since the column position is dynamic depending on the input file being read.
+	 */
 	public CsvProcessor<T> withIgnoreUnknownColumns(boolean ignoreUnknownColumns) {
 		this.ignoreUnknownColumns = ignoreUnknownColumns;
+		return this;
+	}
+
+	/**
+	 * Set the validator which will validate each entity after it has been parsed.
+	 */
+	public void setRowValidator(RowValidator<T> rowValidator) {
+		this.rowValidator = rowValidator;
+	}
+
+	/**
+	 * Set the validator which will validate each entity after it has been parsed.
+	 */
+	public CsvProcessor<T> withRowValidator(RowValidator<T> rowValidator) {
+		this.rowValidator = rowValidator;
 		return this;
 	}
 
@@ -820,6 +880,21 @@ public class CsvProcessor<T> {
 
 	private T processRow(String line, ParseError parseError, int lineNumber) throws ParseException {
 		T entity = processRowInner(line, parseError, lineNumber);
+		if (entity != null && rowValidator != null) {
+			ParseError localParseError = parseError;
+			if (localParseError == null) {
+				localParseError = new ParseError();
+			}
+			try {
+				rowValidator.validateRow(line, lineNumber, entity, localParseError);
+			} catch (ParseException pe) {
+				if (localParseError != parseError) {
+					throw pe;
+				}
+				localParseError.setErrorType(ErrorType.INVALID_ENTITY);
+				localParseError.setMessage(pe.getMessage());
+			}
+		}
 		if (parseError != null && parseError.isError()) {
 			if (parseError.getLine() == null) {
 				parseError.setLine(line);
@@ -830,6 +905,8 @@ public class CsvProcessor<T> {
 			if (parseError.getMessage() == null) {
 				parseError.setMessage(parseError.getErrorType().getTypeMessage());
 			}
+			// force the entity to be null
+			entity = null;
 		}
 		return entity;
 	}
