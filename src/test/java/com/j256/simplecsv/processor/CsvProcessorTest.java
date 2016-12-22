@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.ParseException;
@@ -18,7 +19,7 @@ import java.util.concurrent.Callable;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.converter.BooleanConverter;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.IntegerConverter;
@@ -759,6 +760,24 @@ public class CsvProcessorTest {
 		assertTrue(error.getMessage(), error.getMessage().startsWith("Line has extra information"));
 	}
 
+	@Test
+	public void testGetSetMethods() throws ParseException, IOException {
+		CsvProcessor<GetSetMethod> processor = new CsvProcessor<GetSetMethod>(GetSetMethod.class);
+		int value = 1312321321;
+		String line = value + "\n";
+		ParseError error = new ParseError();
+		GetSetMethod getSetMethod = processor.processRow(line, error);
+		assertEquals(value, getSetMethod.value);
+		StringWriter writer = new StringWriter();
+		processor.writeAll(writer, Collections.singletonList(getSetMethod), false);
+		assertEquals(line, writer.toString());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testMissingSetMethod() {
+		new CsvProcessor<MissingSetMethod>(MissingSetMethod.class).initialize();
+	}
+
 	/* ================================================================================================= */
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
@@ -781,15 +800,15 @@ public class CsvProcessorTest {
 	/* ================================================================================================= */
 
 	private static class Basic {
-		@CsvField
+		@CsvColumn
 		private int intValue;
-		@CsvField(mustNotBeBlank = true)
+		@CsvColumn(mustNotBeBlank = true)
 		private String string;
-		@CsvField
+		@CsvColumn
 		private long longValue;
-		@CsvField(converterClass = UnquotedStringConverter.class, mustBeSupplied = false)
+		@CsvColumn(converterClass = UnquotedStringConverter.class, mustBeSupplied = false)
 		private String unquoted;
-		@CsvField(converterFlags = BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE)
+		@CsvColumn(converterFlags = BooleanConverter.PARSE_ERROR_ON_INVALID_VALUE)
 		private boolean bool;
 
 		public Basic() {
@@ -833,7 +852,7 @@ public class CsvProcessorTest {
 	}
 
 	private static class BasicSubclassDupField extends Basic {
-		@CsvField
+		@CsvColumn
 		private int intValue;
 
 		@SuppressWarnings("unused")
@@ -844,7 +863,7 @@ public class CsvProcessorTest {
 
 	private static class DefaultValue {
 		public static final String DEFAULT_VALUE = "1";
-		@CsvField(defaultValue = DEFAULT_VALUE)
+		@CsvColumn(defaultValue = DEFAULT_VALUE)
 		private int value;
 
 		@SuppressWarnings("unused")
@@ -854,7 +873,7 @@ public class CsvProcessorTest {
 	}
 
 	private static class MustNotBeBlank {
-		@CsvField(mustNotBeBlank = true)
+		@CsvColumn(mustNotBeBlank = true)
 		private int value;
 
 		@SuppressWarnings("unused")
@@ -864,17 +883,50 @@ public class CsvProcessorTest {
 	}
 
 	private static class NoConstructor {
-		@CsvField
+		@CsvColumn
 		private int value;
 	}
 
 	private static class QuoteInColumnHeader {
-		@CsvField(columnName = QUOTE_IN_HEADER)
+		@CsvColumn(columnName = QUOTE_IN_HEADER)
 		private int value;
 
 		@SuppressWarnings("unused")
 		public QuoteInColumnHeader() {
 			// for simplecsv
+		}
+	}
+
+	private static class GetSetMethod {
+		private int value;
+
+		@SuppressWarnings("unused")
+		public GetSetMethod() {
+			// for simplecsv
+		}
+
+		@CsvColumn
+		public int getValue() {
+			return value;
+		}
+
+		@CsvColumn
+		public void setValue(int value) {
+			this.value = value;
+		}
+	}
+
+	private static class MissingSetMethod {
+		private int value;
+
+		@SuppressWarnings("unused")
+		public MissingSetMethod() {
+			// for simplecsv
+		}
+
+		@CsvColumn
+		public int getValue() {
+			return value;
 		}
 	}
 

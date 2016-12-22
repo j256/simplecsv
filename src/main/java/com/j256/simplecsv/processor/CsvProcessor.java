@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.EnumConverter;
@@ -96,7 +97,7 @@ public class CsvProcessor<T> {
 	}
 
 	/**
-	 * Constructs a processor with an entity class whose fields should be marked with {@link CsvField} annotations. The
+	 * Constructs a processor with an entity class whose fields should be marked with {@link CsvColumn} annotations. The
 	 * entity-class must also define a public no-arg contructor so the processor can instantiate them using reflection.
 	 */
 	public CsvProcessor(Class<T> entityClass) {
@@ -105,7 +106,7 @@ public class CsvProcessor<T> {
 
 	/**
 	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
-	 * {@link CsvField#converterClass()} annotation field.
+	 * {@link CsvColumn#converterClass()} annotation field.
 	 */
 	public <FT> void registerConverter(Class<FT> clazz, Converter<FT, ?> converter) {
 		converterMap.put(clazz, converter);
@@ -113,7 +114,7 @@ public class CsvProcessor<T> {
 
 	/**
 	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
-	 * {@link CsvField#converterClass()} annotation field. Alternative way to do
+	 * {@link CsvColumn#converterClass()} annotation field. Alternative way to do
 	 * {@link #registerConverter(Class, Converter)}.
 	 */
 	public <FT> CsvProcessor<T> withConverter(Class<FT> clazz, Converter<FT, ?> converter) {
@@ -1000,30 +1001,82 @@ public class CsvProcessor<T> {
 		}
 		List<ColumnInfo<Object>> columnInfos = new ArrayList<ColumnInfo<Object>>();
 		Set<String> knownFields = new HashSet<String>();
-		int fieldCount = 0;
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : clazz.getDeclaredFields()) {
 				if (!knownFields.add(field.getName())) {
 					continue;
 				}
-				Converter<?, ?> converter = converterMap.get(field.getType());
-				// test for the enum converter specifically
-				if (converter == null && field.getType().isEnum()) {
-					converter = EnumConverter.getSingleton();
+				CsvColumn csvField = field.getAnnotation(CsvColumn.class);
+				if (csvField == null) {
+					continue;
 				}
-				// NOTE: converter could be null in which case the CsvField.converterClass must be set
-				@SuppressWarnings("unchecked")
-				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
-				ColumnInfo<Object> columnInfo = ColumnInfo.fromField(field, castConverter, fieldCount++);
-				if (columnInfo != null) {
-					columnInfos.add(columnInfo);
-					field.setAccessible(true);
-				}
+
+				FieldInfo<Object> fieldInfo = FieldInfo.fromfield(field);
+				addColumnInfo(columnInfos, csvField, fieldInfo);
+				field.setAccessible(true);
 			}
+		}
+
+		// now process the get/set methods
+		Map<String, Method> otherMethodMap = new HashMap<String, Method>();
+		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+			for (Method method : clazz.getMethods()) {
+				CsvColumn csvField = method.getAnnotation(CsvColumn.class);
+				if (csvField == null) {
+					continue;
+				}
+
+				Method getMethod = null;
+				Method setMethod = null;
+				String fieldName = method.getName();
+				if (fieldName.length() > 3 && fieldName.startsWith("get")) {
+					fieldName = fieldName.charAt(3) + fieldName.substring(4);
+					getMethod = method;
+				} else if (fieldName.length() > 2 && fieldName.startsWith("is")) {
+					fieldName = fieldName.charAt(2) + fieldName.substring(3);
+					getMethod = method;
+				} else if (fieldName.length() > 3 && fieldName.startsWith("set")) {
+					fieldName = fieldName.charAt(3) + fieldName.substring(4);
+					setMethod = method;
+				}
+
+				if (knownFields.contains(fieldName)) {
+					throw new IllegalStateException(
+							"Field " + fieldName + " configured as a field and as the method " + method.getName());
+				}
+
+				Method otherMethod = otherMethodMap.remove(fieldName);
+				if (otherMethod == null) {
+					otherMethodMap.put(fieldName, method);
+					continue;
+				}
+				// figure out which method is the right one
+				if (getMethod == null) {
+					getMethod = otherMethod;
+				} else {
+					setMethod = otherMethod;
+				}
+
+				FieldInfo<Object> fieldInfo = FieldInfo.fromMethods(fieldName, getMethod, setMethod);
+				// NOTE: it is the CsvField on the 2nd method that is really the one that is used
+				addColumnInfo(columnInfos, csvField, fieldInfo);
+			}
+		}
+		if (!otherMethodMap.isEmpty()) {
+			Method firstMethod = otherMethodMap.values().iterator().next();
+			throw new IllegalArgumentException(
+					"Must mark both the get/is and set methods with CsvField annotation, not just: " + firstMethod);
 		}
 		if (columnInfos.isEmpty()) {
 			throw new IllegalArgumentException("Could not find any exposed CSV fields in: " + entityClass);
 		}
+
+		// set the position of the items in the list
+		int fieldCount = 0;
+		for (ColumnInfo<Object> columnInfo : columnInfos) {
+			columnInfo.setPosition(fieldCount++);
+		}
+
 		this.allColumnInfos = columnInfos;
 		resetColumnPositionInfoMap();
 		if (constructorCallable == null) {
@@ -1034,6 +1087,19 @@ public class CsvProcessor<T> {
 						"No callable configured or could not find public no-arg constructor for: " + entityClass);
 			}
 		}
+	}
+
+	private void addColumnInfo(List<ColumnInfo<Object>> columnInfos, CsvColumn csvField, FieldInfo<Object> fieldInfo) {
+		Converter<?, ?> converter = converterMap.get(fieldInfo.getType());
+		// test for the enum converter specifically
+		if (converter == null && fieldInfo.getType().isEnum()) {
+			converter = EnumConverter.getSingleton();
+		}
+		// NOTE: converter could be null in which case the CsvField.converterClass must be set
+		@SuppressWarnings("unchecked")
+		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
+		ColumnInfo<Object> columnInfo = ColumnInfo.fromFieldInfo(csvField, fieldInfo, castConverter);
+		columnInfos.add(columnInfo);
 	}
 
 	private void resetColumnPositionInfoMap() {

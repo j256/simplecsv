@@ -13,6 +13,12 @@ import com.j256.simplecsv.processor.CsvProcessor;
 /**
  * Annotation to be added to a field or method to mark it as a column in a CSV file.
  * 
+ * <p>
+ * <b>NOTE:</b> When using on a get/is/set methods you need to add this annotation to <i>both</i> the get/is and the set
+ * methods. Also, you need to make sure that the CsvColumn annotation fields are the same on both the get/is and set
+ * methods.
+ * </p>
+ * 
  * @author graywatson
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -84,7 +90,8 @@ public @interface CsvColumn {
 	/**
 	 * Used to set the order of the columns by setting the column that this column comes after. These are processed in
 	 * order so if there is some sort of loop or if two fields say they come after the same field then you will get an
-	 * undefined order.
+	 * undefined order. If this is not specified then the order in which the fields and methods are descovered in the
+	 * classes will determine their order in the CSV file.
 	 */
 	public String afterColumn() default DEFAULT_VALUE;
 
