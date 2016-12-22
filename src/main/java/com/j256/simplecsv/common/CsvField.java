@@ -16,7 +16,7 @@ import com.j256.simplecsv.processor.CsvProcessor;
  * @author graywatson
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.METHOD })
 public @interface CsvField {
 
 	/** Used internally to detect whether or not a value has been configured. */
@@ -80,6 +80,13 @@ public @interface CsvField {
 	 * the same time since the column lists can be dynamic depending on the input file being read.
 	 */
 	public boolean mustBeSupplied() default true;
+
+	/**
+	 * Used to set the order of the columns by setting the column that this column comes after. These are processed in
+	 * order so if there is some sort of loop or if two fields say they come after the same field then you will get an
+	 * undefined order.
+	 */
+	public String afterColumn() default DEFAULT_VALUE;
 
 	/**
 	 * @deprecated Should use {@link #mustNotBeBlank()} instead.

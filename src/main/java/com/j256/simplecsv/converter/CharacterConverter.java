@@ -1,9 +1,8 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
-
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -35,7 +34,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Boolean configure(String format, long flags, Field field) {
+	public Boolean configure(String format, long flags, FieldInfo<Character> fieldInfo) {
 		boolean parseErrorOnMoreThanOne = ((flags & PARSE_ERROR_IF_MORE_THAN_ONE_CHAR) != 0);
 		return parseErrorOnMoreThanOne;
 	}
@@ -51,7 +50,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public String javaToString(ColumnInfo columnInfo, Character value) {
+	public String javaToString(ColumnInfo<Character> columnInfo, Character value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -60,8 +59,8 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Character stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
-			ParseError parseError) {
+	public Character stringToJava(String line, int lineNumber, int linePos, ColumnInfo<Character> columnInfo,
+			String value, ParseError parseError) {
 		Boolean parseErrorOnMoreThanOne = (Boolean) columnInfo.getConfigInfo();
 		if (value.isEmpty()) {
 			return null;

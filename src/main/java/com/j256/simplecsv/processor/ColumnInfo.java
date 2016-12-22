@@ -12,10 +12,10 @@ import com.j256.simplecsv.converter.VoidConverter;
  * 
  * @author graywatson
  */
-public class ColumnInfo {
+public class ColumnInfo<T> {
 
-	private final Field field;
-	private final Converter<?, ?> converter;
+	private final FieldInfo<T> fieldInfo;
+	private final Converter<T, ?> converter;
 	private final Object configInfo;
 	private final String columnName;
 	private final int position;
@@ -25,9 +25,10 @@ public class ColumnInfo {
 	private final String defaultValue;
 	private final boolean mustBeSupplied;
 
-	private ColumnInfo(Field field, Converter<?, ?> converter, Object configInfo, String columnName, int position,
-			boolean mustNotBeBlank, boolean trimInput, boolean needsQuotes, String defaultValue, boolean mustBeSupplied) {
-		this.field = field;
+	private ColumnInfo(FieldInfo<T> fieldInfo, Converter<T, ?> converter, Object configInfo, String columnName,
+			int position, boolean mustNotBeBlank, boolean trimInput, boolean needsQuotes, String defaultValue,
+			boolean mustBeSupplied) {
+		this.fieldInfo = fieldInfo;
 		this.converter = converter;
 		this.configInfo = configInfo;
 		this.columnName = columnName;
@@ -42,14 +43,14 @@ public class ColumnInfo {
 	/**
 	 * Returns the Java reflection Field associated with the column.
 	 */
-	public Field getField() {
-		return field;
+	public FieldInfo<T> getFieldInfo() {
+		return fieldInfo;
 	}
 
 	/**
 	 * Returns the converter class associated with the column.
 	 */
-	public Converter<?, ?> getConverter() {
+	public Converter<T, ?> getConverter() {
 		return converter;
 	}
 
@@ -122,7 +123,7 @@ public class ColumnInfo {
 	/**
 	 * Make a column-info instance from a Java Field.
 	 */
-	public static ColumnInfo fromField(Field field, Converter<?, ?> converter, int position) {
+	public static <T> ColumnInfo<T> fromField(Field field, Converter<T, ?> converter, int position) {
 		CsvField csvField = field.getAnnotation(CsvField.class);
 		if (csvField == null) {
 			return null;
@@ -135,8 +136,8 @@ public class ColumnInfo {
 			}
 		} else {
 			@SuppressWarnings("unchecked")
-			Converter<Object, Object> castConverter =
-					(Converter<Object, Object>) ConverterUtils.constructConverter(csvField.converterClass());
+			Converter<T, Object> castConverter =
+					(Converter<T, Object>) ConverterUtils.constructConverter(csvField.converterClass());
 			converter = castConverter;
 		}
 		String format;
@@ -145,7 +146,8 @@ public class ColumnInfo {
 		} else {
 			format = csvField.format();
 		}
-		Object configInfo = converter.configure(format, csvField.converterFlags(), field);
+		FieldInfo<T> fieldInfo = FieldInfo.fromfield(field);
+		Object configInfo = converter.configure(format, csvField.converterFlags(), fieldInfo);
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
@@ -160,15 +162,15 @@ public class ColumnInfo {
 		if (!csvField.defaultValue().equals(CsvField.DEFAULT_VALUE)) {
 			defaultValue = csvField.defaultValue();
 		}
-		return new ColumnInfo(field, converter, configInfo, columnName, position, fieldMustNotBeBlank(csvField),
+		return new ColumnInfo<T>(fieldInfo, converter, configInfo, columnName, position, fieldMustNotBeBlank(csvField),
 				csvField.trimInput(), needsQuotes, defaultValue, fieldMustBeSupplied(csvField));
 	}
 
 	/**
 	 * For testing purposes.
 	 */
-	public static ColumnInfo forTests(Converter<?, ?> converter, Object configInfo) {
-		return new ColumnInfo(null, converter, configInfo, "name", 0, false, false, false, null, false);
+	public static <T> ColumnInfo<T> forTests(Converter<T, ?> converter, Object configInfo) {
+		return new ColumnInfo<T>(null, converter, configInfo, "name", 0, false, false, false, null, false);
 	}
 
 	/**

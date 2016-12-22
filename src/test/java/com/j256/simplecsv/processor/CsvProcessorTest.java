@@ -10,7 +10,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -881,7 +880,7 @@ public class CsvProcessorTest {
 
 	public static class UnquotedStringConverter implements Converter<String, Void> {
 		@Override
-		public Void configure(String format, long flags, Field field) {
+		public Void configure(String format, long flags, FieldInfo<String> field) {
 			return null;
 		}
 
@@ -896,20 +895,20 @@ public class CsvProcessorTest {
 		}
 
 		@Override
-		public String javaToString(ColumnInfo columnInfo, String value) {
+		public String javaToString(ColumnInfo<String> columnInfo, String value) {
 			return value;
 		}
 
 		@Override
-		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
-				ParseError parseError) {
+		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo<String> columnInfo,
+				String value, ParseError parseError) {
 			return value;
 		}
 	}
 
 	public static class IntPlusOneConverter implements Converter<Integer, Void> {
 		@Override
-		public Void configure(String format, long flags, Field field) {
+		public Void configure(String format, long flags, FieldInfo<Integer> field) {
 			return null;
 		}
 
@@ -924,20 +923,20 @@ public class CsvProcessorTest {
 		}
 
 		@Override
-		public String javaToString(ColumnInfo columnInfo, Integer value) {
+		public String javaToString(ColumnInfo<Integer> columnInfo, Integer value) {
 			return value.toString();
 		}
 
 		@Override
-		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
-				ParseError parseError) {
+		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo<Integer> columnInfo,
+				String value, ParseError parseError) {
 			return Integer.parseInt(value) + 1;
 		}
 	}
 
 	public static class IntThrowsConverter implements Converter<Integer, Void> {
 		@Override
-		public Void configure(String format, long flags, Field field) {
+		public Void configure(String format, long flags, FieldInfo<Integer> field) {
 			return null;
 		}
 
@@ -952,13 +951,13 @@ public class CsvProcessorTest {
 		}
 
 		@Override
-		public String javaToString(ColumnInfo columnInfo, Integer value) {
+		public String javaToString(ColumnInfo<Integer> columnInfo, Integer value) {
 			return value.toString();
 		}
 
 		@Override
-		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
-				ParseError parseError) throws ParseException {
+		public Integer stringToJava(String line, int lineNumber, int linePos, ColumnInfo<Integer> columnInfo,
+				String value, ParseError parseError) throws ParseException {
 			// this could throw a runtime exception
 			Integer.parseInt(value);
 			throw new ParseException("value should be an invalid int", 0);

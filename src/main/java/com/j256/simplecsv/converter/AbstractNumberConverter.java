@@ -1,10 +1,10 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -40,7 +40,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public DecimalFormat configure(String format, long flags, Field field) {
+	public DecimalFormat configure(String format, long flags, FieldInfo<T> fieldInfo) {
 		if (format == null) {
 			return null;
 		} else {
@@ -49,7 +49,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public String javaToString(ColumnInfo columnInfo, T value) {
+	public String javaToString(ColumnInfo<T> columnInfo, T value) {
 		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value == null) {
 			return null;
@@ -61,8 +61,8 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value, ParseError parseError)
-			throws ParseException {
+	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo<T> columnInfo, String value,
+			ParseError parseError) throws ParseException {
 		DecimalFormat decimalFormat = (DecimalFormat) columnInfo.getConfigInfo();
 		if (value.length() == 0) {
 			return null;

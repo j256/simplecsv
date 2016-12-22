@@ -29,7 +29,7 @@ public class CharacterConverterTest extends AbstractConverterTest {
 	public void testMoreThanOne() {
 		CharacterConverter converter = CharacterConverter.getSingleton();
 		Boolean configInfo = converter.configure(null, 0, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Character> columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
 		char one = '1';

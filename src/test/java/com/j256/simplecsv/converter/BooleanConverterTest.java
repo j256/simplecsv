@@ -33,7 +33,7 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	public void testCaseSensitive() {
 		BooleanConverter converter = BooleanConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, BooleanConverter.CASE_SENSITIVE, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		assertTrue(converter.stringToJava("line", 1, 2, columnInfo, "true", parseError));
 		assertFalse(converter.stringToJava("line", 1, 2, columnInfo, "True", parseError));
@@ -85,7 +85,7 @@ public class BooleanConverterTest extends AbstractConverterTest {
 	public void testParseErrorOnBadValue() {
 		BooleanConverter converter = new BooleanConverter();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		assertEquals(false, converter.stringToJava("line", 1, 2, columnInfo, "unknown", parseError));
 		assertFalse(parseError.isError());

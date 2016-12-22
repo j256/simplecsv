@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
@@ -24,8 +23,7 @@ public class ColumnInfoTest {
 	public void testStuff() throws Exception {
 		String fieldName = "field";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
-		assertSame(field, columnInfo.getField());
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertNull(columnInfo.getDefaultValue());
 		assertEquals(fieldName, columnInfo.getColumnName());
 		assertFalse(columnInfo.isMustNotBeBlank());
@@ -35,7 +33,7 @@ public class ColumnInfoTest {
 	public void testNameSet() throws Exception {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertEquals(MyClass.HAS_NAME_FIELD_NAME, columnInfo.getColumnName());
 	}
 
@@ -43,7 +41,7 @@ public class ColumnInfoTest {
 	public void testDefaultValue() throws Exception {
 		String fieldName = "defaultValue";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromField(field, IntegerConverter.getSingleton(), 0);
 		assertEquals(fieldName, columnInfo.getDefaultValue());
 	}
 
@@ -51,7 +49,7 @@ public class ColumnInfoTest {
 	public void testCustomConverter() throws Exception {
 		String fieldName = "specialString";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, null, 0);
+		ColumnInfo<String> columnInfo = ColumnInfo.fromField(field, null, 0);
 		assertTrue(columnInfo.getConverter() instanceof MyConverter);
 	}
 
@@ -59,7 +57,7 @@ public class ColumnInfoTest {
 	public void testFormat() throws Exception {
 		String fieldName = "number";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
+		ColumnInfo<Long> columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
 		assertNotNull(columnInfo.getConfigInfo());
 	}
 
@@ -72,27 +70,27 @@ public class ColumnInfoTest {
 	@Test
 	public void testTrimInput() throws Exception {
 		Field field = MyClass.class.getDeclaredField("number");
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
+		ColumnInfo<Long> columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
 		assertFalse(columnInfo.isTrimInput());
 		field = MyClass.class.getDeclaredField("trim");
-		columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), 0);
-		assertTrue(columnInfo.isTrimInput());
+		ColumnInfo<Boolean> otherColumnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), 0);
+		assertTrue(otherColumnInfo.isTrimInput());
 	}
 
 	@Test
 	public void testNeedsQuotes() throws Exception {
 		Field field = MyClass.class.getDeclaredField("field");
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
+		ColumnInfo<Long> columnInfo = ColumnInfo.fromField(field, LongConverter.getSingleton(), 0);
 		assertFalse(columnInfo.isNeedsQuotes());
 		field = MyClass.class.getDeclaredField("defaultValue");
-		columnInfo = ColumnInfo.fromField(field, StringConverter.getSingleton(), 0);
-		assertTrue(columnInfo.isNeedsQuotes());
+		ColumnInfo<String> otherColumnInfo = ColumnInfo.fromField(field, StringConverter.getSingleton(), 0);
+		assertTrue(otherColumnInfo.isNeedsQuotes());
 	}
 
 	@Test
 	public void testMustBeSupplied() throws Exception {
 		Field field = MyClass.class.getDeclaredField("trim");
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), 0);
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), 0);
 		assertTrue(columnInfo.isMustBeSupplied());
 		field = MyClass.class.getDeclaredField("mustBeSupplied");
 		columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), 0);
@@ -103,7 +101,7 @@ public class ColumnInfoTest {
 	public void testPosition() throws Exception {
 		Field field = MyClass.class.getDeclaredField("trim");
 		int position = 12333;
-		ColumnInfo columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), position);
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromField(field, BooleanConverter.getSingleton(), position);
 		assertEquals(position, columnInfo.getPosition());
 	}
 
@@ -135,7 +133,7 @@ public class ColumnInfoTest {
 
 	public static class MyConverter implements Converter<String, Void> {
 		@Override
-		public Void configure(String format, long flags, Field field) {
+		public Void configure(String format, long flags, FieldInfo<String> field) {
 			return null;
 		}
 
@@ -150,13 +148,13 @@ public class ColumnInfoTest {
 		}
 
 		@Override
-		public String javaToString(ColumnInfo columnInfo, String value) {
+		public String javaToString(ColumnInfo<String> columnInfo, String value) {
 			return value;
 		}
 
 		@Override
-		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
-				ParseError parseError) {
+		public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo<String> columnInfo,
+				String value, ParseError parseError) {
 			return value;
 		}
 	}

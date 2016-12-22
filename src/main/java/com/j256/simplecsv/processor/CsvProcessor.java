@@ -84,8 +84,8 @@ public class CsvProcessor<T> {
 
 	private final Map<Class<?>, Converter<?, ?>> converterMap = new HashMap<Class<?>, Converter<?, ?>>();
 
-	private List<ColumnInfo> allColumnInfos;
-	private Map<Integer, ColumnInfo> columnPositionInfoMap;
+	private List<ColumnInfo<Object>> allColumnInfos;
+	private Map<Integer, ColumnInfo<Object>> columnPositionInfoMap;
 
 	{
 		ConverterUtils.addInternalConverters(converterMap);
@@ -464,7 +464,7 @@ public class CsvProcessor<T> {
 		checkEntityConfig();
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (ColumnInfo columnInfo : allColumnInfos) {
+		for (ColumnInfo<?> columnInfo : allColumnInfos) {
 			if (first) {
 				first = false;
 			} else {
@@ -496,18 +496,18 @@ public class CsvProcessor<T> {
 		checkEntityConfig();
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
-		for (ColumnInfo columnInfo : allColumnInfos) {
+		for (ColumnInfo<Object> columnInfo : allColumnInfos) {
 			if (first) {
 				first = false;
 			} else {
 				sb.append(columnSeparator);
 			}
-			Field field = columnInfo.getField();
+			FieldInfo<?> fieldInfo = columnInfo.getFieldInfo();
 			Object value;
 			try {
-				value = field.get(entity);
+				value = fieldInfo.getValue(entity);
 			} catch (Exception e) {
-				throw new IllegalStateException("Could not get value from entity field: " + field);
+				throw new IllegalStateException("Could not get value from entity field: " + fieldInfo);
 			}
 			@SuppressWarnings("unchecked")
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) columnInfo.getConverter();
@@ -770,20 +770,20 @@ public class CsvProcessor<T> {
 	private boolean validateHeaderColumns(String[] columns, ParseError parseError, int lineNumber) {
 		boolean result = true;
 
-		Map<String, ColumnInfo> columnNameToInfoMap = new HashMap<String, ColumnInfo>();
-		for (ColumnInfo columnInfo : allColumnInfos) {
+		Map<String, ColumnInfo<Object>> columnNameToInfoMap = new HashMap<String, ColumnInfo<Object>>();
+		for (ColumnInfo<Object> columnInfo : allColumnInfos) {
 			columnNameToInfoMap.put(columnInfo.getColumnName(), columnInfo);
 		}
 
-		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
+		Map<Integer, ColumnInfo<Object>> columnPositionInfoMap = new HashMap<Integer, ColumnInfo<Object>>();
 		int lastColumnInfoPosition = -1;
 		for (int i = 0; i < columns.length; i++) {
-			ColumnInfo matchedColumnInfo = null;
+			ColumnInfo<Object> matchedColumnInfo = null;
 			if (columnNameMatcher == null) {
 				matchedColumnInfo = columnNameToInfoMap.get(columns[i]);
 			} else {
 				// have to do a N^2 search
-				for (ColumnInfo columnInfo : allColumnInfos) {
+				for (ColumnInfo<Object> columnInfo : allColumnInfos) {
 					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), columns[i])) {
 						matchedColumnInfo = columnInfo;
 						break;
@@ -822,7 +822,7 @@ public class CsvProcessor<T> {
 		}
 
 		// now look for must-be-supplied columns
-		for (ColumnInfo columnInfo : columnNameToInfoMap.values()) {
+		for (ColumnInfo<Object> columnInfo : columnNameToInfoMap.values()) {
 			if (columnInfo.isMustBeSupplied()) {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
@@ -920,7 +920,7 @@ public class CsvProcessor<T> {
 		}
 		int columnCount = 0;
 		while (true) {
-			ColumnInfo columnInfo = columnPositionInfoMap.get(columnCount);
+			ColumnInfo<Object> columnInfo = columnPositionInfoMap.get(columnCount);
 			if (columnInfo == null && !ignoreUnknownColumns) {
 				break;
 			}
@@ -939,8 +939,8 @@ public class CsvProcessor<T> {
 					return null;
 				} else {
 					throw new ParseException("Problems parsing line at position " + linePos + " for type "
-							+ columnInfo.getField().getType().getSimpleName() + " (" + localParseError + "): " + line,
-							linePos);
+							+ columnInfo.getFieldInfo().getType().getSimpleName() + " (" + localParseError + "): "
+							+ line, linePos);
 				}
 			}
 			columnCount++;
@@ -998,7 +998,7 @@ public class CsvProcessor<T> {
 		if (entityClass == null) {
 			throw new IllegalStateException("Entity class not configured for CSV processor");
 		}
-		List<ColumnInfo> columnInfos = new ArrayList<ColumnInfo>();
+		List<ColumnInfo<Object>> columnInfos = new ArrayList<ColumnInfo<Object>>();
 		Set<String> knownFields = new HashSet<String>();
 		int fieldCount = 0;
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
@@ -1014,7 +1014,7 @@ public class CsvProcessor<T> {
 				// NOTE: converter could be null in which case the CsvField.converterClass must be set
 				@SuppressWarnings("unchecked")
 				Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
-				ColumnInfo columnInfo = ColumnInfo.fromField(field, castConverter, fieldCount++);
+				ColumnInfo<Object> columnInfo = ColumnInfo.fromField(field, castConverter, fieldCount++);
 				if (columnInfo != null) {
 					columnInfos.add(columnInfo);
 					field.setAccessible(true);
@@ -1037,17 +1037,17 @@ public class CsvProcessor<T> {
 	}
 
 	private void resetColumnPositionInfoMap() {
-		Map<Integer, ColumnInfo> columnPositionInfoMap = new HashMap<Integer, ColumnInfo>();
+		Map<Integer, ColumnInfo<Object>> columnPositionInfoMap = new HashMap<Integer, ColumnInfo<Object>>();
 		int columnCount = 0;
-		for (ColumnInfo columnInfo : allColumnInfos) {
+		for (ColumnInfo<Object> columnInfo : allColumnInfos) {
 			columnPositionInfoMap.put(columnCount, columnInfo);
 			columnCount++;
 		}
 		this.columnPositionInfoMap = columnPositionInfoMap;
 	}
 
-	private int processQuotedColumn(String line, int lineNumber, int linePos, ColumnInfo columnInfo, Object target,
-			StringBuilder headerSb, ParseError parseError) {
+	private int processQuotedColumn(String line, int lineNumber, int linePos, ColumnInfo<Object> columnInfo,
+			Object target, StringBuilder headerSb, ParseError parseError) {
 
 		// linePos is pointing at the first quote, move past it
 		linePos++;
@@ -1129,8 +1129,8 @@ public class CsvProcessor<T> {
 		return linePos;
 	}
 
-	private int processUnquotedColumn(String line, int lineNumber, int linePos, ColumnInfo columnInfo, Object target,
-			StringBuilder headerSb, ParseError parseError) {
+	private int processUnquotedColumn(String line, int lineNumber, int linePos, ColumnInfo<Object> columnInfo,
+			Object target, StringBuilder headerSb, ParseError parseError) {
 		int columnStart = linePos;
 		linePos = line.indexOf(columnSeparator, columnStart);
 		if (linePos < 0) {
@@ -1175,7 +1175,7 @@ public class CsvProcessor<T> {
 	/**
 	 * Extract a value from the line, convert it into its java equivalent, and assign it to our target object.
 	 */
-	private void extractAndAssignValue(String line, int lineNumber, ColumnInfo columnInfo, String columnStr,
+	private void extractAndAssignValue(String line, int lineNumber, ColumnInfo<Object> columnInfo, String columnStr,
 			int linePos, Object target, ParseError parseError) {
 		Object value = extractValue(line, lineNumber, columnInfo, columnStr, linePos, target, parseError);
 		if (value == null) {
@@ -1183,7 +1183,7 @@ public class CsvProcessor<T> {
 			return;
 		}
 		try {
-			columnInfo.getField().set(target, value);
+			columnInfo.getFieldInfo().setValue(target, value);
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());
@@ -1194,10 +1194,10 @@ public class CsvProcessor<T> {
 	/**
 	 * Extract a value from the line and convert it into its java equivalent.
 	 */
-	private Object extractValue(String line, int lineNumber, ColumnInfo columnInfo, String columnStr, int linePos,
-			Object target, ParseError parseError) {
+	private Object extractValue(String line, int lineNumber, ColumnInfo<Object> columnInfo, String columnStr,
+			int linePos, Object target, ParseError parseError) {
 
-		Converter<?, ?> converter = columnInfo.getConverter();
+		Converter<Object, ?> converter = columnInfo.getConverter();
 		if (alwaysTrimInput || columnInfo.isTrimInput() || converter.isAlwaysTrimInput()) {
 			columnStr = columnStr.trim();
 		}

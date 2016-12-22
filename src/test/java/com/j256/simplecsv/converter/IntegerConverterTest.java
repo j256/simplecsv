@@ -31,7 +31,7 @@ public class IntegerConverterTest extends AbstractConverterTest {
 	public void testInvalidFormat() throws Exception {
 		IntegerConverter converter = IntegerConverter.getSingleton();
 		DecimalFormat configInfo = converter.configure(null, 0, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Integer> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "notanumber", parseError));
 		assertTrue(parseError.isError());

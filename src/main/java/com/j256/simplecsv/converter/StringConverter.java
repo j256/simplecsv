@@ -1,9 +1,8 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
-
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -38,7 +37,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public ConfigInfo configure(String format, long flags, Field field) {
+	public ConfigInfo configure(String format, long flags, FieldInfo<String> fieldInfo) {
 		boolean trimOutput = ((flags & TRIM_OUTPUT) != 0);
 		boolean blankIsNull = ((flags & BLANK_IS_NULL) != 0);
 		return new ConfigInfo(trimOutput, blankIsNull);
@@ -55,7 +54,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public String javaToString(ColumnInfo columnInfo, String value) {
+	public String javaToString(ColumnInfo<String> columnInfo, String value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -69,7 +68,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+	public String stringToJava(String line, int lineNumber, int linePos, ColumnInfo<String> columnInfo, String value,
 			ParseError parseError) {
 		ConfigInfo configInfo = (ConfigInfo) columnInfo.getConfigInfo();
 		if (value.isEmpty() && configInfo.blankIsNull) {

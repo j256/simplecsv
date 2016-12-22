@@ -1,12 +1,12 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -47,7 +47,7 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public String configure(String format, long flags, Field field) {
+	public String configure(String format, long flags, FieldInfo<Date> fieldInfo) {
 		String datePattern;
 		if (format == null) {
 			datePattern = DEFAULT_DATE_PATTERN;
@@ -70,7 +70,7 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public String javaToString(ColumnInfo columnInfo, Date value) {
+	public String javaToString(ColumnInfo<Date> columnInfo, Date value) {
 		if (value == null) {
 			return null;
 		} else {
@@ -80,7 +80,7 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public Date stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+	public Date stringToJava(String line, int lineNumber, int linePos, ColumnInfo<Date> columnInfo, String value,
 			ParseError parseError) throws ParseException {
 		if (value.isEmpty()) {
 			return null;

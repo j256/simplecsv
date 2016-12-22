@@ -1,8 +1,7 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
-
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -13,7 +12,7 @@ import com.j256.simplecsv.processor.ParseError;
 public class VoidConverter implements Converter<Void, Void> {
 
 	@Override
-	public Void configure(String format, long flags, Field field) {
+	public Void configure(String format, long flags, FieldInfo<Void> fieldInfo) {
 		// no op
 		return null;
 	}
@@ -29,12 +28,12 @@ public class VoidConverter implements Converter<Void, Void> {
 	}
 
 	@Override
-	public String javaToString(ColumnInfo columnInfo, Void value) {
+	public String javaToString(ColumnInfo<Void> columnInfo, Void value) {
 		return null;
 	}
 
 	@Override
-	public Void stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+	public Void stringToJava(String line, int lineNumber, int linePos, ColumnInfo<Void> columnInfo, String value,
 			ParseError parseError) {
 		return null;
 	}

@@ -12,7 +12,7 @@ public class UuidConverterTest extends AbstractConverterTest {
 	public void testStuff() throws Exception {
 		UuidConverter converter = UuidConverter.getSingleton();
 		converter.configure(null, 0, null);
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10; i++) {
 			testConverter(converter, null, UUID.randomUUID());
 		}
 		testConverter(converter, null, null);

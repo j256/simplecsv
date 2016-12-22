@@ -25,7 +25,7 @@ public class StringConverterTest extends AbstractConverterTest {
 	public void testBlankNull() throws Exception {
 		StringConverter converter = StringConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		ParseError parseError = new ParseError();
 		assertEquals("", converter.stringToJava("line", 1, 2, columnInfo, "", parseError));
@@ -43,7 +43,7 @@ public class StringConverterTest extends AbstractConverterTest {
 	public void testTrimOutput() {
 		StringConverter converter = StringConverter.getSingleton();
 		ConfigInfo configInfo = converter.configure(null, 0, null);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, configInfo);
 
 		String ok = "ok";
 		String spacedOk = " " + ok + " ";

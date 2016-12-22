@@ -16,6 +16,7 @@ import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.EnumConverter.ConfigInfo;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.CsvProcessor;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class EnumConverterTest extends AbstractConverterTest {
@@ -24,7 +25,8 @@ public class EnumConverterTest extends AbstractConverterTest {
 	public void testStuff() throws Exception {
 		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
-		ConfigInfo configInfo = converter.configure(null, 0, field);
+		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
+		ConfigInfo configInfo = converter.configure(null, 0, fieldInfo);
 		testConverter(converter, configInfo, MyEnum.RED);
 		testConverter(converter, configInfo, MyEnum.BLUE);
 		testConverter(converter, configInfo, MyEnum.GREEN);
@@ -36,8 +38,10 @@ public class EnumConverterTest extends AbstractConverterTest {
 		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
 		MyEnum unknownValue = MyEnum.RED;
-		ConfigInfo configInfo = converter.configure(unknownValue.name(), EnumConverter.FORMAT_IS_UNKNOWN_VALUE, field);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
+		ConfigInfo configInfo =
+				converter.configure(unknownValue.name(), EnumConverter.FORMAT_IS_UNKNOWN_VALUE, fieldInfo);
+		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		Enum<?> converted = converter.stringToJava("line", 1, 2, columnInfo, "unknown-value", parseError);
 		assertEquals(unknownValue, converted);
@@ -48,22 +52,25 @@ public class EnumConverterTest extends AbstractConverterTest {
 	public void testNotEnum() throws Exception {
 		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("notEnum");
-		converter.configure(null, 0, field);
+		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
+		converter.configure(null, 0, fieldInfo);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testUnknownUnknown() throws Exception {
 		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
-		converter.configure("unknownenumvalue", EnumConverter.FORMAT_IS_UNKNOWN_VALUE, field);
+		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
+		converter.configure("unknownenumvalue", EnumConverter.FORMAT_IS_UNKNOWN_VALUE, fieldInfo);
 	}
 
 	@Test
 	public void testUnknownAndNoUnknown() throws Exception {
 		EnumConverter converter = EnumConverter.getSingleton();
 		Field field = MyObject.class.getDeclaredField("myEnum");
-		ConfigInfo configInfo = converter.configure(null, 0, field);
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
+		ConfigInfo configInfo = converter.configure(null, 0, fieldInfo);
+		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		ParseError parseError = new ParseError();
 		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "unknown-value", parseError));
 		assertTrue(parseError.isError());

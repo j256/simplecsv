@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
+import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -39,7 +40,7 @@ public interface Converter<T, C> {
 	 *            Reflection field associated with this converter.
 	 * @return Information structure or null if none. This will be passed to the other methods.
 	 */
-	public C configure(String format, long flags, Field field);
+	public C configure(String format, long flags, FieldInfo<T> fieldInfo);
 
 	/**
 	 * Returns true if the field needs to be quoted in the CSV output.
@@ -47,7 +48,8 @@ public interface Converter<T, C> {
 	public boolean isNeedsQuotes(C configInfo);
 
 	/**
-	 * Returns true if the field should always trim before it is processed.
+	 * Returns true if the field should trim the string before it is passed to
+	 * {@link #stringToJava(String, int, int, ColumnInfo, String, ParseError)}.
 	 */
 	public boolean isAlwaysTrimInput();
 
@@ -61,7 +63,7 @@ public interface Converter<T, C> {
 	 * 
 	 * @return The String equivalent object of the value parameter or null in which case nothing will be printed.
 	 */
-	public String javaToString(ColumnInfo columnInfo, T value);
+	public String javaToString(ColumnInfo<T> columnInfo, T value);
 
 	/**
 	 * Converts from a string representation to Java.
@@ -86,6 +88,6 @@ public interface Converter<T, C> {
 	 *             If there was some sort of parse or other error. It is better to return null and use the parseError
 	 *             argument instead. All RuntimeExceptions will be caught as well.
 	 */
-	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo columnInfo, String value,
+	public T stringToJava(String line, int lineNumber, int linePos, ColumnInfo<T> columnInfo, String value,
 			ParseError parseError) throws ParseException;
 }

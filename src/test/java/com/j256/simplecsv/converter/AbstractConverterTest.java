@@ -14,7 +14,7 @@ import com.j256.simplecsv.processor.ParseError;
 public abstract class AbstractConverterTest {
 
 	protected <T, C> String testConverter(Converter<T, C> converter, C configInfo, T value) throws ParseException {
-		ColumnInfo columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<T> columnInfo = ColumnInfo.forTests(converter, configInfo);
 		String strVal = converter.javaToString(columnInfo, value);
 		ParseError parseError = new ParseError();
 		T converted = null;
