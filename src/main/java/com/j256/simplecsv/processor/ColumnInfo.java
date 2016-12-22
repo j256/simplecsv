@@ -172,7 +172,7 @@ public class ColumnInfo<T> {
 					(Converter<T, Object>) ConverterUtils.constructConverter(converterClass);
 			converter = castConverter;
 		}
-		if (format.equals(CsvColumn.DEFAULT_VALUE)) {
+		if (format != null && format.equals(CsvColumn.DEFAULT_VALUE)) {
 			format = null;
 		}
 		Object configInfo = converter.configure(format, converterFlags, fieldInfo);
@@ -180,13 +180,13 @@ public class ColumnInfo<T> {
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
 
-		if (columnName.equals(CsvColumn.DEFAULT_VALUE)) {
+		if (columnName != null && columnName.equals(CsvColumn.DEFAULT_VALUE)) {
 			columnName = fieldInfo.getName();
 		}
-		if (defaultValue.equals(CsvColumn.DEFAULT_VALUE)) {
+		if (defaultValue != null && defaultValue.equals(CsvColumn.DEFAULT_VALUE)) {
 			defaultValue = null;
 		}
-		if (afterColumn.equals(CsvColumn.DEFAULT_VALUE)) {
+		if (afterColumn != null && afterColumn.equals(CsvColumn.DEFAULT_VALUE)) {
 			afterColumn = null;
 		}
 		return new ColumnInfo<T>(fieldInfo, converter, configInfo, columnName, mustNotBeBlank, trimInput, needsQuotes,
