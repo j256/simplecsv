@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -999,11 +1000,10 @@ public class CsvProcessor<T> {
 		if (entityClass == null) {
 			throw new IllegalStateException("Entity class not configured for CSV processor");
 		}
-		List<ColumnInfo<Object>> columnInfos = new ArrayList<ColumnInfo<Object>>();
-		Set<String> knownFields = new HashSet<String>();
+		Map<String, ColumnInfo<Object>> fieldNameMap = new LinkedHashMap<String, ColumnInfo<Object>>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Field field : clazz.getDeclaredFields()) {
-				if (!knownFields.add(field.getName())) {
+				if (fieldNameMap.containsKey(field.getName())) {
 					continue;
 				}
 				CsvColumn csvField = field.getAnnotation(CsvColumn.class);
@@ -1012,7 +1012,7 @@ public class CsvProcessor<T> {
 				}
 
 				FieldInfo<Object> fieldInfo = FieldInfo.fromfield(field);
-				addColumnInfo(columnInfos, csvField, fieldInfo);
+				addColumnInfo(fieldNameMap, csvField, fieldInfo);
 				field.setAccessible(true);
 			}
 		}
@@ -1030,19 +1030,18 @@ public class CsvProcessor<T> {
 				Method setMethod = null;
 				String fieldName = method.getName();
 				if (fieldName.length() > 3 && fieldName.startsWith("get")) {
-					fieldName = fieldName.charAt(3) + fieldName.substring(4);
+					fieldName = Character.toLowerCase(fieldName.charAt(3)) + fieldName.substring(4);
 					getMethod = method;
 				} else if (fieldName.length() > 2 && fieldName.startsWith("is")) {
-					fieldName = fieldName.charAt(2) + fieldName.substring(3);
+					fieldName = Character.toLowerCase(fieldName.charAt(2)) + fieldName.substring(3);
 					getMethod = method;
 				} else if (fieldName.length() > 3 && fieldName.startsWith("set")) {
-					fieldName = fieldName.charAt(3) + fieldName.substring(4);
+					fieldName = Character.toLowerCase(fieldName.charAt(3)) + fieldName.substring(4);
 					setMethod = method;
 				}
 
-				if (knownFields.contains(fieldName)) {
-					throw new IllegalStateException(
-							"Field " + fieldName + " configured as a field and as the method " + method.getName());
+				if (fieldNameMap.containsKey(fieldName)) {
+					continue;
 				}
 
 				Method otherMethod = otherMethodMap.remove(fieldName);
@@ -1073,7 +1072,7 @@ public class CsvProcessor<T> {
 
 				FieldInfo<Object> fieldInfo = FieldInfo.fromMethods(fieldName, getMethod, setMethod);
 				// NOTE: it is the CsvField on the 2nd method that is really the one that is used
-				addColumnInfo(columnInfos, csvField, fieldInfo);
+				addColumnInfo(fieldNameMap, csvField, fieldInfo);
 			}
 		}
 		if (!otherMethodMap.isEmpty()) {
@@ -1081,17 +1080,11 @@ public class CsvProcessor<T> {
 			throw new IllegalStateException(
 					"Must mark both the get/is and set methods with CsvField annotation, not just: " + firstMethod);
 		}
-		if (columnInfos.isEmpty()) {
+		if (fieldNameMap.isEmpty()) {
 			throw new IllegalArgumentException("Could not find any exposed CSV fields in: " + entityClass);
 		}
 
-		// set the position of the items in the list
-		int fieldCount = 0;
-		for (ColumnInfo<Object> columnInfo : columnInfos) {
-			columnInfo.setPosition(fieldCount++);
-		}
-
-		this.allColumnInfos = columnInfos;
+		this.allColumnInfos = assignColumnPositions(fieldNameMap);
 		resetColumnPositionInfoMap();
 		if (constructorCallable == null) {
 			try {
@@ -1103,7 +1096,76 @@ public class CsvProcessor<T> {
 		}
 	}
 
-	private void addColumnInfo(List<ColumnInfo<Object>> columnInfos, CsvColumn csvField, FieldInfo<Object> fieldInfo) {
+	private List<ColumnInfo<Object>> assignColumnPositions(Map<String, ColumnInfo<Object>> fieldNameMap) {
+
+		// run through the columns and track the columns that come after others
+		Map<ColumnInfo<Object>, ColumnInfo<Object>> afterMap = new HashMap<ColumnInfo<Object>, ColumnInfo<Object>>();
+		Set<ColumnInfo<Object>> afterDestSet = new HashSet<ColumnInfo<Object>>();
+		for (ColumnInfo<Object> columnInfo : fieldNameMap.values()) {
+			if (columnInfo.getAfterColumn() == null) {
+				continue;
+			}
+			// lookup the column by name
+			ColumnInfo<Object> previousColumnInfo = fieldNameMap.get(columnInfo.getAfterColumn());
+			if (previousColumnInfo == null) {
+				throw new IllegalArgumentException(
+						"Could not find an after column with the name: " + columnInfo.getAfterColumn());
+			}
+			/*
+			 * Add this to the end of the fields already in the after list for this field (first one wins). We track the
+			 * field number so we don't get into some sort of infinite loop.
+			 */
+			int fieldCount = 0;
+			while (true) {
+				ColumnInfo<Object> previousNext = afterMap.get(previousColumnInfo);
+				if (previousNext == null) {
+					break;
+				}
+				previousColumnInfo = previousNext;
+				if (++fieldCount > fieldNameMap.size()) {
+					throw new IllegalStateException(
+							"Some sort of after-column loop has been detected, check all after-column settings");
+				}
+			}
+			afterMap.put(previousColumnInfo, columnInfo);
+			afterDestSet.add(columnInfo);
+		}
+
+		// go back and build our list of column infos
+		List<ColumnInfo<Object>> columnInfos = new ArrayList<ColumnInfo<Object>>(fieldNameMap.size());
+		for (ColumnInfo<Object> columnInfo : fieldNameMap.values()) {
+			// if the column does not come after any other column then spit it out in order
+			if (afterDestSet.contains(columnInfo)) {
+				continue;
+			}
+			// also spit out any of the columns that come after it according to after-column
+			for (; columnInfo != null; columnInfo = afterMap.get(columnInfo)) {
+				columnInfos.add(columnInfo);
+				if (columnInfos.size() > fieldNameMap.size()) {
+					throw new IllegalStateException(
+							"Some sort of after-column loop has been detected, check all after-column settings");
+				}
+			}
+		}
+
+		/*
+		 * Now we need to make sure that we don't have a gap in the after-column points. This could happen because of:
+		 * value1, value2 comes after value3, value3 comes after value2.
+		 */
+		if (columnInfos.size() < fieldNameMap.size()) {
+			throw new IllegalStateException("Some sort of after-column gap has been detected because only configured "
+					+ columnInfos.size() + " fields but expected " + fieldNameMap.size());
+		}
+
+		int fieldCount = 0;
+		for (ColumnInfo<Object> columnInfo : columnInfos) {
+			columnInfo.setPosition(fieldCount++);
+		}
+		return columnInfos;
+	}
+
+	private void addColumnInfo(Map<String, ColumnInfo<Object>> fieldNameMap, CsvColumn csvField,
+			FieldInfo<Object> fieldInfo) {
 		Converter<?, ?> converter = converterMap.get(fieldInfo.getType());
 		// test for the enum converter specifically
 		if (converter == null && fieldInfo.getType().isEnum()) {
@@ -1113,7 +1175,7 @@ public class CsvProcessor<T> {
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		ColumnInfo<Object> columnInfo = ColumnInfo.fromFieldInfo(csvField, fieldInfo, castConverter);
-		columnInfos.add(columnInfo);
+		fieldNameMap.put(columnInfo.getColumnName(), columnInfo);
 	}
 
 	private void resetColumnPositionInfoMap() {

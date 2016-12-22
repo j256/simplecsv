@@ -22,10 +22,11 @@ public class ColumnInfo<T> {
 	private final boolean needsQuotes;
 	private final String defaultValue;
 	private final boolean mustBeSupplied;
+	private final String afterColumn;
 
 	private ColumnInfo(FieldInfo<T> fieldInfo, Converter<T, ?> converter, Object configInfo, String columnName,
-			boolean mustNotBeBlank, boolean trimInput, boolean needsQuotes, String defaultValue,
-			boolean mustBeSupplied) {
+			boolean mustNotBeBlank, boolean trimInput, boolean needsQuotes, String defaultValue, boolean mustBeSupplied,
+			String afterColumn) {
 		this.fieldInfo = fieldInfo;
 		this.converter = converter;
 		this.configInfo = configInfo;
@@ -35,6 +36,7 @@ public class ColumnInfo<T> {
 		this.needsQuotes = needsQuotes;
 		this.defaultValue = defaultValue;
 		this.mustBeSupplied = mustBeSupplied;
+		this.afterColumn = afterColumn;
 	}
 
 	/**
@@ -125,6 +127,13 @@ public class ColumnInfo<T> {
 	}
 
 	/**
+	 * Column name that we come after.
+	 */
+	public String getAfterColumn() {
+		return afterColumn;
+	}
+
+	/**
 	 * Make a column-info instance from a Java Field.
 	 */
 	public static <T> ColumnInfo<T> fromFieldInfo(CsvColumn csvField, FieldInfo<T> fieldInfo,
@@ -141,36 +150,41 @@ public class ColumnInfo<T> {
 					(Converter<T, Object>) ConverterUtils.constructConverter(csvField.converterClass());
 			converter = castConverter;
 		}
-		String format;
-		if (csvField.format().equals(CsvColumn.DEFAULT_VALUE)) {
+		String format = csvField.format();
+		if (format.equals(CsvColumn.DEFAULT_VALUE)) {
 			format = null;
-		} else {
-			format = csvField.format();
 		}
 		Object configInfo = converter.configure(format, csvField.converterFlags(), fieldInfo);
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
 
-		String columnName;
-		if (csvField.columnName().equals(CsvColumn.DEFAULT_VALUE)) {
+		String columnName = csvField.columnName();
+		if (columnName.equals(CsvColumn.DEFAULT_VALUE)) {
 			columnName = fieldInfo.getName();
-		} else {
-			columnName = csvField.columnName();
 		}
-		String defaultValue = null;
-		if (!csvField.defaultValue().equals(CsvColumn.DEFAULT_VALUE)) {
-			defaultValue = csvField.defaultValue();
+		String defaultValue = csvField.defaultValue();
+		if (defaultValue.equals(CsvColumn.DEFAULT_VALUE)) {
+			defaultValue = null;
+		}
+		String afterColumn = csvField.afterColumn();
+		if (afterColumn.equals(CsvColumn.DEFAULT_VALUE)) {
+			afterColumn = null;
 		}
 		return new ColumnInfo<T>(fieldInfo, converter, configInfo, columnName, fieldMustNotBeBlank(csvField),
-				csvField.trimInput(), needsQuotes, defaultValue, fieldMustBeSupplied(csvField));
+				csvField.trimInput(), needsQuotes, defaultValue, fieldMustBeSupplied(csvField), afterColumn);
 	}
 
 	/**
 	 * For testing purposes.
 	 */
 	public static <T> ColumnInfo<T> forTests(Converter<T, ?> converter, Object configInfo) {
-		return new ColumnInfo<T>(null, converter, configInfo, "name", false, false, false, null, false);
+		return new ColumnInfo<T>(null, converter, configInfo, "name", false, false, false, null, false, null);
+	}
+
+	@Override
+	public String toString() {
+		return "ColumnInfo [name=" + fieldInfo.getName() + ", type=" + fieldInfo.getType() + "]";
 	}
 
 	/**

@@ -770,6 +770,7 @@ public class CsvProcessorTest {
 		assertEquals(value, getSetMethod.value);
 		StringWriter writer = new StringWriter();
 		processor.writeAll(writer, Collections.singletonList(getSetMethod), false);
+		assertEquals("\"value\"", processor.buildHeaderLine(false));
 		assertEquals(line, writer.toString());
 	}
 
@@ -791,6 +792,43 @@ public class CsvProcessorTest {
 	@Test(expected = IllegalStateException.class)
 	public void testGetSetMethodTypeNoMatch() {
 		new CsvProcessor<GetSetMethodTypeNoMatch>(GetSetMethodTypeNoMatch.class).initialize();
+	}
+
+	@Test
+	public void testAfterColumn() {
+		CsvProcessor<AfterColumn> processor = new CsvProcessor<AfterColumn>(AfterColumn.class);
+		AfterColumn afterColumn = new AfterColumn();
+		afterColumn.value1 = 1;
+		afterColumn.value2 = 2;
+		afterColumn.value3 = 3;
+		assertEquals("\"value1\",\"value3\",\"value2\"", processor.buildHeaderLine(false));
+		assertEquals("1,3,2", processor.buildLine(afterColumn, false));
+	}
+
+	@Test
+	public void testAfterColumnComplex() {
+		CsvProcessor<AfterColumnComplex> processor = new CsvProcessor<AfterColumnComplex>(AfterColumnComplex.class);
+		AfterColumnComplex afterColumnComplex = new AfterColumnComplex();
+		afterColumnComplex.value1 = 1;
+		afterColumnComplex.value2 = 2;
+		afterColumnComplex.value3 = 3;
+		afterColumnComplex.value4 = 4;
+		afterColumnComplex.value5 = 5;
+		afterColumnComplex.value6 = 6;
+		afterColumnComplex.value7 = 7;
+		assertEquals("\"value1\",\"value7\",\"value4\",\"value6\",\"value3\",\"value2\",\"value5\"",
+				processor.buildHeaderLine(false));
+		assertEquals("1,7,4,6,3,2,5", processor.buildLine(afterColumnComplex, false));
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testNoFirstField() {
+		new CsvProcessor<NoFirstField>(NoFirstField.class).initialize();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testAfterColumnLoop() {
+		new CsvProcessor<AfterColumnLoop>(AfterColumnLoop.class).initialize();
 	}
 
 	/* ================================================================================================= */
@@ -931,7 +969,6 @@ public class CsvProcessorTest {
 	}
 
 	public static class GetSetMethodTypeNoMatch {
-
 		@CsvColumn
 		public int getValue() {
 			return 0;
@@ -941,6 +978,51 @@ public class CsvProcessorTest {
 		public void setValue(Integer value) {
 		}
 	}
+
+	public static class AfterColumn {
+		@CsvColumn
+		int value1;
+		@CsvColumn(afterColumn = "value3")
+		int value2;
+		@CsvColumn
+		int value3;
+	}
+
+	public static class AfterColumnComplex {
+		@CsvColumn
+		int value1;
+		@CsvColumn(afterColumn = "value3")
+		int value2;
+		@CsvColumn
+		int value3;
+		@CsvColumn(afterColumn = "value7")
+		int value4;
+		@CsvColumn
+		int value5;
+		@CsvColumn(afterColumn = "value4")
+		int value6;
+		// this should come before value4
+		@CsvColumn(afterColumn = "value1")
+		int value7;
+	}
+
+	public static class NoFirstField {
+		@CsvColumn(afterColumn = "value2")
+		private int value1;
+		@CsvColumn(afterColumn = "value1")
+		private int value2;
+	}
+
+	public static class AfterColumnLoop {
+		@CsvColumn
+		private int value1;
+		@CsvColumn(afterColumn = "value3")
+		private int value2;
+		@CsvColumn(afterColumn = "value2")
+		private int value3;
+	}
+
+	/* ================================================================================================= */
 
 	public static class UnquotedStringConverter implements Converter<String, Void> {
 		@Override
