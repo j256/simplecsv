@@ -9,7 +9,7 @@ import java.text.ParseException;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
 public class RowValidatorTest {
@@ -35,9 +35,9 @@ public class RowValidatorTest {
 	}
 
 	protected static class Basic {
-		@CsvField
+		@CsvColumn
 		private int intValue;
-		@CsvField
+		@CsvColumn
 		private String string;
 
 		public Basic() {

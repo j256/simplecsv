@@ -1,6 +1,6 @@
 package com.j256.simplecsv.converter;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
@@ -10,13 +10,13 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * Converter for the Java Boolean type.
  * 
  * <p>
- * The {@link CsvField#format()} parameter can be set to a comma separated list of 2 strings. The string before the
+ * The {@link CsvColumn#format()} parameter can be set to a comma separated list of 2 strings. The string before the
  * comma will be printed for true, and the string after the comma will be printed for false. For example "1,0" will
  * output and read 1 for true and 0 for false.
  * </p>
  * 
  * <p>
- * The {@link CsvField#converterFlags()} can be set with {@link #PARSE_ERROR_ON_INVALID_VALUE} if you want a parse error
+ * The {@link CsvColumn#converterFlags()} can be set with {@link #PARSE_ERROR_ON_INVALID_VALUE} if you want a parse error
  * generated on unknown values, {@link #CASE_SENSITIVE} if you want to compare the true and false values in a
  * case-sensitive manner, and/or{@link #NEEDS_QUOTES} if you want the output to be surrounded by quotes.
  * </p>
@@ -26,18 +26,18 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
 public class BooleanConverter implements Converter<Boolean, BooleanConverter.ConfigInfo> {
 
 	/**
-	 * Set this flag using {@link CsvField#converterFlags()} if you want a parse error to be generated if the value is
+	 * Set this flag using {@link CsvColumn#converterFlags()} if you want a parse error to be generated if the value is
 	 * not either false or true (or the ones specified in the format). Default is that an invalid value will generate
 	 * false.
 	 */
 	public static final long PARSE_ERROR_ON_INVALID_VALUE = 1 << 1;
 	/**
-	 * Set this flag using {@link CsvField#converterFlags()} if you want the boolean formats to be compared
+	 * Set this flag using {@link CsvColumn#converterFlags()} if you want the boolean formats to be compared
 	 * case-sensitively. So "TRUE" and "True" would be converted into false. Default is case-insensitive.
 	 */
 	public static final long CASE_SENSITIVE = 1 << 2;
 	/**
-	 * Set this flag using {@link CsvField#converterFlags()} if you want the output to be surrounded by quotes. Default
+	 * Set this flag using {@link CsvColumn#converterFlags()} if you want the output to be surrounded by quotes. Default
 	 * is none.
 	 */
 	public static final long NEEDS_QUOTES = 1 << 3;

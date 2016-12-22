@@ -31,6 +31,12 @@ public class FieldInfo<T> {
 		return new FieldInfo<T>(field.getName(), clazz, field, null, null);
 	}
 
+	public static <T> FieldInfo<T> fromMethods(String fieldName, Method getMethod, Method setMethod) {
+		@SuppressWarnings("unchecked")
+		Class<T> clazz = (Class<T>) getMethod.getReturnType();
+		return new FieldInfo<T>(fieldName, clazz, null, getMethod, setMethod);
+	}
+
 	public String getName() {
 		return name;
 	}

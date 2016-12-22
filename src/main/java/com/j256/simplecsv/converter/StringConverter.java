@@ -1,6 +1,6 @@
 package com.j256.simplecsv.converter;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
@@ -9,7 +9,7 @@ import com.j256.simplecsv.processor.ParseError;
  * Converter for the Java String type.
  * 
  * <p>
- * The {@link CsvField#converterFlags()} parameter can be set to {@link #TRIM_OUTPUT} for trimming before a column is
+ * The {@link CsvColumn#converterFlags()} parameter can be set to {@link #TRIM_OUTPUT} for trimming before a column is
  * printed and/or {@link #BLANK_IS_NULL} to have a blank-string interpreted as a null value.
  * </p>
  * 

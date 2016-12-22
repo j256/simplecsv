@@ -1,6 +1,6 @@
 package com.j256.simplecsv.converter;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
@@ -10,7 +10,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * Converter for the Java String type.
  * 
  * <p>
- * The {@link CsvField#converterFlags()} parameter can be set to {@link #PARSE_ERROR_IF_MORE_THAN_ONE_CHAR} to throw a
+ * The {@link CsvColumn#converterFlags()} parameter can be set to {@link #PARSE_ERROR_IF_MORE_THAN_ONE_CHAR} to throw a
  * parse error if the input has more than one character.
  * </p>
  * 

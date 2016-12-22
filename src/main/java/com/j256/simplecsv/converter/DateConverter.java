@@ -4,7 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
@@ -14,7 +14,7 @@ import com.j256.simplecsv.processor.ParseError;
  * reentrance.
  * 
  * <p>
- * The {@link CsvField#format()} parameter can be set the {@link SimpleDateFormat} format string to read and write the
+ * The {@link CsvColumn#format()} parameter can be set the {@link SimpleDateFormat} format string to read and write the
  * date.
  * </p>
  * 

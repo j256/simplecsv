@@ -11,20 +11,20 @@ import com.j256.simplecsv.converter.VoidConverter;
 import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
- * Annotation to be added to a field to mark it as a column in a CSV file.
+ * Annotation to be added to a field or method to mark it as a column in a CSV file.
  * 
  * @author graywatson
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD })
-public @interface CsvField {
+public @interface CsvColumn {
 
 	/** Used internally to detect whether or not a value has been configured. */
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
-	 * This allows you to override and set a column name for the field. By default it will use the field name. This
-	 * column name is used when you are generating and validating the header line.
+	 * This allows you to override and set a column name. By default it will use the field or method name. This column
+	 * name is used when you are generating and validating the header line.
 	 */
 	public String columnName() default DEFAULT_VALUE;
 
@@ -36,7 +36,7 @@ public @interface CsvField {
 
 	/**
 	 * Set to true if you want the column read from the line to be trimmed (using {@link String#trim()}) before it is
-	 * converted to Java. This may not be applicable to all field types.
+	 * converted to Java. This may not be applicable to all column types.
 	 */
 	public boolean trimInput() default false;
 

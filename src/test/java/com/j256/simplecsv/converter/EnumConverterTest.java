@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.converter.EnumConverter.ConfigInfo;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.CsvProcessor;
@@ -107,9 +107,9 @@ public class EnumConverterTest extends AbstractConverterTest {
 	}
 
 	protected static class MyObject {
-		@CsvField
+		@CsvColumn
 		private MyEnum myEnum;
-		@CsvField
+		@CsvColumn
 		private String notEnum;
 
 		public MyObject() {

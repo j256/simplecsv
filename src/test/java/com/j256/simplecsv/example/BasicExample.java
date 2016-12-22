@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
@@ -91,12 +91,12 @@ public class BasicExample {
 	 * NOTE: this needs to be public to expose the no-arg constructor
 	 */
 	public static class Account {
-		@CsvField(columnName = "Name")
+		@CsvColumn(columnName = "Name")
 		private String name;
-		@CsvField(columnName = "Account Number")
+		@CsvColumn(columnName = "Account Number")
 		private long number;
 		// we use a format to show currency as $1,027.99 and ($23.15)
-		@CsvField(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
+		@CsvColumn(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
 		private double amount;
 
 		public Account() {

@@ -2,13 +2,13 @@ package com.j256.simplecsv.converter;
 
 import java.text.DecimalFormat;
 
-import com.j256.simplecsv.common.CsvField;
+import com.j256.simplecsv.common.CsvColumn;
 
 /**
  * Converter for the Java Float type.
  * 
  * <p>
- * NOTE: The {@link CsvField#format()} is the same pattern used by {@link DecimalFormat} and will be used in both
+ * NOTE: The {@link CsvColumn#format()} is the same pattern used by {@link DecimalFormat} and will be used in both
  * {@link #javaToString} and {@link #stringToJava} methods.
  * </p>
  * 
