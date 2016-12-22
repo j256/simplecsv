@@ -1,7 +1,7 @@
-1.5: 8/2/2016
+1.5: 12/22/2016
 	* Refactored to support get/is/set methods as well as field.
 	* BROKE converter API to switch to a FieldInfo instead of a field and to make it generic.  Required for method support.
-	* RENAMED CsvField to be CsvColumn to better line up with using fields and methods.
+	* RENAMED CsvField to be CsvColumn to better line up with using fields and methods.  Deprecated CsvField.
 
 1.4: 8/2/2016
 	* Added RowValidator to validate an entity parsed from a CSV line.

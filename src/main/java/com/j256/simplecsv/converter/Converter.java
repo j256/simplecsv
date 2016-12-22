@@ -58,12 +58,11 @@ public interface Converter<T, C> {
 	 * 
 	 * @param columnInfo
 	 *            Information about the column we are processing.
-	 * @param value
+	 * @param fieldValue
 	 *            Value of the field that we are converting.
-	 * 
 	 * @return The String equivalent object of the value parameter or null in which case nothing will be printed.
 	 */
-	public String javaToString(ColumnInfo<T> columnInfo, T value);
+	public String javaToString(ColumnInfo<T> columnInfo, T fieldValue);
 
 	/**
 	 * Converts from a string representation to Java.
@@ -81,7 +80,6 @@ public interface Converter<T, C> {
 	 * @param parseError
 	 *            Parse error which can we use to set information about parse errors here. If there are no parse errors
 	 *            then just ignore this field. Any exceptions thrown will also be caught and interpreted as errors.
-	 * 
 	 * @return The Java equivalent object of the value parameter or null. Null can mean a null value or if the
 	 *         parseError type is set to something other than {@link ErrorType#NONE}.
 	 * @throws ParseException

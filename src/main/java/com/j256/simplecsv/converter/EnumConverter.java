@@ -13,8 +13,8 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * Converter for the Java Enum type associated with an Enum field.
  * 
  * <p>
- * Use the {@link #FORMAT_IS_UNKNOWN_VALUE} flag to set the unknown enum field name set in the {@link CsvColumn#format()}
- * .
+ * Use the {@link #FORMAT_IS_UNKNOWN_VALUE} flag to set the unknown enum field name set in the
+ * {@link CsvColumn#format()} .
  * </p>
  * 
  * @author graywatson
@@ -22,9 +22,9 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
 public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInfo> {
 
 	/**
-	 * If this flag is set then the {@link CsvColumn#format()} string is actually the name of the enum constant that will
-	 * be used if the value in the column is unknown. So, for example, if the column value is "red" but there is not an
-	 * enum name that corresponds to "red" then the format value "blue" will be used instead.
+	 * If this flag is set then the {@link CsvColumn#format()} string is actually the name of the enum constant that
+	 * will be used if the value in the column is unknown. So, for example, if the column value is "red" but there is
+	 * not an enum name that corresponds to "red" then the format value "blue" will be used instead.
 	 */
 	public static final long FORMAT_IS_UNKNOWN_VALUE = 1 << 1;
 

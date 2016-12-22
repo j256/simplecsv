@@ -16,8 +16,8 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * </p>
  * 
  * <p>
- * The {@link CsvColumn#converterFlags()} can be set with {@link #PARSE_ERROR_ON_INVALID_VALUE} if you want a parse error
- * generated on unknown values, {@link #CASE_SENSITIVE} if you want to compare the true and false values in a
+ * The {@link CsvColumn#converterFlags()} can be set with {@link #PARSE_ERROR_ON_INVALID_VALUE} if you want a parse
+ * error generated on unknown values, {@link #CASE_SENSITIVE} if you want to compare the true and false values in a
  * case-sensitive manner, and/or{@link #NEEDS_QUOTES} if you want the output to be surrounded by quotes.
  * </p>
  * 

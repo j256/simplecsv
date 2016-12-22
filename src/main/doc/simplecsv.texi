@@ -6,9 +6,9 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 1.4
+@set simplecsv_version 1.5
 @set simplecsv_year 2016
-@set simplecsv_date August @value{simplecsv_year}
+@set simplecsv_date December @value{simplecsv_year}
 @set package SimpleCSV
 @c ----------------------------------------------------------------
 
@@ -77,13 +77,29 @@ To use SimpleCSV you need to do the following steps.  For more information, @pxr
 
 @item Download SimpleCSV from the @uref{http://256.com/sources/simplecsv/releases/, SimpleCSV release page}.  @xref{Downloading}.
 
-@item Add @code{@@CsvField} annotation to each of the fields that you want to write and read to/from CSV files.  @xref{CsvField Annotation}.
+@item Add @code{@@CsvColumn} annotation to each of the fields or get/set method that you want to write and read to/from
+CSV files.  @xref{CsvColumn Annotation}.
 
 @example
 public class Account @{
     @dots{}
-    @@CsvField
+    @@CsvColumn
     private String name;
+@end example
+
+Or.
+
+@example
+public class Account @{
+    @dots{}
+    @@CsvColumn
+    private String getName() @{
+        return name;
+    @}
+    @@CsvColumn
+    private void setName(String name) @{
+        this.name = name;
+    @}
 @end example
 
 @item Create a CsvProcessor utility class for the entity.
@@ -123,7 +139,7 @@ For more extensive instructions, @pxref{Using}.
 @menu
 * Downloading ::                Downloading the SimpleCSV jar.
 * Maven ::                      How to use with Maven
-* CsvField Annotation ::        Details about the @@CsvField annotation.
+* CsvColumn Annotation ::        Details about the @@CsvColumn annotation.
 @end menu
 
 @c ----------------------------------------------------------------
@@ -140,7 +156,7 @@ central maven repository}.
 The code works with Java 6 or later.
 
 @c ----------------------------------------------------------------
-@node Maven, CsvField Annotation, Using, Using
+@node Maven, CsvColumn Annotation, Using, Using
 @section Using With Maven
 
 @cindex Maven, use with
@@ -156,12 +172,12 @@ To use SimpleCSV with maven, include the following dependency in your @file{pom.
 @end example 
 
 @c ----------------------------------------------------------------
-@node CsvField Annotation, Examples, Maven, Using
-@section CsvField Annotation
+@node CsvColumn Annotation, Examples, Maven, Using
+@section CsvColumn Annotation
 
-@cindex CsvField annotation
-@cindex @@CsvField
-The @code{@@CsvField} annotation is used to mark the fields in your entity that you want to write to and read from CSV files
+@cindex CsvColumn annotation
+@cindex @@CsvColumn
+The @code{@@CsvColumn} annotation is used to mark the fields in your entity that you want to write to and read from CSV files
 as a column.  It also allows you to customize the output format and other details for the particular field instance.  The
 following fields from the annotation can be used:
 
@@ -204,7 +220,7 @@ Optional flags for the converter which adjust the output. The flags that are use
 the converter Javadocs for more information. These need to be constants that are added together. For example,
 
 @example
-@@CsvField(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
+@@CsvColumn(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
 private Xxx dollarAmount;
 @end example
 
@@ -233,33 +249,41 @@ doesn't have to be in the header or the lines at all. Default is true.
 @emph{WARNING:} If you are using optional ordering, the same CsvProcessor cannot be used with multiple files at
 the same time since the column lists can be dynamic depending on the input file being read.
 
+@cindex column order
+@item afterColumn
+
+Used to set the order of the columns by setting the column-name that this column comes after. If there is some sort
+of loop or if two fields say they come after the same field then you will get an undefined order. If this is not
+specified then the order in which the fields and methods are discovered in the classes will determine their order
+in the CSV file.
+
 @end table
 
-Here's some examples of how to use the @code{@@CsvField} annotation.
+Here's some examples of how to use the @code{@@CsvColumn} annotation.
 
 Override the column name:
 
 @example
-@@CsvField(columnName = "Account Number")
+@@CsvColumn(columnName = "Account Number")
 private long number;
 @end example
 
 Change the column input/output format.  This will display the amount as @code{$1,231.00} or @code{($2,000,000.28)}. 
 
 @example
-@@CsvField(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
+@@CsvColumn(columnName = "Amount", format = "$###,##0.00;($###,##0.00)")
 private double amount;
 @end example
 
 Specifying a custom converter class for an object that you have defined. 
 
 @example
-@@CsvField(columnName = "Gender", converterClass = GenderConverter.class)
+@@CsvColumn(columnName = "Gender", converterClass = GenderConverter.class)
 private Gender gender;
 @end example
 
 @c ----------------------------------------------------------------
-@node Examples, License, CsvField Annotation, Top
+@node Examples, License, CsvColumn Annotation, Top
 @chapter Example Code
 
 @cindex examples of code
