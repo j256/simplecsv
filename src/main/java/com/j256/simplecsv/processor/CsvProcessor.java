@@ -1057,6 +1057,20 @@ public class CsvProcessor<T> {
 					setMethod = otherMethod;
 				}
 
+				// test the types
+				if (getMethod.getReturnType() == null || getMethod.getReturnType() == void.class) {
+					throw new IllegalStateException("Get method must return a type, not void: " + getMethod);
+				}
+				Class<?>[] setParamTypes = setMethod.getParameterTypes();
+				if (setParamTypes.length != 1) {
+					throw new IllegalStateException("Get method must have exactly 1 argument: " + setMethod);
+				}
+				if (setParamTypes[0] != getMethod.getReturnType()) {
+					throw new IllegalStateException("Get method return type " + getMethod.getReturnType()
+							+ " should match set method parameter type " + setParamTypes[0] + " for field "
+							+ fieldName);
+				}
+
 				FieldInfo<Object> fieldInfo = FieldInfo.fromMethods(fieldName, getMethod, setMethod);
 				// NOTE: it is the CsvField on the 2nd method that is really the one that is used
 				addColumnInfo(columnInfos, csvField, fieldInfo);
@@ -1064,7 +1078,7 @@ public class CsvProcessor<T> {
 		}
 		if (!otherMethodMap.isEmpty()) {
 			Method firstMethod = otherMethodMap.values().iterator().next();
-			throw new IllegalArgumentException(
+			throw new IllegalStateException(
 					"Must mark both the get/is and set methods with CsvField annotation, not just: " + firstMethod);
 		}
 		if (columnInfos.isEmpty()) {

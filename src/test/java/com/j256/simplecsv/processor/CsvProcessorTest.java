@@ -773,9 +773,24 @@ public class CsvProcessorTest {
 		assertEquals(line, writer.toString());
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = IllegalStateException.class)
 	public void testMissingSetMethod() {
 		new CsvProcessor<MissingSetMethod>(MissingSetMethod.class).initialize();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testGetMethodReturnsVoid() {
+		new CsvProcessor<GetMethodReturnsVoid>(GetMethodReturnsVoid.class).initialize();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testSetMethodWrongNumParams() {
+		new CsvProcessor<SetMethodWrongNumParams>(SetMethodWrongNumParams.class).initialize();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testGetSetMethodTypeNoMatch() {
+		new CsvProcessor<GetSetMethodTypeNoMatch>(GetSetMethodTypeNoMatch.class).initialize();
 	}
 
 	/* ================================================================================================= */
@@ -844,42 +859,23 @@ public class CsvProcessorTest {
 		}
 	}
 
-	private static class BasicSubclass extends Basic {
-		@SuppressWarnings("unused")
-		public BasicSubclass() {
-			// for simplecsv
-		}
+	public static class BasicSubclass extends Basic {
 	}
 
-	private static class BasicSubclassDupField extends Basic {
+	public static class BasicSubclassDupField extends Basic {
 		@CsvColumn
 		private int intValue;
-
-		@SuppressWarnings("unused")
-		public BasicSubclassDupField() {
-			// for simplecsv
-		}
 	}
 
-	private static class DefaultValue {
+	public static class DefaultValue {
 		public static final String DEFAULT_VALUE = "1";
 		@CsvColumn(defaultValue = DEFAULT_VALUE)
 		private int value;
-
-		@SuppressWarnings("unused")
-		public DefaultValue() {
-			// for simplecsv
-		}
 	}
 
-	private static class MustNotBeBlank {
+	public static class MustNotBeBlank {
 		@CsvColumn(mustNotBeBlank = true)
 		private int value;
-
-		@SuppressWarnings("unused")
-		public MustNotBeBlank() {
-			// for simplecsv
-		}
 	}
 
 	private static class NoConstructor {
@@ -887,23 +883,13 @@ public class CsvProcessorTest {
 		private int value;
 	}
 
-	private static class QuoteInColumnHeader {
+	public static class QuoteInColumnHeader {
 		@CsvColumn(columnName = QUOTE_IN_HEADER)
 		private int value;
-
-		@SuppressWarnings("unused")
-		public QuoteInColumnHeader() {
-			// for simplecsv
-		}
 	}
 
-	private static class GetSetMethod {
+	public static class GetSetMethod {
 		private int value;
-
-		@SuppressWarnings("unused")
-		public GetSetMethod() {
-			// for simplecsv
-		}
 
 		@CsvColumn
 		public int getValue() {
@@ -916,17 +902,43 @@ public class CsvProcessorTest {
 		}
 	}
 
-	private static class MissingSetMethod {
-		private int value;
+	public static class MissingSetMethod {
+		@CsvColumn
+		public int getValue() {
+			return 0;
+		}
+	}
 
-		@SuppressWarnings("unused")
-		public MissingSetMethod() {
-			// for simplecsv
+	public static class GetMethodReturnsVoid {
+		@CsvColumn
+		public void getValue() {
 		}
 
 		@CsvColumn
+		public void setValue(int value) {
+		}
+	}
+
+	public static class SetMethodWrongNumParams {
+		@CsvColumn
 		public int getValue() {
-			return value;
+			return 0;
+		}
+
+		@CsvColumn
+		public void setValue(int value, int value2) {
+		}
+	}
+
+	public static class GetSetMethodTypeNoMatch {
+
+		@CsvColumn
+		public int getValue() {
+			return 0;
+		}
+
+		@CsvColumn
+		public void setValue(Integer value) {
 		}
 	}
 
