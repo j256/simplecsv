@@ -11,26 +11,21 @@ import com.j256.simplecsv.converter.VoidConverter;
 import com.j256.simplecsv.processor.CsvProcessor;
 
 /**
- * Annotation to be added to a field or method to mark it as a column in a CSV file.
- * 
- * <p>
- * <b>NOTE:</b> When using on a get/is/set methods you need to add this annotation to <i>both</i> the get/is and the set
- * methods. Also, you need to make sure that the CsvColumn annotation fields are the same on both the get/is and set
- * methods.
- * </p>
+ * @deprecated Should switch to {@link CsvColumn} which makes more send with get/set method support.
  * 
  * @author graywatson
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.METHOD })
-public @interface CsvColumn {
+@Target(ElementType.FIELD)
+@Deprecated
+public @interface CsvField {
 
 	/** Used internally to detect whether or not a value has been configured. */
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
-	 * This allows you to override and set a column name. By default it will use the field or method name. This column
-	 * name is used when you are generating and validating the header line.
+	 * This allows you to override and set a column name for the field. By default it will use the field name. This
+	 * column name is used when you are generating and validating the header line.
 	 */
 	public String columnName() default DEFAULT_VALUE;
 
@@ -42,7 +37,7 @@ public @interface CsvColumn {
 
 	/**
 	 * Set to true if you want the column read from the line to be trimmed (using {@link String#trim()}) before it is
-	 * converted to Java. This may not be applicable to all column types.
+	 * converted to Java. This may not be applicable to all field types.
 	 */
 	public boolean trimInput() default false;
 
@@ -58,7 +53,7 @@ public @interface CsvColumn {
 	 * the converter Javadocs for more information. These need to be constants that are added together. For example,
 	 * 
 	 * <pre>
-	 * &#064;CsvColumn(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
+	 * &#064;CsvField(converterFlags = XxxConverter.FLAG1 + XxxConverter.FLAG2)
 	 * private Xxx dollarAmount;
 	 * </pre>
 	 */
@@ -86,12 +81,4 @@ public @interface CsvColumn {
 	 * the same time since the column lists can be dynamic depending on the input file being read.
 	 */
 	public boolean mustBeSupplied() default true;
-
-	/**
-	 * Used to set the order of the columns by setting the column-name that this column comes after. If there is some
-	 * sort of loop or if two fields say they come after the same field then you will get an undefined order. If this is
-	 * not specified then the order in which the fields and methods are discovered in the classes will determine their
-	 * order in the CSV file.
-	 */
-	public String afterColumn() default DEFAULT_VALUE;
 }

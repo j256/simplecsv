@@ -1,6 +1,7 @@
 package com.j256.simplecsv.processor;
 
 import com.j256.simplecsv.common.CsvColumn;
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;
@@ -8,8 +9,11 @@ import com.j256.simplecsv.converter.VoidConverter;
 /**
  * Information about a particular column used internally to keep track of the CSV columns.
  * 
+ * @param <T>
+ *            The type of the column whose information we are storing in here.
  * @author graywatson
  */
+@SuppressWarnings("deprecation")
 public class ColumnInfo<T> {
 
 	private final FieldInfo<T> fieldInfo;
@@ -136,9 +140,27 @@ public class ColumnInfo<T> {
 	/**
 	 * Make a column-info instance from a Java Field.
 	 */
-	public static <T> ColumnInfo<T> fromFieldInfo(CsvColumn csvField, FieldInfo<T> fieldInfo,
+	public static <T> ColumnInfo<T> fromFieldInfo(CsvColumn csvColumn, FieldInfo<T> fieldInfo,
 			Converter<T, ?> converter) {
-		if (csvField.converterClass() == VoidConverter.class) {
+		return fromFieldInfo(csvColumn.converterClass(), csvColumn.format(), csvColumn.converterFlags(),
+				csvColumn.columnName(), csvColumn.defaultValue(), csvColumn.afterColumn(), csvColumn.mustNotBeBlank(),
+				csvColumn.mustBeSupplied(), csvColumn.trimInput(), fieldInfo, converter);
+	}
+
+	/**
+	 * Make a column-info instance from a Java Field.
+	 */
+	public static <T> ColumnInfo<T> fromFieldInfo(CsvField csvField, FieldInfo<T> fieldInfo,
+			Converter<T, ?> converter) {
+		return fromFieldInfo(csvField.converterClass(), csvField.format(), csvField.converterFlags(),
+				csvField.columnName(), csvField.defaultValue(), null, csvField.mustNotBeBlank(),
+				csvField.mustBeSupplied(), csvField.trimInput(), fieldInfo, converter);
+	}
+
+	private static <T> ColumnInfo<T> fromFieldInfo(Class<? extends Converter<?, ?>> converterClass, String format,
+			long converterFlags, String columnName, String defaultValue, String afterColumn, boolean mustNotBeBlank,
+			boolean mustBeSupplied, boolean trimInput, FieldInfo<T> fieldInfo, Converter<T, ?> converter) {
+		if (converterClass == VoidConverter.class) {
 			if (converter == null) {
 				throw new IllegalArgumentException("No converter available for type: " + fieldInfo.getType());
 			} else {
@@ -147,32 +169,28 @@ public class ColumnInfo<T> {
 		} else {
 			@SuppressWarnings("unchecked")
 			Converter<T, Object> castConverter =
-					(Converter<T, Object>) ConverterUtils.constructConverter(csvField.converterClass());
+					(Converter<T, Object>) ConverterUtils.constructConverter(converterClass);
 			converter = castConverter;
 		}
-		String format = csvField.format();
 		if (format.equals(CsvColumn.DEFAULT_VALUE)) {
 			format = null;
 		}
-		Object configInfo = converter.configure(format, csvField.converterFlags(), fieldInfo);
+		Object configInfo = converter.configure(format, converterFlags, fieldInfo);
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		boolean needsQuotes = castConverter.isNeedsQuotes(configInfo);
 
-		String columnName = csvField.columnName();
 		if (columnName.equals(CsvColumn.DEFAULT_VALUE)) {
 			columnName = fieldInfo.getName();
 		}
-		String defaultValue = csvField.defaultValue();
 		if (defaultValue.equals(CsvColumn.DEFAULT_VALUE)) {
 			defaultValue = null;
 		}
-		String afterColumn = csvField.afterColumn();
 		if (afterColumn.equals(CsvColumn.DEFAULT_VALUE)) {
 			afterColumn = null;
 		}
-		return new ColumnInfo<T>(fieldInfo, converter, configInfo, columnName, fieldMustNotBeBlank(csvField),
-				csvField.trimInput(), needsQuotes, defaultValue, fieldMustBeSupplied(csvField), afterColumn);
+		return new ColumnInfo<T>(fieldInfo, converter, configInfo, columnName, mustNotBeBlank, trimInput, needsQuotes,
+				defaultValue, mustBeSupplied, afterColumn);
 	}
 
 	/**
@@ -185,22 +203,5 @@ public class ColumnInfo<T> {
 	@Override
 	public String toString() {
 		return "ColumnInfo [name=" + fieldInfo.getName() + ", type=" + fieldInfo.getType() + "]";
-	}
-
-	/**
-	 * To isolate the suppress warnings.
-	 */
-	@SuppressWarnings("deprecation")
-	private static boolean fieldMustNotBeBlank(CsvColumn csvField) {
-		return (csvField.mustNotBeBlank() || csvField.required());
-	}
-
-	/**
-	 * To isolate the suppress warnings.
-	 */
-	@SuppressWarnings("deprecation")
-	private static boolean fieldMustBeSupplied(CsvColumn csvField) {
-		// must-be-suppled default true but optionalColumn default was false
-		return (csvField.mustBeSupplied() && !csvField.optionalColumn());
 	}
 }

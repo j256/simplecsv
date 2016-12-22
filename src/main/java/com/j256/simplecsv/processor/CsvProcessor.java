@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.j256.simplecsv.common.CsvColumn;
+import com.j256.simplecsv.common.CsvField;
 import com.j256.simplecsv.converter.Converter;
 import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.EnumConverter;
@@ -44,6 +45,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * 
  * @author graywatson
  */
+@SuppressWarnings("deprecation")
 public class CsvProcessor<T> {
 
 	/**
@@ -1006,13 +1008,14 @@ public class CsvProcessor<T> {
 				if (fieldNameMap.containsKey(field.getName())) {
 					continue;
 				}
-				CsvColumn csvField = field.getAnnotation(CsvColumn.class);
-				if (csvField == null) {
+				CsvField csvField = field.getAnnotation(CsvField.class);
+				CsvColumn csvColumn = field.getAnnotation(CsvColumn.class);
+				if (csvField == null && csvColumn == null) {
 					continue;
 				}
 
 				FieldInfo<Object> fieldInfo = FieldInfo.fromfield(field);
-				addColumnInfo(fieldNameMap, csvField, fieldInfo);
+				addColumnInfo(fieldNameMap, csvColumn, csvField, fieldInfo);
 				field.setAccessible(true);
 			}
 		}
@@ -1021,8 +1024,8 @@ public class CsvProcessor<T> {
 		Map<String, Method> otherMethodMap = new HashMap<String, Method>();
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			for (Method method : clazz.getMethods()) {
-				CsvColumn csvField = method.getAnnotation(CsvColumn.class);
-				if (csvField == null) {
+				CsvColumn csvColumn = method.getAnnotation(CsvColumn.class);
+				if (csvColumn == null) {
 					continue;
 				}
 
@@ -1071,14 +1074,14 @@ public class CsvProcessor<T> {
 				}
 
 				FieldInfo<Object> fieldInfo = FieldInfo.fromMethods(fieldName, getMethod, setMethod);
-				// NOTE: it is the CsvField on the 2nd method that is really the one that is used
-				addColumnInfo(fieldNameMap, csvField, fieldInfo);
+				// NOTE: it is the CsvColumn on the 2nd method that is really the one that is used
+				addColumnInfo(fieldNameMap, csvColumn, null, fieldInfo);
 			}
 		}
 		if (!otherMethodMap.isEmpty()) {
 			Method firstMethod = otherMethodMap.values().iterator().next();
 			throw new IllegalStateException(
-					"Must mark both the get/is and set methods with CsvField annotation, not just: " + firstMethod);
+					"Must mark both the get/is and set methods with CsvColumn annotation, not just: " + firstMethod);
 		}
 		if (fieldNameMap.isEmpty()) {
 			throw new IllegalArgumentException("Could not find any exposed CSV fields in: " + entityClass);
@@ -1164,17 +1167,22 @@ public class CsvProcessor<T> {
 		return columnInfos;
 	}
 
-	private void addColumnInfo(Map<String, ColumnInfo<Object>> fieldNameMap, CsvColumn csvField,
+	private void addColumnInfo(Map<String, ColumnInfo<Object>> fieldNameMap, CsvColumn csvColumn, CsvField csvField,
 			FieldInfo<Object> fieldInfo) {
 		Converter<?, ?> converter = converterMap.get(fieldInfo.getType());
 		// test for the enum converter specifically
 		if (converter == null && fieldInfo.getType().isEnum()) {
 			converter = EnumConverter.getSingleton();
 		}
-		// NOTE: converter could be null in which case the CsvField.converterClass must be set
+		// NOTE: converter could be null in which case the CsvColumn.converterClass must be set
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
-		ColumnInfo<Object> columnInfo = ColumnInfo.fromFieldInfo(csvField, fieldInfo, castConverter);
+		ColumnInfo<Object> columnInfo;
+		if (csvField == null) {
+			columnInfo = ColumnInfo.fromFieldInfo(csvColumn, fieldInfo, castConverter);
+		} else {
+			columnInfo = ColumnInfo.fromFieldInfo(csvField, fieldInfo, castConverter);
+		}
 		fieldNameMap.put(columnInfo.getColumnName(), columnInfo);
 	}
 
