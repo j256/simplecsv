@@ -22,7 +22,6 @@ Gray Watson
 
 Quick Example:
 
-
 Define your entity with the fields marked with the @CsvColumn annotation, can also mark get/set methods:
 
 	public class Account {
