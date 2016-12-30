@@ -22,7 +22,7 @@ public abstract class AbstractConverterTest {
 			converted = converter.stringToJava(strVal, 1, 2, columnInfo, strVal, parseError);
 		}
 		assertFalse(parseError.isError());
-		System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
+		//System.out.println("value '" + value + "' == converted '" + converted + "' from string '" + strVal + "'");
 		assertEquals(value, converted);
 		if (converter instanceof StringConverter) {
 			String val = (String) converter.stringToJava("", 1, 2, columnInfo, "", parseError);
