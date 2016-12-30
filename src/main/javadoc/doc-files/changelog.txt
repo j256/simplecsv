@@ -1,9 +1,10 @@
-1.6: 12/30/2016
+2.1: 12/30/2016
 	* Sorry for the changes here but this is cleaner.
 	* More refactored to remove FieldInfo entirely and move field information into ColumnInfo.
 	* BROKE (again) the Converter API to switch to a ColumnInfo in the configure(...) method.
 
 1.5: 12/22/2016
+	* NOTE: should have been 2.0 given the API changes
 	* Refactored to support get/is/set methods as well as field.
 	* BROKE Converter API to switch to a FieldInfo instead of a field and to make it generic.  Required for method support.
 	* RENAMED CsvField to be CsvColumn to better line up with using fields and methods.  Deprecated CsvField.

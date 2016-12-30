@@ -6,7 +6,7 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 1.5
+@set simplecsv_version 2.1
 @set simplecsv_year 2016
 @set simplecsv_date December @value{simplecsv_year}
 @set package SimpleCSV
@@ -249,13 +249,14 @@ doesn't have to be in the header or the lines at all. Default is true.
 @emph{WARNING:} If you are using optional ordering, the same CsvProcessor cannot be used with multiple files at
 the same time since the column lists can be dynamic depending on the input file being read.
 
+@cindex order of the columns
 @cindex column order
 @item afterColumn
 
-Used to set the order of the columns by setting the column-name that this column comes after. If there is some sort
-of loop or if two fields say they come after the same field then you will get an undefined order. If this is not
+Used to set the order of the columns by setting the column-name that this column comes after. If this is not
 specified then the order in which the fields and methods are discovered in the classes will determine their order
-in the CSV file.
+in the CSV file. If two fields say they come after the same field then you will get an undefined order. If there
+is an loop in the after columns then an exception will be thrown.
 
 @end table
 
