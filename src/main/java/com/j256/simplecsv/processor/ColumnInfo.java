@@ -7,7 +7,7 @@ import com.j256.simplecsv.converter.ConverterUtils;
 import com.j256.simplecsv.converter.VoidConverter;
 
 /**
- * Information about a particular column used internally to keep track of the CSV columns.
+ * Information about a particular CSV column used internally to keep track of the CSV columns.
  * 
  * @param <T>
  *            The type of the column whose information we are storing in here.
