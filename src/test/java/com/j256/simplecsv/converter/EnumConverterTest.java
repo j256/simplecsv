@@ -6,17 +6,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
 import com.j256.simplecsv.common.CsvColumn;
-import com.j256.simplecsv.converter.EnumConverter.ConfigInfo;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.CsvProcessor;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 public class EnumConverterTest extends AbstractConverterTest {
@@ -24,24 +21,18 @@ public class EnumConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		EnumConverter converter = EnumConverter.getSingleton();
-		Field field = MyObject.class.getDeclaredField("myEnum");
-		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
-		ConfigInfo configInfo = converter.configure(null, 0, fieldInfo);
-		testConverter(converter, configInfo, MyEnum.RED);
-		testConverter(converter, configInfo, MyEnum.BLUE);
-		testConverter(converter, configInfo, MyEnum.GREEN);
-		testConverter(converter, configInfo, null);
+		testConverter(converter, MyEnum.class, null, 0L, MyEnum.RED);
+		testConverter(converter, MyEnum.class, null, 0, MyEnum.BLUE);
+		testConverter(converter, MyEnum.class, null, 0, MyEnum.GREEN);
+		testConverter(converter, MyEnum.class, null, 0, null);
 	}
 
 	@Test
-	public void testUnknown() throws Exception {
+	public void testUnknown() {
 		EnumConverter converter = EnumConverter.getSingleton();
-		Field field = MyObject.class.getDeclaredField("myEnum");
 		MyEnum unknownValue = MyEnum.RED;
-		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
-		ConfigInfo configInfo =
-				converter.configure(unknownValue.name(), EnumConverter.FORMAT_IS_UNKNOWN_VALUE, fieldInfo);
-		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, MyEnum.class, unknownValue.name(),
+				EnumConverter.FORMAT_IS_UNKNOWN_VALUE);
 		ParseError parseError = new ParseError();
 		Enum<?> converted = converter.stringToJava("line", 1, 2, columnInfo, "unknown-value", parseError);
 		assertEquals(unknownValue, converted);
@@ -49,28 +40,21 @@ public class EnumConverterTest extends AbstractConverterTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testNotEnum() throws Exception {
+	public void testNotEnum() {
 		EnumConverter converter = EnumConverter.getSingleton();
-		Field field = MyObject.class.getDeclaredField("notEnum");
-		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
-		converter.configure(null, 0, fieldInfo);
+		ColumnInfo.forTests(converter, MyEnum.class, null, EnumConverter.FORMAT_IS_UNKNOWN_VALUE);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testUnknownUnknown() throws Exception {
+	public void testUnknownUnknown() {
 		EnumConverter converter = EnumConverter.getSingleton();
-		Field field = MyObject.class.getDeclaredField("myEnum");
-		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
-		converter.configure("unknownenumvalue", EnumConverter.FORMAT_IS_UNKNOWN_VALUE, fieldInfo);
+		ColumnInfo.forTests(converter, MyEnum.class, "unknownenumvalue", EnumConverter.FORMAT_IS_UNKNOWN_VALUE);
 	}
 
 	@Test
-	public void testUnknownAndNoUnknown() throws Exception {
+	public void testUnknownAndNoUnknown() {
 		EnumConverter converter = EnumConverter.getSingleton();
-		Field field = MyObject.class.getDeclaredField("myEnum");
-		FieldInfo<Enum<?>> fieldInfo = FieldInfo.fromfield(field);
-		ConfigInfo configInfo = converter.configure(null, 0, fieldInfo);
-		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, MyEnum.class, null, 0);
 		ParseError parseError = new ParseError();
 		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "unknown-value", parseError));
 		assertTrue(parseError.isError());

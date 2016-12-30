@@ -14,20 +14,18 @@ public class DateConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws ParseException {
 		DateConverter converter = DateConverter.getSingleton();
-		String configInfo = converter.configure(null, 0, null);
-		testConverter(converter, configInfo, makeDate(2014, 11, 23));
-		testConverter(converter, configInfo, makeDate(2014, 1, 1));
-		testConverter(converter, configInfo, makeDate(2014, 1, 30));
-		testConverter(converter, configInfo, makeDate(2014, 12, 31));
-		testConverter(converter, configInfo, null);
+		testConverter(converter, Date.class, null, 0, makeDate(2014, 11, 23));
+		testConverter(converter, Date.class, null, 0, makeDate(2014, 1, 1));
+		testConverter(converter, Date.class, null, 0, makeDate(2014, 1, 30));
+		testConverter(converter, Date.class, null, 0, makeDate(2014, 12, 31));
+		testConverter(converter, Date.class, null, 0, null);
 
 		converter = DateConverter.getSingleton();
-		configInfo = converter.configure("yyyyMMdd", 0, null);
-		testConverter(converter, configInfo, makeDate(2014, 11, 23));
-		testConverter(converter, configInfo, makeDate(2014, 1, 1));
-		testConverter(converter, configInfo, makeDate(2014, 1, 30));
-		testConverter(converter, configInfo, makeDate(2014, 12, 31));
-		testConverter(converter, configInfo, null);
+		testConverter(converter, Date.class, "yyyyMMdd", 0, makeDate(2014, 11, 23));
+		testConverter(converter, Date.class, "yyyyMMdd", 0, makeDate(2014, 1, 1));
+		testConverter(converter, Date.class, "yyyyMMdd", 0, makeDate(2014, 1, 30));
+		testConverter(converter, Date.class, "yyyyMMdd", 0, makeDate(2014, 12, 31));
+		testConverter(converter, Date.class, "yyyyMMdd", 0, null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)

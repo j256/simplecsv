@@ -506,12 +506,11 @@ public class CsvProcessor<T> {
 			} else {
 				sb.append(columnSeparator);
 			}
-			FieldInfo<?> fieldInfo = columnInfo.getFieldInfo();
 			Object value;
 			try {
-				value = fieldInfo.getValue(entity);
+				value = columnInfo.getValue(entity);
 			} catch (Exception e) {
-				throw new IllegalStateException("Could not get value from entity field: " + fieldInfo);
+				throw new IllegalStateException("Could not get value from entity field: " + columnInfo);
 			}
 			@SuppressWarnings("unchecked")
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) columnInfo.getConverter();
@@ -942,9 +941,10 @@ public class CsvProcessor<T> {
 					// parseError has the error information
 					return null;
 				} else {
-					throw new ParseException("Problems parsing line at position " + linePos + " for type "
-							+ columnInfo.getFieldInfo().getType().getSimpleName() + " (" + localParseError + "): "
-							+ line, linePos);
+					throw new ParseException(
+							"Problems parsing line at position " + linePos + " for type "
+									+ columnInfo.getType().getSimpleName() + " (" + localParseError + "): " + line,
+							linePos);
 				}
 			}
 			columnCount++;
@@ -1014,8 +1014,7 @@ public class CsvProcessor<T> {
 					continue;
 				}
 
-				FieldInfo<Object> fieldInfo = FieldInfo.fromfield(field);
-				addColumnInfo(fieldNameMap, csvColumn, csvField, fieldInfo);
+				addColumnInfo(fieldNameMap, csvColumn, csvField, field.getName(), field.getType(), field, null, null);
 				field.setAccessible(true);
 			}
 		}
@@ -1073,9 +1072,9 @@ public class CsvProcessor<T> {
 							+ fieldName);
 				}
 
-				FieldInfo<Object> fieldInfo = FieldInfo.fromMethods(fieldName, getMethod, setMethod);
 				// NOTE: it is the CsvColumn on the 2nd method that is really the one that is used
-				addColumnInfo(fieldNameMap, csvColumn, null, fieldInfo);
+				addColumnInfo(fieldNameMap, csvColumn, null, fieldName, getMethod.getReturnType(), null, getMethod,
+						setMethod);
 			}
 		}
 		if (!otherMethodMap.isEmpty()) {
@@ -1168,20 +1167,24 @@ public class CsvProcessor<T> {
 	}
 
 	private void addColumnInfo(Map<String, ColumnInfo<Object>> fieldNameMap, CsvColumn csvColumn, CsvField csvField,
-			FieldInfo<Object> fieldInfo) {
-		Converter<?, ?> converter = converterMap.get(fieldInfo.getType());
+			String fieldName, Class<?> type, Field field, Method getMethod, Method setMethod) {
+		Converter<?, ?> converter = converterMap.get(type);
 		// test for the enum converter specifically
-		if (converter == null && fieldInfo.getType().isEnum()) {
+		if (converter == null && type.isEnum()) {
 			converter = EnumConverter.getSingleton();
 		}
 		// NOTE: converter could be null in which case the CsvColumn.converterClass must be set
 		@SuppressWarnings("unchecked")
 		Converter<Object, Object> castConverter = (Converter<Object, Object>) converter;
 		ColumnInfo<Object> columnInfo;
+		@SuppressWarnings("unchecked")
+		Class<Object> castType = (Class<Object>) type;
 		if (csvField == null) {
-			columnInfo = ColumnInfo.fromFieldInfo(csvColumn, fieldInfo, castConverter);
+			columnInfo = ColumnInfo.fromAnnotation(csvColumn, fieldName, castType, field, getMethod, setMethod,
+					castConverter);
 		} else {
-			columnInfo = ColumnInfo.fromFieldInfo(csvField, fieldInfo, castConverter);
+			columnInfo = ColumnInfo.fromAnnotation(csvField, fieldName, castType, field, getMethod, setMethod,
+					castConverter);
 		}
 		fieldNameMap.put(columnInfo.getColumnName(), columnInfo);
 	}
@@ -1333,7 +1336,7 @@ public class CsvProcessor<T> {
 			return;
 		}
 		try {
-			columnInfo.getFieldInfo().setValue(target, value);
+			columnInfo.setValue(target, value);
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError.setMessage(e.getMessage());

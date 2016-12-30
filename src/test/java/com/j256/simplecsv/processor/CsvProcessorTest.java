@@ -1026,7 +1026,7 @@ public class CsvProcessorTest {
 
 	public static class UnquotedStringConverter implements Converter<String, Void> {
 		@Override
-		public Void configure(String format, long flags, FieldInfo<String> field) {
+		public Void configure(String format, long flags, ColumnInfo<String> field) {
 			return null;
 		}
 
@@ -1054,7 +1054,7 @@ public class CsvProcessorTest {
 
 	public static class IntPlusOneConverter implements Converter<Integer, Void> {
 		@Override
-		public Void configure(String format, long flags, FieldInfo<Integer> field) {
+		public Void configure(String format, long flags, ColumnInfo<Integer> field) {
 			return null;
 		}
 
@@ -1082,7 +1082,7 @@ public class CsvProcessorTest {
 
 	public static class IntThrowsConverter implements Converter<Integer, Void> {
 		@Override
-		public Void configure(String format, long flags, FieldInfo<Integer> field) {
+		public Void configure(String format, long flags, ColumnInfo<Integer> field) {
 			return null;
 		}
 

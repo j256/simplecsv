@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -40,7 +39,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
 	}
 
 	@Override
-	public DecimalFormat configure(String format, long flags, FieldInfo<T> fieldInfo) {
+	public DecimalFormat configure(String format, long flags, ColumnInfo<T> fieldInfo) {
 		if (format == null) {
 			return null;
 		} else {

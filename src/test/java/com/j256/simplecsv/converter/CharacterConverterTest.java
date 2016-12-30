@@ -14,22 +14,20 @@ public class CharacterConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		CharacterConverter converter = CharacterConverter.getSingleton();
-		Boolean configInfo = converter.configure(null, 0, null);
 
-		testConverter(converter, configInfo, '1');
-		testConverter(converter, configInfo, '2');
+		testConverter(converter, Character.class, null, 0, '1');
+		testConverter(converter, Character.class, null, 0, '2');
 		// this should become \\r in the string
-		testConverter(converter, configInfo, '\r');
-		testConverter(converter, configInfo, Character.MIN_VALUE);
-		testConverter(converter, configInfo, Character.MAX_VALUE);
-		testConverter(converter, configInfo, null);
+		testConverter(converter, Character.class, null, 0, '\r');
+		testConverter(converter, Character.class, null, 0, Character.MIN_VALUE);
+		testConverter(converter, Character.class, null, 0, Character.MAX_VALUE);
+		testConverter(converter, Character.class, null, 0, null);
 	}
 
 	@Test
 	public void testMoreThanOne() {
 		CharacterConverter converter = CharacterConverter.getSingleton();
-		Boolean configInfo = converter.configure(null, 0, null);
-		ColumnInfo<Character> columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<Character> columnInfo = ColumnInfo.forTests(converter, Character.class, null, 0);
 
 		ParseError parseError = new ParseError();
 		char one = '1';
@@ -38,8 +36,8 @@ public class CharacterConverterTest extends AbstractConverterTest {
 		assertEquals((Object) one, converter.stringToJava("line", 1, 2, columnInfo, columnVal, parseError));
 		assertFalse(parseError.isError());
 
-		configInfo = converter.configure(null, CharacterConverter.PARSE_ERROR_IF_MORE_THAN_ONE_CHAR, null);
-		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		columnInfo = ColumnInfo.forTests(converter, Character.class, null,
+				CharacterConverter.PARSE_ERROR_IF_MORE_THAN_ONE_CHAR);
 		converter.stringToJava("line", 1, 2, columnInfo, columnVal, parseError);
 		assertTrue(parseError.isError());
 	}

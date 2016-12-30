@@ -3,7 +3,6 @@ package com.j256.simplecsv.converter;
 import java.util.UUID;
 
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -23,7 +22,7 @@ public class UuidConverter implements Converter<UUID, Void> {
 	}
 
 	@Override
-	public Void configure(String format, long flags, FieldInfo<UUID> fieldInfo) {
+	public Void configure(String format, long flags, ColumnInfo<UUID> fieldInfo) {
 		// no op
 		return null;
 	}

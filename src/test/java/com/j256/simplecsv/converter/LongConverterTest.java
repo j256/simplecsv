@@ -1,6 +1,5 @@
 package com.j256.simplecsv.converter;
 
-import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import org.junit.Test;
@@ -10,23 +9,21 @@ public class LongConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		LongConverter converter = LongConverter.getSingleton();
-		DecimalFormat configInfo = converter.configure(null, 0, null);
-		testNumbers(converter, configInfo);
+		testNumbers(converter, null);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
 		LongConverter converter = LongConverter.getSingleton();
-		DecimalFormat configInfo = converter.configure("###,##0", 0, null);
-		testNumbers(converter, configInfo);
+		testNumbers(converter, "###,##0");
 	}
 
-	private void testNumbers(LongConverter converter, DecimalFormat configInfo) throws ParseException {
-		testConverter(converter, configInfo, -1L);
-		testConverter(converter, configInfo, 0L);
-		testConverter(converter, configInfo, 1L);
-		testConverter(converter, configInfo, Long.MIN_VALUE);
-		testConverter(converter, configInfo, Long.MAX_VALUE);
-		testConverter(converter, configInfo, null);
+	private void testNumbers(LongConverter converter, String format) throws ParseException {
+		testConverter(converter, Long.class, format, 0, -1L);
+		testConverter(converter, Long.class, format, 0, 0L);
+		testConverter(converter, Long.class, format, 0, 1L);
+		testConverter(converter, Long.class, format, 0, Long.MIN_VALUE);
+		testConverter(converter, Long.class, format, 0, Long.MAX_VALUE);
+		testConverter(converter, Long.class, format, 0, null);
 	}
 }

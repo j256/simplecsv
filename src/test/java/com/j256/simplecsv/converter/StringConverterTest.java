@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import com.j256.simplecsv.converter.StringConverter.ConfigInfo;
 import com.j256.simplecsv.processor.ColumnInfo;
 import com.j256.simplecsv.processor.ParseError;
 
@@ -15,42 +14,37 @@ public class StringConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		StringConverter converter = StringConverter.getSingleton();
-		ConfigInfo configInfo = converter.configure(null, 0, null);
-		testConverter(converter, configInfo, "");
-		testConverter(converter, configInfo, "one");
-		testConverter(converter, configInfo, "two");
+		testConverter(converter, String.class, null, 0, "");
+		testConverter(converter, String.class, null, 0, "one");
+		testConverter(converter, String.class, null, 0, "two");
 	}
 
 	@Test
 	public void testBlankNull() throws Exception {
 		StringConverter converter = StringConverter.getSingleton();
-		ConfigInfo configInfo = converter.configure(null, 0, null);
-		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, String.class, null, 0);
 
 		ParseError parseError = new ParseError();
 		assertEquals("", converter.stringToJava("line", 1, 2, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
-		configInfo = converter.configure(null, StringConverter.BLANK_IS_NULL, null);
-		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		columnInfo = ColumnInfo.forTests(converter, String.class, null, StringConverter.BLANK_IS_NULL);
 		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "", parseError));
 		assertFalse(parseError.isError());
 
-		testConverter(converter, configInfo, null);
+		testConverter(converter, String.class, null, StringConverter.BLANK_IS_NULL, null);
 	}
 
 	@Test
 	public void testTrimOutput() {
 		StringConverter converter = StringConverter.getSingleton();
-		ConfigInfo configInfo = converter.configure(null, 0, null);
-		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, configInfo);
+		ColumnInfo<String> columnInfo = ColumnInfo.forTests(converter, String.class, null, 0);
 
 		String ok = "ok";
 		String spacedOk = " " + ok + " ";
 		assertEquals(spacedOk, converter.javaToString(columnInfo, spacedOk));
 
-		configInfo = converter.configure(null, StringConverter.TRIM_OUTPUT, null);
-		columnInfo = ColumnInfo.forTests(converter, configInfo);
+		columnInfo = ColumnInfo.forTests(converter, String.class, null, StringConverter.TRIM_OUTPUT);
 		assertEquals(ok, converter.javaToString(columnInfo, spacedOk));
 	}
 }

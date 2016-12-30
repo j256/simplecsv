@@ -2,7 +2,6 @@ package com.j256.simplecsv.converter;
 
 import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -37,7 +36,7 @@ public class StringConverter implements Converter<String, StringConverter.Config
 	}
 
 	@Override
-	public ConfigInfo configure(String format, long flags, FieldInfo<String> fieldInfo) {
+	public ConfigInfo configure(String format, long flags, ColumnInfo<String> fieldInfo) {
 		boolean trimOutput = ((flags & TRIM_OUTPUT) != 0);
 		boolean blankIsNull = ((flags & BLANK_IS_NULL) != 0);
 		return new ConfigInfo(trimOutput, blankIsNull);

@@ -2,7 +2,6 @@ package com.j256.simplecsv.converter;
 
 import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -55,7 +54,7 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	}
 
 	@Override
-	public ConfigInfo configure(String format, long flags, FieldInfo<Boolean> fieldInfo) {
+	public ConfigInfo configure(String format, long flags, ColumnInfo<Boolean> fieldInfo) {
 		String trueString;
 		String falseString;
 		if (format == null) {

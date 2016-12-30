@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -38,12 +37,12 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 	}
 
 	@Override
-	public ConfigInfo configure(String format, long flags, FieldInfo<Enum<?>> fieldInfo) {
+	public ConfigInfo configure(String format, long flags, ColumnInfo<Enum<?>> columnInfo) {
 
 		Map<String, Enum<?>> enumStringMap = new HashMap<String, Enum<?>>();
-		Enum<?>[] constants = (Enum<?>[]) fieldInfo.getType().getEnumConstants();
+		Enum<?>[] constants = (Enum<?>[]) columnInfo.getType().getEnumConstants();
 		if (constants == null) {
-			throw new IllegalArgumentException("Field " + fieldInfo + " improperly configured as a enum");
+			throw new IllegalArgumentException("Field " + columnInfo + " improperly configured as a enum");
 		}
 		for (Enum<?> enumVal : constants) {
 			enumStringMap.put(enumVal.name(), enumVal);
@@ -54,7 +53,7 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 			unknownValue = enumStringMap.get(format);
 			if (unknownValue == null) {
 				throw new IllegalArgumentException(
-						"Format string '" + format + "' is not a valid enum value for " + fieldInfo.getType());
+						"Format string '" + format + "' is not a valid enum value for " + columnInfo.getType());
 			}
 		}
 

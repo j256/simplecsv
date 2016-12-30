@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -36,11 +35,11 @@ public interface Converter<T, C> {
 	 *            which case the default format is used.
 	 * @param flags
 	 *            Optional numerical flags which affect the output and parsing of the field. 0 if no flags supplied.
-	 * @param field
-	 *            Reflection field associated with this converter.
+	 * @param fieldInfo
+	 *            Information about the field associated with this converter.
 	 * @return Information structure or null if none. This will be passed to the other methods.
 	 */
-	public C configure(String format, long flags, FieldInfo<T> fieldInfo);
+	public C configure(String format, long flags, ColumnInfo<T> fieldInfo);
 
 	/**
 	 * Returns true if the field needs to be quoted in the CSV output.

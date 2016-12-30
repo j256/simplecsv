@@ -6,7 +6,6 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -26,7 +25,7 @@ public class BigIntegerConverter implements Converter<BigInteger, DecimalFormat>
 	}
 
 	@Override
-	public DecimalFormat configure(String format, long flags, FieldInfo<BigInteger> fieldInfo) {
+	public DecimalFormat configure(String format, long flags, ColumnInfo<BigInteger> fieldInfo) {
 		if (format == null) {
 			return null;
 		} else {

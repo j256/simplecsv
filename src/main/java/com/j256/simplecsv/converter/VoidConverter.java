@@ -1,7 +1,6 @@
 package com.j256.simplecsv.converter;
 
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -12,7 +11,7 @@ import com.j256.simplecsv.processor.ParseError;
 public class VoidConverter implements Converter<Void, Void> {
 
 	@Override
-	public Void configure(String format, long flags, FieldInfo<Void> fieldInfo) {
+	public Void configure(String format, long flags, ColumnInfo<Void> fieldInfo) {
 		// no op
 		return null;
 	}

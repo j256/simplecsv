@@ -23,9 +23,10 @@ public class ColumnInfoTest {
 	public void testStuff() throws Exception {
 		String fieldName = "field";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo<Integer> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Integer> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				IntegerConverter.getSingleton());
+		@SuppressWarnings("unchecked")
+		Class<Integer> castType = (Class<Integer>) field.getType();
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, IntegerConverter.getSingleton());
 		assertNull(columnInfo.getDefaultValue());
 		assertEquals(fieldName, columnInfo.getColumnName());
 		assertFalse(columnInfo.isMustNotBeBlank());
@@ -35,9 +36,10 @@ public class ColumnInfoTest {
 	public void testNameSet() throws Exception {
 		String fieldName = "hasName";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo<Integer> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Integer> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				IntegerConverter.getSingleton());
+		@SuppressWarnings("unchecked")
+		Class<Integer> castType = (Class<Integer>) field.getType();
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, IntegerConverter.getSingleton());
 		assertEquals(MyClass.HAS_NAME_FIELD_NAME, columnInfo.getColumnName());
 	}
 
@@ -45,9 +47,10 @@ public class ColumnInfoTest {
 	public void testDefaultValue() throws Exception {
 		String fieldName = "defaultValue";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo<Integer> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Integer> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				IntegerConverter.getSingleton());
+		@SuppressWarnings("unchecked")
+		Class<Integer> castType = (Class<Integer>) field.getType();
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, IntegerConverter.getSingleton());
 		assertEquals(fieldName, columnInfo.getDefaultValue());
 	}
 
@@ -55,8 +58,10 @@ public class ColumnInfoTest {
 	public void testCustomConverter() throws Exception {
 		String fieldName = "specialString";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo<String> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<String> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo, null);
+		@SuppressWarnings("unchecked")
+		Class<String> castType = (Class<String>) field.getType();
+		ColumnInfo<String> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, null);
 		assertTrue(columnInfo.getConverter() instanceof MyConverter);
 	}
 
@@ -64,70 +69,87 @@ public class ColumnInfoTest {
 	public void testFormat() throws Exception {
 		String fieldName = "number";
 		Field field = MyClass.class.getDeclaredField(fieldName);
-		FieldInfo<Long> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Long> columnInfo =
-				ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo, LongConverter.getSingleton());
+		@SuppressWarnings("unchecked")
+		Class<Long> castType = (Class<Long>) field.getType();
+		ColumnInfo<Long> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, LongConverter.getSingleton());
 		assertNotNull(columnInfo.getConfigInfo());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testNoConverter() throws Exception {
-		Field field = MyClass.class.getDeclaredField("defaultValue");
-		FieldInfo<String> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo, null);
+		String fieldName = "defaultValue";
+		Field field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Integer> castType = (Class<Integer>) field.getType();
+		ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName, castType, field, null, null, null);
 	}
 
 	@Test
 	public void testTrimInput() throws Exception {
-		Field field = MyClass.class.getDeclaredField("number");
-		FieldInfo<Long> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Long> columnInfo =
-				ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo, LongConverter.getSingleton());
+		String fieldName = "number";
+		Field field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Long> castType = (Class<Long>) field.getType();
+		ColumnInfo<Long> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, LongConverter.getSingleton());
 		assertFalse(columnInfo.isTrimInput());
 
-		field = MyClass.class.getDeclaredField("trim");
-		FieldInfo<Boolean> otherFieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Boolean> otherColumnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class),
-				otherFieldInfo, BooleanConverter.getSingleton());
+		fieldName = "trim";
+		field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Boolean> castType2 = (Class<Boolean>) field.getType();
+		ColumnInfo<Boolean> otherColumnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType2, field, null, null, BooleanConverter.getSingleton());
 		assertTrue(otherColumnInfo.isTrimInput());
 	}
 
 	@Test
 	public void testNeedsQuotes() throws Exception {
-		Field field = MyClass.class.getDeclaredField("field");
-		FieldInfo<Integer> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Integer> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				IntegerConverter.getSingleton());
+		String fieldName = "field";
+		Field field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Integer> castType = (Class<Integer>) field.getType();
+		ColumnInfo<Integer> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, IntegerConverter.getSingleton());
 		assertFalse(columnInfo.isNeedsQuotes());
 
+		fieldName = "number";
 		field = MyClass.class.getDeclaredField("defaultValue");
-		FieldInfo<String> otherFieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<String> otherColumnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class),
-				otherFieldInfo, StringConverter.getSingleton());
+		@SuppressWarnings("unchecked")
+		Class<String> castType2 = (Class<String>) field.getType();
+		ColumnInfo<String> otherColumnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType2, field, null, null, StringConverter.getSingleton());
 		assertTrue(otherColumnInfo.isNeedsQuotes());
 	}
 
 	@Test
 	public void testMustBeSupplied() throws Exception {
-		Field field = MyClass.class.getDeclaredField("trim");
-		FieldInfo<Boolean> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				BooleanConverter.getSingleton());
+		String fieldName = "trim";
+		Field field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Boolean> castType = (Class<Boolean>) field.getType();
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, BooleanConverter.getSingleton());
 		assertTrue(columnInfo.isMustBeSupplied());
 
-		field = MyClass.class.getDeclaredField("mustBeSupplied");
-		FieldInfo<Boolean> otherFieldInfo = FieldInfo.fromfield(field);
-		columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), otherFieldInfo,
-				BooleanConverter.getSingleton());
+		fieldName = "mustBeSupplied";
+		field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Boolean> castType2 = (Class<Boolean>) field.getType();
+		columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName, castType2, field, null,
+				null, BooleanConverter.getSingleton());
 		assertFalse(columnInfo.isMustBeSupplied());
 	}
 
 	@Test
 	public void testPosition() throws Exception {
-		Field field = MyClass.class.getDeclaredField("trim");
-		FieldInfo<Boolean> fieldInfo = FieldInfo.fromfield(field);
-		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromFieldInfo(field.getAnnotation(CsvColumn.class), fieldInfo,
-				BooleanConverter.getSingleton());
+		String fieldName = "trim";
+		Field field = MyClass.class.getDeclaredField(fieldName);
+		@SuppressWarnings("unchecked")
+		Class<Boolean> castType = (Class<Boolean>) field.getType();
+		ColumnInfo<Boolean> columnInfo = ColumnInfo.fromAnnotation(field.getAnnotation(CsvColumn.class), fieldName,
+				castType, field, null, null, BooleanConverter.getSingleton());
 		assertEquals(0, columnInfo.getPosition());
 		int position = 12312321;
 		columnInfo.setPosition(position);
@@ -156,7 +178,7 @@ public class ColumnInfoTest {
 
 	public static class MyConverter implements Converter<String, Void> {
 		@Override
-		public Void configure(String format, long flags, FieldInfo<String> field) {
+		public Void configure(String format, long flags, ColumnInfo<String> field) {
 			return null;
 		}
 

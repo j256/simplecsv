@@ -3,7 +3,6 @@ package com.j256.simplecsv.converter;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 
 import org.junit.Test;
@@ -13,15 +12,13 @@ public class BigIntegerConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		BigIntegerConverter converter = BigIntegerConverter.getSingleton();
-		DecimalFormat configInfo = converter.configure(null, 0, null);
-		testNumbers(converter, configInfo);
+		testNumbers(converter, null);
 	}
 
 	@Test
 	public void testFormat() throws Exception {
 		BigIntegerConverter converter = BigIntegerConverter.getSingleton();
-		DecimalFormat configInfo = converter.configure("###,##0", 0, null);
-		testNumbers(converter, configInfo);
+		testNumbers(converter, "###,##0");
 	}
 
 	@Test
@@ -31,20 +28,20 @@ public class BigIntegerConverterTest extends AbstractConverterTest {
 		assertTrue(converter.isAlwaysTrimInput());
 	}
 
-	private void testNumbers(BigIntegerConverter converter, DecimalFormat configInfo) throws ParseException {
-		testConverter(converter, configInfo, new BigInteger("-1"));
-		testConverter(converter, configInfo, new BigInteger("0"));
-		testConverter(converter, configInfo, new BigInteger("1"));
-		testConverter(converter, configInfo, null);
+	private void testNumbers(BigIntegerConverter converter, String format) throws ParseException {
+		testConverter(converter, BigInteger.class, format, 0, new BigInteger("-1"));
+		testConverter(converter, BigInteger.class, format, 0, new BigInteger("0"));
+		testConverter(converter, BigInteger.class, format, 0, new BigInteger("1"));
+		testConverter(converter, BigInteger.class, format, 0, null);
 
 		BigInteger bigInt = new BigInteger(Long.toString(Long.MIN_VALUE));
-		testConverter(converter, configInfo, bigInt);
+		testConverter(converter, BigInteger.class, format, 0, bigInt);
 		BigInteger smaller = bigInt.add(bigInt);
-		testConverter(converter, configInfo, smaller);
+		testConverter(converter, BigInteger.class, format, 0, smaller);
 
 		bigInt = new BigInteger(Long.toString(Long.MAX_VALUE));
-		testConverter(converter, configInfo, bigInt);
+		testConverter(converter, BigInteger.class, format, 0, bigInt);
 		BigInteger larger = bigInt.add(bigInt);
-		testConverter(converter, configInfo, larger);
+		testConverter(converter, BigInteger.class, format, 0, larger);
 	}
 }

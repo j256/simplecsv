@@ -2,7 +2,6 @@ package com.j256.simplecsv.converter;
 
 import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 import com.j256.simplecsv.processor.ParseError.ErrorType;
 
@@ -34,7 +33,7 @@ public class CharacterConverter implements Converter<Character, Boolean> {
 	}
 
 	@Override
-	public Boolean configure(String format, long flags, FieldInfo<Character> fieldInfo) {
+	public Boolean configure(String format, long flags, ColumnInfo<Character> fieldInfo) {
 		boolean parseErrorOnMoreThanOne = ((flags & PARSE_ERROR_IF_MORE_THAN_ONE_CHAR) != 0);
 		return parseErrorOnMoreThanOne;
 	}

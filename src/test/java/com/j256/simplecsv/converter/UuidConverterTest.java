@@ -11,11 +11,10 @@ public class UuidConverterTest extends AbstractConverterTest {
 	@Test
 	public void testStuff() throws Exception {
 		UuidConverter converter = UuidConverter.getSingleton();
-		converter.configure(null, 0, null);
 		for (int i = 0; i < 10; i++) {
-			testConverter(converter, null, UUID.randomUUID());
+			testConverter(converter, UUID.class, null, 0, UUID.randomUUID());
 		}
-		testConverter(converter, null, null);
+		testConverter(converter, UUID.class, null, 0, null);
 	}
 
 	@Test

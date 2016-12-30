@@ -6,7 +6,6 @@ import java.util.Date;
 
 import com.j256.simplecsv.common.CsvColumn;
 import com.j256.simplecsv.processor.ColumnInfo;
-import com.j256.simplecsv.processor.FieldInfo;
 import com.j256.simplecsv.processor.ParseError;
 
 /**
@@ -47,7 +46,7 @@ public class DateConverter implements Converter<Date, String> {
 	}
 
 	@Override
-	public String configure(String format, long flags, FieldInfo<Date> fieldInfo) {
+	public String configure(String format, long flags, ColumnInfo<Date> fieldInfo) {
 		String datePattern;
 		if (format == null) {
 			datePattern = DEFAULT_DATE_PATTERN;

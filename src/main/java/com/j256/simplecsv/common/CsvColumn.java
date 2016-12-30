@@ -88,10 +88,10 @@ public @interface CsvColumn {
 	public boolean mustBeSupplied() default true;
 
 	/**
-	 * Used to set the order of the columns by setting the column-name that this column comes after. If there is some
-	 * sort of loop or if two fields say they come after the same field then you will get an undefined order. If this is
-	 * not specified then the order in which the fields and methods are discovered in the classes will determine their
-	 * order in the CSV file.
+	 * Used to set the order of the columns by setting the column-name that this column comes after. If this is not
+	 * specified then the order in which the fields and methods are discovered in the classes will determine their order
+	 * in the CSV file. If two fields say they come after the same field then you will get an undefined order. If there
+	 * is an loop in the after columns then an exception will be thrown.
 	 */
 	public String afterColumn() default DEFAULT_VALUE;
 }
