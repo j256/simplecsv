@@ -1,26 +1,19 @@
 This package provides some Java classes to help with the reading and writing of CSV files.
 
-For more information, visit the home page:
-	http://256stuff.com/sources/simplecsv/
+For more information, visit the [home page](http://256stuff.com/sources/simplecsv/).	
 
-Simple working example program can be found here:
-	http://256stuff.com/sources/simplecsv/docs/example-simple
+In the sourcecode thre is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
+	
+Online documentation can be found off the home page including [full Javadocs](http://256stuff.com/sources/simplecsv/javadoc/simplecsv/).
 
-Online documentation can be found off the home page.  Here are the Javadocs:
-	http://256stuff.com/sources/simplecsv/javadoc/simplecsv/
+The source is available from the [git repository](https://github.com/j256/simplecsv).	
 
-The git repository is:
-	https://github.com/j256/simplecsv
-
-Maven packages are published via the central repo:
-	http://repo1.maven.org/maven2/com/j256/simplecsv/simplecsv/
+Maven packages are published via the [central repo](http://repo1.maven.org/maven2/com/j256/simplecsv/simplecsv/).	
 
 Enjoy,
 Gray Watson
 
-----------------------------------------------------------------------------------------------------
-
-Quick Example:
+## Quick Example:
 
 Define your entity with the fields marked with the @CsvColumn annotation, can also mark get/set methods:
 
