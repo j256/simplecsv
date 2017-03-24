@@ -1,7 +1,7 @@
 Simple Java CSV Reader / Writer
 ===============================
 
-This package provides some Java classes to help with the reading and writing of CSV files.
+This package provides some Java classes to help with the reading and writing of CSV files using Java annotations.
 
 For more information, visit the [home page](http://256stuff.com/sources/simplecsv/).	
 
