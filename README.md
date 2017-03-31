@@ -6,11 +6,10 @@ This package provides some Java classes to help with the reading and writing of 
 * For more information, visit the [home page](http://256stuff.com/sources/simplecsv/).	
 * In the sourcecode thre is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
 * Online documentation can be found off the home page including [full Javadocs](http://256stuff.com/sources/simplecsv/javadoc/simplecsv/).
-* The source is available from the [git repository](https://github.com/j256/simplecsv).	
+* The source is available from the [git repository](https://github.com/j256/simplecsv).	 [![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=svg)](https://circleci.com/gh/j256/simplecsv)
 * Maven packages are published via the [central repo](http://repo1.maven.org/maven2/com/j256/simplecsv/simplecsv/).	
 
-Enjoy, <br />
-Gray Watson
+Enjoy, Gray Watson
 
 ## Quick Example:
 
