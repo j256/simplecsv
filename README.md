@@ -42,3 +42,7 @@ This generates the following output:
 Now read those accounts back in with an optional error handler:
 
 	List<Account> readAccounts = csvProcessor.readAll(csvFile, null /* error handler */);
+
+# ChangeLog Release Notes
+
+See the [ChangeLog.txt file](src/main/javadoc/doc-files/changelog.txt).
