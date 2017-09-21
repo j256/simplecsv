@@ -1,5 +1,7 @@
 package com.j256.simplecsv.processor;
 
+import java.io.Serializable;
+
 import com.j256.simplecsv.converter.Converter;
 
 /**
@@ -13,7 +15,9 @@ import com.j256.simplecsv.converter.Converter;
  * 
  * @author graywatson
  */
-public class ParseError {
+public class ParseError implements Serializable {
+
+	private static final long serialVersionUID = -4075913099396910530L;
 
 	private ErrorType errorType = ErrorType.NONE;
 	private String message;
