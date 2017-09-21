@@ -1,6 +1,5 @@
 package com.j256.simplecsv.converter;
 
-import java.lang.reflect.Field;
 import java.text.ParseException;
 
 import com.j256.simplecsv.processor.ColumnInfo;
@@ -13,7 +12,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * <p>
  * Converters must have a public no-arg constructor so they can be constructed by the library. Also, they will be reused
  * so all local state should be saved in the config-info object that is returned by the
- * {@link #configure(String, long, Field)} method and passed to the other methods.
+ * {@link #configure(String, long, ColumnInfo)} method and passed to the other methods.
  * </p>
  * 
  * @param <T>
