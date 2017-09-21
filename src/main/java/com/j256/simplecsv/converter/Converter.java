@@ -21,7 +21,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * @param <C>
  *            The configuration information object that we use to share state so we can use this converter with multiple
  *            entities. If your converter has no config-info then you can use Void here and return null from
- *            {@link #configure(String, long, Field)}.
+ *            {@link #configure(String, long, ColumnInfo)}.
  * 
  * @author graywatson
  */
