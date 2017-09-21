@@ -1339,7 +1339,8 @@ public class CsvProcessor<T> {
 			columnInfo.setValue(target, value);
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
-			parseError.setMessage(e.getMessage());
+			parseError
+					.setMessage("setting value for field '" + columnInfo.getFieldName() + "' error: " + e.getMessage());
 			parseError.setLinePos(linePos);
 		}
 	}
@@ -1358,6 +1359,7 @@ public class CsvProcessor<T> {
 			columnStr = columnInfo.getDefaultValue();
 		}
 		if (columnStr.isEmpty() && columnInfo.isMustNotBeBlank()) {
+			parseError.setMessage("field '" + columnInfo.getFieldName() + "' must not be blank");
 			parseError.setErrorType(ErrorType.MUST_NOT_BE_BLANK);
 			parseError.setLinePos(linePos);
 			return null;
@@ -1367,12 +1369,12 @@ public class CsvProcessor<T> {
 			return converter.stringToJava(line, lineNumber, linePos, columnInfo, columnStr, parseError);
 		} catch (ParseException e) {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
-			parseError.setMessage(e.getMessage());
+			parseError.setMessage("field '" + columnInfo.getFieldName() + "' parse-error: " + e.getMessage());
 			parseError.setLinePos(linePos);
 			return null;
 		} catch (Exception e) {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
-			parseError.setMessage(e.getMessage());
+			parseError.setMessage("field '" + columnInfo.getFieldName() + "' error: " + e.getMessage());
 			parseError.setLinePos(linePos);
 			return null;
 		}

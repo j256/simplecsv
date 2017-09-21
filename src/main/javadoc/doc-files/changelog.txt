@@ -1,3 +1,6 @@
+2.2: 9/20/2017
+	* Some small changes around logging and serializable parse-errors.
+
 2.1: 12/30/2016
 	* Sorry for the changes here but this is cleaner.
 	* More refactored to remove FieldInfo entirely and move field information into ColumnInfo.
