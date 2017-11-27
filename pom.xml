@@ -21,7 +21,7 @@
 		<version>5</version>
 	</parent>
 	<properties>
-	    <disableDoclint></disableDoclint>
+		<disableDoclint></disableDoclint>
 		<!-- test dependency versions -->
 		<easymock-version>3.4</easymock-version>
 		<junit-version>4.8.1</junit-version>
