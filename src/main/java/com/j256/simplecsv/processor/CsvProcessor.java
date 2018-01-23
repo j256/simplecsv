@@ -830,7 +830,7 @@ public class CsvProcessor<T> {
 				if (parseError != null) {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
 					parseError.setMessage(
-							"column '" + columnInfo.getColumnName() + "' must be suppled and was not specified");
+							"column '" + columnInfo.getColumnName() + "' must be supplied and was not specified");
 					parseError.setLineNumber(lineNumber);
 				}
 				result = false;
