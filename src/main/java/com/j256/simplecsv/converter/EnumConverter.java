@@ -93,7 +93,9 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 			return configInfo.unknownValue;
 		} else {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
-			parseError.setMessage(value);
+			String possibleValues = Arrays.asList(columnInfo.getType().getEnumConstants()).toString();
+			parseError.setMessage(String.format("%s can't be converted to column %s (%s). Possible Values : %s",
+					value, columnInfo.getColumnName(), columnInfo.getType().getSimpleName(), possibleValues));
 			parseError.setLinePos(linePos);
 			return null;
 		}
