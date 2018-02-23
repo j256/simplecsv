@@ -1,5 +1,6 @@
 package com.j256.simplecsv.converter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -94,6 +95,8 @@ public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInf
 		} else {
 			parseError.setErrorType(ErrorType.INVALID_FORMAT);
 			parseError.setMessage(value);
+			String possibleValues = Arrays.toString(columnInfo.getType().getEnumConstants());
+			parseError.setMessage("enum string not in " + possibleValues);
 			parseError.setLinePos(linePos);
 			return null;
 		}

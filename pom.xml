@@ -8,7 +8,7 @@
 	<packaging>jar</packaging>
 	<name>Simple CSV</name>
 	<url>http://256stuff.com/sources/simplecsv/</url>
-	<description>Simple CSV Classes</description>
+	<description>Simple CSV Java package which helps with the reading and writing of CSV files using annotations.</description>
 	<licenses>
 		<license>
 			<name>ISC License</name>

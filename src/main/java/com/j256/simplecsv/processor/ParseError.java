@@ -21,10 +21,16 @@ public class ParseError implements Serializable {
 
 	private ErrorType errorType = ErrorType.NONE;
 	private String message;
+	private String columnName;
+	private String columnValue;
+	private Class<?> columnType;
 	private String line;
 	private int lineNumber;
 	private int linePos;
 
+	/**
+	 * Return the enumerated error type for this parse error.
+	 */
 	public ErrorType getErrorType() {
 		return errorType;
 	}
@@ -33,6 +39,9 @@ public class ParseError implements Serializable {
 		this.errorType = errorType;
 	}
 
+	/**
+	 * Return a string message providing details about the error.
+	 */
 	public String getMessage() {
 		return message;
 	}
@@ -41,28 +50,70 @@ public class ParseError implements Serializable {
 		this.message = message;
 	}
 
+	/**
+	 * Return the name of the column that was affected, if any.
+	 */
+	public String getColumnName() {
+		return columnName;
+	}
+
+	public void setColumnName(String columnName) {
+		this.columnName = columnName;
+	}
+
+	/**
+	 * Return the value of the column that was being parsed, if any.
+	 */
+	public String getColumnValue() {
+		return columnValue;
+	}
+
+	public void setColumnValue(String columnValue) {
+		this.columnValue = columnValue;
+	}
+
+	/**
+	 * Return the java class of the column, if any.
+	 */
+	public Class<?> getColumnType() {
+		return columnType;
+	}
+
+	public void setColumnType(Class<?> columnClass) {
+		this.columnType = columnClass;
+	}
+
+	/**
+	 * Line from the input that generated the error.
+	 */
+	public String getLine() {
+		return line;
+	}
+
 	public void setLine(String line) {
 		this.line = line;
 	}
 
-	public String getLine() {
-		return line;
+	/**
+	 * Line number in the input file that generated the error. First line is #1.
+	 */
+	public int getLineNumber() {
+		return lineNumber;
 	}
 
 	public void setLineNumber(int lineNumber) {
 		this.lineNumber = lineNumber;
 	}
 
-	public int getLineNumber() {
-		return lineNumber;
+	/**
+	 * Line position in the input line where the parse error occurred, if any.
+	 */
+	public int getLinePos() {
+		return linePos;
 	}
 
 	public void setLinePos(int linePos) {
 		this.linePos = linePos;
-	}
-
-	public int getLinePos() {
-		return linePos;
 	}
 
 	/**
@@ -71,6 +122,9 @@ public class ParseError implements Serializable {
 	public void reset() {
 		this.errorType = ErrorType.NONE;
 		this.message = null;
+		this.columnName = null;
+		this.columnValue = null;
+		this.columnType = null;
 		this.line = null;
 		this.lineNumber = 0;
 		this.linePos = 0;
@@ -85,11 +139,35 @@ public class ParseError implements Serializable {
 
 	@Override
 	public String toString() {
-		if (message == null) {
-			return errorType.getTypeMessage();
-		} else {
-			return message + ", type " + errorType.getTypeMessage();
+		StringBuilder sb = new StringBuilder(64);
+		if (message != null) {
+			sb.append(message);
 		}
+		if (errorType != null) {
+			if (sb.length() > 0) {
+				sb.append(", ");
+			}
+			sb.append(errorType.getTypeMessage());
+		}
+		if (columnName != null) {
+			if (sb.length() > 0) {
+				sb.append(", ");
+			}
+			sb.append("column '").append(columnName).append('\'');
+		}
+		if (columnType != null) {
+			if (sb.length() > 0) {
+				sb.append(", ");
+			}
+			sb.append("type ").append(columnType.getSimpleName());
+		}
+		if (columnValue != null) {
+			if (sb.length() > 0) {
+				sb.append(", ");
+			}
+			sb.append("value '").append(columnValue).append('\'');
+		}
+		return sb.toString();
 	}
 
 	/**
