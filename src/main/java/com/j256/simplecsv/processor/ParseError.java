@@ -51,7 +51,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Return the name of the column that was affected.
+	 * Return the name of the column that was affected, if any.
 	 */
 	public String getColumnName() {
 		return columnName;
@@ -62,7 +62,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Return the value of the column that was being parsed.
+	 * Return the value of the column that was being parsed, if any.
 	 */
 	public String getColumnValue() {
 		return columnValue;
@@ -73,7 +73,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Return the java class of the column.
+	 * Return the java class of the column, if any.
 	 */
 	public Class<?> getColumnType() {
 		return columnType;
@@ -84,7 +84,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Line from the input that generated the error..
+	 * Line from the input that generated the error.
 	 */
 	public String getLine() {
 		return line;
@@ -95,7 +95,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Line number (first line is #1) in the input file that generated the error.
+	 * Line number in the input file that generated the error. First line is #1.
 	 */
 	public int getLineNumber() {
 		return lineNumber;
@@ -106,7 +106,7 @@ public class ParseError implements Serializable {
 	}
 
 	/**
-	 * Line position in the input line where the parse error occurred.
+	 * Line position in the input line where the parse error occurred, if any.
 	 */
 	public int getLinePos() {
 		return linePos;
