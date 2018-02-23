@@ -1365,9 +1365,9 @@ public class CsvProcessor<T> {
 			columnStr = columnInfo.getDefaultValue();
 		}
 		if (columnStr.isEmpty() && columnInfo.isMustNotBeBlank()) {
-			assignParseErrorFields(parseError, columnInfo, columnStr);
 			parseError.setErrorType(ErrorType.MUST_NOT_BE_BLANK);
 			parseError.setMessage("field '" + columnInfo.getFieldName() + "' must not be blank");
+			assignParseErrorFields(parseError, columnInfo, columnStr);
 			parseError.setLinePos(linePos);
 			return null;
 		}
@@ -1390,7 +1390,9 @@ public class CsvProcessor<T> {
 	private void assignParseErrorFields(ParseError parseError, ColumnInfo<Object> columnInfo, String columnStr) {
 		if (parseError != null && parseError.isError() && columnInfo != null) {
 			parseError.setColumnName(columnInfo.getColumnName());
-			parseError.setColumnValue(columnStr);
+			if (columnStr != null) {
+				parseError.setColumnValue(columnStr);
+			}
 			parseError.setColumnType(columnInfo.getType());
 		}
 	}
