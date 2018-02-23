@@ -30,10 +30,24 @@ public class ParseErrorTest {
 		int linePos = 21321312;
 		parseError.setLinePos(linePos);
 		assertEquals(linePos, parseError.getLinePos());
+		assertNull(parseError.getColumnName());
+		String colName = "pefwjpgowe";
+		parseError.setColumnName(colName);
+		assertEquals(colName, parseError.getColumnName());
+		String colValue = "pjfpoewefjpoefwjpgowe";
+		assertNull(parseError.getColumnValue());
+		parseError.setColumnValue(colValue);
+		assertEquals(colValue, parseError.getColumnValue());
+		assertNull(parseError.getColumnType());
+		parseError.setColumnType(getClass());
+		assertEquals(getClass(), parseError.getColumnType());
 
 		parseError.reset();
 		assertEquals(ErrorType.NONE, parseError.getErrorType());
 		assertNull(parseError.getMessage());
+		assertNull(parseError.getColumnName());
+		assertNull(parseError.getColumnValue());
+		assertNull(parseError.getColumnType());
 		assertNull(parseError.getLine());
 		assertEquals(0, parseError.getLineNumber());
 		assertEquals(0, parseError.getLinePos());
@@ -52,5 +66,26 @@ public class ParseErrorTest {
 		String toString = parseError.toString();
 		assertTrue(toString.contains(errorType.getTypeMessage()));
 		assertTrue(toString.contains(msg));
+	}
+
+	@Test
+	public void testFullString() {
+		ParseError parseError = new ParseError();
+		String msg = "jrgrpjegrjpoergrpjoe";
+		parseError.setMessage(msg);
+		String colName = "col";
+		parseError.setColumnName(colName);
+		String colValue = "val";
+		parseError.setColumnValue(colValue);
+		parseError.setColumnType(getClass());
+		ErrorType errorType = ErrorType.INVALID_FORMAT;
+		parseError.setErrorType(errorType);
+		String toString = parseError.toString();
+		assertTrue(toString.contains(errorType.getTypeMessage()));
+		assertTrue(toString.contains(colName));
+		assertTrue(toString.contains(colValue));
+		assertTrue(toString.contains(msg));
+		assertTrue(toString.contains(getClass().getSimpleName()));
+		System.out.println(toString);
 	}
 }

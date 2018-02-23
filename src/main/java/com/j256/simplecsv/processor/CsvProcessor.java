@@ -808,6 +808,7 @@ public class CsvProcessor<T> {
 					if (parseError != null) {
 						parseError.setErrorType(ErrorType.INVALID_HEADER);
 						parseError.setMessage("column name '" + columns[i] + "' is not in the proper order");
+						assignParseErrorFields(parseError, matchedColumnInfo, null);
 						parseError.setLineNumber(lineNumber);
 					}
 					result = false;
@@ -831,6 +832,7 @@ public class CsvProcessor<T> {
 					parseError.setErrorType(ErrorType.INVALID_HEADER);
 					parseError.setMessage(
 							"column '" + columnInfo.getColumnName() + "' must be suppled and was not specified");
+					assignParseErrorFields(parseError, columnInfo, null);
 					parseError.setLineNumber(lineNumber);
 				}
 				result = false;
@@ -1216,6 +1218,7 @@ public class CsvProcessor<T> {
 			if (sectionEnd < 0) {
 				parseError.setErrorType(ErrorType.TRUNCATED_COLUMN);
 				parseError.setMessage("Column not terminated with quote '" + columnQuote + "'");
+				assignParseErrorFields(parseError, columnInfo, null);
 				parseError.setLinePos(linePos);
 				return line.length();
 			}
@@ -1233,6 +1236,7 @@ public class CsvProcessor<T> {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage(
 						"quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
+				assignParseErrorFields(parseError, columnInfo, null);
 				parseError.setLinePos(linePos);
 				return linePos;
 			}
@@ -1332,6 +1336,7 @@ public class CsvProcessor<T> {
 			int linePos, Object target, ParseError parseError) {
 		Object value = extractValue(line, lineNumber, columnInfo, columnStr, linePos, target, parseError);
 		if (value == null) {
+			assignParseErrorFields(parseError, columnInfo, columnStr);
 			// either error or no value
 			return;
 		}
@@ -1341,6 +1346,7 @@ public class CsvProcessor<T> {
 			parseError.setErrorType(ErrorType.INTERNAL_ERROR);
 			parseError
 					.setMessage("setting value for field '" + columnInfo.getFieldName() + "' error: " + e.getMessage());
+			assignParseErrorFields(parseError, columnInfo, columnStr);
 			parseError.setLinePos(linePos);
 		}
 	}
@@ -1359,8 +1365,9 @@ public class CsvProcessor<T> {
 			columnStr = columnInfo.getDefaultValue();
 		}
 		if (columnStr.isEmpty() && columnInfo.isMustNotBeBlank()) {
-			parseError.setMessage("field '" + columnInfo.getFieldName() + "' must not be blank");
+			assignParseErrorFields(parseError, columnInfo, columnStr);
 			parseError.setErrorType(ErrorType.MUST_NOT_BE_BLANK);
+			parseError.setMessage("field '" + columnInfo.getFieldName() + "' must not be blank");
 			parseError.setLinePos(linePos);
 			return null;
 		}
@@ -1377,6 +1384,14 @@ public class CsvProcessor<T> {
 			parseError.setMessage("field '" + columnInfo.getFieldName() + "' error: " + e.getMessage());
 			parseError.setLinePos(linePos);
 			return null;
+		}
+	}
+
+	private void assignParseErrorFields(ParseError parseError, ColumnInfo<Object> columnInfo, String columnStr) {
+		if (parseError != null && parseError.isError() && columnInfo != null) {
+			parseError.setColumnName(columnInfo.getColumnName());
+			parseError.setColumnValue(columnStr);
+			parseError.setColumnType(columnInfo.getType());
 		}
 	}
 

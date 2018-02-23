@@ -56,8 +56,13 @@ public class EnumConverterTest extends AbstractConverterTest {
 		EnumConverter converter = EnumConverter.getSingleton();
 		ColumnInfo<Enum<?>> columnInfo = ColumnInfo.forTests(converter, MyEnum.class, null, 0);
 		ParseError parseError = new ParseError();
-		assertNull(converter.stringToJava("line", 1, 2, columnInfo, "unknown-value", parseError));
+		String value = "unknown-value";
+		assertNull(converter.stringToJava("line", 1, 2, columnInfo, value, parseError));
+		parseError.setColumnName(columnInfo.getColumnName());
+		parseError.setColumnValue(value);
+		parseError.setColumnType(columnInfo.getType());
 		assertTrue(parseError.isError());
+		System.out.println(parseError.toString());
 	}
 
 	@Test
