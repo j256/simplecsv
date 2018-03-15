@@ -7,6 +7,7 @@ This package provides some Java classes to help with the reading and writing of 
 * In the sourcecode thre is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
 * Online documentation can be found off the home page including [full Javadocs](http://256stuff.com/sources/simplecsv/javadoc/simplecsv/).
 * The source is available from the [git repository](https://github.com/j256/simplecsv).	 [![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=svg)](https://circleci.com/gh/j256/simplecsv) [![CodeCov](https://img.shields.io/codecov/c/github/j256/simplecsv.svg)](https://codecov.io/github/j256/simplecsv/)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7118b0ce045d48f29187f219f1234a06)](https://www.codacy.com/app/j256/simplecsv?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=j256/simplecsv&amp;utm_campaign=Badge_Grade)
 * Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/)
 
 Enjoy, Gray Watson
