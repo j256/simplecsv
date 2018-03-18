@@ -516,28 +516,30 @@ public class CsvProcessor<T> {
 			Converter<Object, Object> castConverter = (Converter<Object, Object>) columnInfo.getConverter();
 			String str = castConverter.javaToString(columnInfo, value);
 			boolean needsQuotes = columnInfo.isNeedsQuotes();
-			if (str != null) {
-				// need to protect the column if it contains a quote
-				if (str.indexOf(columnQuote) >= 0) {
-					writeQuoted(sb, str);
-					continue;
+			if (str == null) {
+				if (needsQuotes) {
+					sb.append(columnQuote).append(columnQuote);
 				}
-				if (!needsQuotes) {
-					for (int i = 0; i < str.length(); i++) {
-						char ch = str.charAt(i);
-						if (ch == columnSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
-							needsQuotes = true;
-							break;
-						}
+				continue;
+			}
+			// need to protect the column if it contains a quote
+			if (str.indexOf(columnQuote) >= 0) {
+				writeQuoted(sb, str);
+				continue;
+			}
+			if (!needsQuotes) {
+				for (int i = 0; i < str.length(); i++) {
+					char ch = str.charAt(i);
+					if (ch == columnSeparator || ch == '\r' || ch == '\n' || ch == '\t' || ch == '\b') {
+						needsQuotes = true;
+						break;
 					}
 				}
 			}
 			if (needsQuotes) {
 				sb.append(columnQuote);
 			}
-			if (str != null) {
-				sb.append(str);
-			}
+			sb.append(str);
 			if (needsQuotes) {
 				sb.append(columnQuote);
 			}
@@ -781,13 +783,14 @@ public class CsvProcessor<T> {
 		Map<Integer, ColumnInfo<Object>> columnPositionInfoMap = new HashMap<Integer, ColumnInfo<Object>>();
 		int lastColumnInfoPosition = -1;
 		for (int i = 0; i < columns.length; i++) {
+			String headerColumn = columns[i];
 			ColumnInfo<Object> matchedColumnInfo = null;
 			if (columnNameMatcher == null) {
-				matchedColumnInfo = columnNameToInfoMap.get(columns[i]);
+				matchedColumnInfo = columnNameToInfoMap.get(headerColumn);
 			} else {
-				// have to do a N^2 search
+				// have to do a N^2 search because we are using a matcher not just string equals
 				for (ColumnInfo<Object> columnInfo : allColumnInfos) {
-					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), columns[i])) {
+					if (columnNameMatcher.matchesColumnName(columnInfo.getColumnName(), headerColumn)) {
 						matchedColumnInfo = columnInfo;
 						break;
 					}
@@ -798,7 +801,7 @@ public class CsvProcessor<T> {
 				if (!ignoreUnknownColumns) {
 					if (parseError != null) {
 						parseError.setErrorType(ErrorType.INVALID_HEADER);
-						parseError.setMessage("column name '" + columns[i] + "' is unknown");
+						parseError.setMessage("column name '" + headerColumn + "' is unknown");
 						parseError.setLineNumber(lineNumber);
 					}
 					result = false;
@@ -807,7 +810,7 @@ public class CsvProcessor<T> {
 				if (!flexibleOrder && matchedColumnInfo.getPosition() <= lastColumnInfoPosition) {
 					if (parseError != null) {
 						parseError.setErrorType(ErrorType.INVALID_HEADER);
-						parseError.setMessage("column name '" + columns[i] + "' is not in the proper order");
+						parseError.setMessage("column name '" + headerColumn + "' is not in the proper order");
 						assignParseErrorFields(parseError, matchedColumnInfo, null);
 						parseError.setLineNumber(lineNumber);
 					}
