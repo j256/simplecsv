@@ -38,7 +38,7 @@ fi
 
 #############################################################
 
-release=`grep version pom.xml | grep SNAPSHOT | head -1 | cut -f2 -d\> | cut -f1 -d\-`
+release=$(grep version pom.xml | grep SNAPSHOT | head -1 | cut -f2 -d\> | cut -f1 -d\-)
 
 /bin/echo ""
 /bin/echo ""
@@ -54,7 +54,7 @@ fi
 # check docs:
 
 cd $LOCAL_DIR
-ver=`head -1 src/main/javadoc/doc-files/changelog.txt | cut -f1 -d:`
+ver=$(head -1 src/main/javadoc/doc-files/changelog.txt | cut -f1 -d:)
 if [ "$release" != "$ver" ]; then
 	echo "Change log top line version seems wrong:"
 	head -1 src/main/javadoc/doc-files/changelog.txt
@@ -62,10 +62,10 @@ if [ "$release" != "$ver" ]; then
 fi
 
 var="${LIBRARY}_version"
-ver=`grep "^@set $var" src/main/doc/$LIBRARY.texi | cut -f3 -d' '`
+ver=$(grep "^@set $var" src/main/doc/$LIBRARY.texi | cut -f3 -d' ')
 if [ "$release" != "$ver" ]; then
 	/bin/echo "$LIBRARY.texi version seems wrong:"
-	grep '^@set $LIBRARY_version' src/main/doc/$LIBRARY.texi
+	grep "^@set $LIBRARY_version" src/main/doc/$LIBRARY.texi
 	/bin/echo "Press control-c to quit otherwise return.  [ok] "
 	read cont
 fi
