@@ -39,7 +39,7 @@ public class CsvProcessorTest {
 	}
 
 	@Test
-	public void testSingleQuotes() throws ParseException {
+	public void testSingleQuotes() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 1;
 		String str = "\"";
@@ -51,10 +51,11 @@ public class CsvProcessorTest {
 		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test
-	public void testTwoQuotes() throws ParseException {
+	public void testTwoQuotes() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 1;
 		String str = "\"\"";
@@ -67,10 +68,11 @@ public class CsvProcessorTest {
 		assertEquals("\"", basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test
-	public void testTwoQuotesPlus() throws ParseException {
+	public void testTwoQuotesPlus() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 1;
 		String str = "\"\"wow\"\"";
@@ -83,10 +85,11 @@ public class CsvProcessorTest {
 		assertEquals("\"wow\"", basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test
-	public void testPartialLine() throws ParseException {
+	public void testPartialLine() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		processor.setAllowPartialLines(true);
 		int intValue = 1;
@@ -118,7 +121,7 @@ public class CsvProcessorTest {
 	}
 
 	@Test
-	public void testQuotedStringOutput() {
+	public void testQuotedStringOutput() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 200;
 		String beforeQuote = "str";
@@ -131,24 +134,19 @@ public class CsvProcessorTest {
 		assertEquals(
 				intValue + ",\"" + beforeQuote + "\"\"" + afterQuote + "\"," + longValue + "," + unquoted + "," + bool,
 				line);
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test
-	public void testSeparatorStringOutput() throws ParseException {
+	public void testSeparatorStringOutput() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 200;
 		String str = "has,comma";
 		long longValue = 3452L;
 		String unquoted = "u,q";
 		boolean bool = true;
-		Basic basic = new Basic(intValue, str, longValue, unquoted, true);
-		String written = processor.buildLine(basic, false);
-		basic = processor.processRow(written, null);
-		assertEquals(intValue, basic.getIntValue());
-		assertEquals(str, basic.getStringValue());
-		assertEquals(longValue, basic.getLongValue());
-		assertEquals(unquoted, basic.getUnquotedValue());
-		assertEquals(bool, basic.isBool());
+		Basic basic = new Basic(intValue, str, longValue, unquoted, bool);
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test
@@ -831,6 +829,36 @@ public class CsvProcessorTest {
 		new CsvProcessor<AfterColumnLoop>(AfterColumnLoop.class).initialize();
 	}
 
+	@Test
+	public void testNewlineInColumn() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
+		String str = "gprr23p" + "\n" + "efwjopwfjepo";
+		Basic basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+
+		// shorter 1st line
+		str = "g" + "\n" + "eweopfjewpfjewfjewopfjowepfjwepfjwefjwefwepf";
+		basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+
+		// shorter 2nd line
+		str = "gprr23p" + "\n" + "e";
+		basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+
+		// double rainbow!
+		str = "short\n" + "loooooooooooong\n" + "short";
+		basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+	}
+
+	@Test(expected = ParseException.class)
+	public void testNewlineInColumnAtEof() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
+		String line = 0 + ",\"start\n";
+		processor.readRow(new BufferedReader(new StringReader(line)), null);
+	}
+
 	/* ================================================================================================= */
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
@@ -848,6 +876,22 @@ public class CsvProcessorTest {
 		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
+	}
+
+	private void testReadWriteBasic(CsvProcessor<Basic> processor, Basic basic) throws IOException, ParseException {
+		StringWriter writer = new StringWriter();
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		processor.writeRow(bufferedWriter, basic, false);
+		bufferedWriter.flush();
+
+		BufferedReader bufferedReader = new BufferedReader(new StringReader(writer.toString()));
+		Basic result = processor.readRow(bufferedReader, null);
+		assertNotNull(result);
+		assertEquals(basic.intValue, result.intValue);
+		assertEquals(basic.string, result.string);
+		assertEquals(basic.longValue, result.longValue);
+		assertEquals(basic.unquoted, result.unquoted);
+		assertEquals(basic.bool, result.bool);
 	}
 
 	/* ================================================================================================= */

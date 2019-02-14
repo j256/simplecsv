@@ -33,7 +33,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * CSV reader and writer.
  * 
  * <p>
- * <b>NOTE:</b> You need to set the entity class either in the constructor or with {@link #setEntityClass(Class)} or
+ * <b>NOTE:</b> You need to set the entity class either in the constructor, with {@link #setEntityClass(Class)}, or
  * {@link #withEntityClass(Class)}. Then you need to do any {@link #registerConverter(Class, Converter)} or
  * {@link #withConverter(Class, Converter)} calls before the processor gets configured. You can then let the processor
  * be auto-configured on the first read/write method call or call {@link #initialize()} directly (or in spring).
@@ -79,6 +79,7 @@ public class CsvProcessor<T> {
 	private boolean firstLineHeader = true;
 	private boolean flexibleOrder;
 	private boolean ignoreUnknownColumns;
+	private boolean allowLineTerminationInColumns;
 	private RowValidator<T> rowValidator;
 	private ColumnNameMatcher columnNameMatcher = stringEqualsColumnNameMatcher;
 
@@ -304,7 +305,7 @@ public class CsvProcessor<T> {
 		if (line == null) {
 			return null;
 		} else {
-			return processRow(line, parseError, getLineNumber(bufferedReader));
+			return processRow(line, bufferedReader, parseError, getLineNumber(bufferedReader));
 		}
 	}
 
@@ -361,7 +362,12 @@ public class CsvProcessor<T> {
 	 */
 	public String[] processHeader(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		return processHeader(line, parseError, 1);
+		try {
+			return processHeader(line, parseError, 1);
+		} catch (IOException e) {
+			// this won't happen because processRow won't do any IO
+			return null;
+		}
 	}
 
 	/**
@@ -379,7 +385,12 @@ public class CsvProcessor<T> {
 	 */
 	public T processRow(String line, ParseError parseError) throws ParseException {
 		checkEntityConfig();
-		return processRow(line, parseError, 1);
+		try {
+			return processRow(line, null, parseError, 1);
+		} catch (IOException e) {
+			// this won't happen because processRow won't do any IO
+			return null;
+		}
 	}
 
 	/**
@@ -765,6 +776,21 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Set to true to allow line-termination characters inside of a column.
+	 */
+	public CsvProcessor<T> withAllowLineTerminationInColumns(boolean allowLineTerminationInColumns) {
+		this.allowLineTerminationInColumns = allowLineTerminationInColumns;
+		return this;
+	}
+
+	/**
+	 * Set to true to allow line-termination characters inside of a column.
+	 */
+	public void setAllowLineTerminationInColumns(boolean allowLineTerminationInColumns) {
+		this.allowLineTerminationInColumns = allowLineTerminationInColumns;
+	}
+
+	/**
 	 * Set the validator which will validate each entity after it has been parsed.
 	 */
 	public CsvProcessor<T> withRowValidator(RowValidator<T> rowValidator) {
@@ -849,22 +875,24 @@ public class CsvProcessor<T> {
 		return result;
 	}
 
-	private String[] processHeader(String line, ParseError parseError, int lineNumber) throws ParseException {
+	private String[] processHeader(String line, ParseError parseError, int lineNumber)
+			throws ParseException, IOException {
 		StringBuilder sb = new StringBuilder(32);
-		int linePos = 0;
 		ParseError localParseError = parseError;
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
 		List<String> headerColumns = new ArrayList<String>();
+		CsvProcessor<T>.LineInfo lineInfo = new LineInfo(line);
+		line = null;
 		while (true) {
-			boolean atEnd = (linePos == line.length());
+			boolean atEnd = lineInfo.isAtEnd();
 			localParseError.reset();
 			sb.setLength(0);
-			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
-				linePos = processQuotedColumn(line, lineNumber, linePos, null, null, sb, localParseError);
+			if (lineInfo.isAtQuote()) {
+				processQuotedColumn(lineInfo, null, lineNumber, null, null, sb, localParseError);
 			} else {
-				linePos = processUnquotedColumn(line, lineNumber, linePos, null, null, sb, localParseError);
+				processUnquotedColumn(lineInfo, lineNumber, null, null, sb, localParseError);
 			}
 			if (localParseError.isError()) {
 				if (localParseError == parseError) {
@@ -872,8 +900,8 @@ public class CsvProcessor<T> {
 					return null;
 				} else {
 					// if no error passed in then we throw
-					throw new ParseException("Problems parsing header line at position " + linePos + " ("
-							+ localParseError + "): " + line, linePos);
+					throw new ParseException("Problems parsing header line at position " + lineInfo.linePos + " ("
+							+ localParseError + "): " + lineInfo.line, lineInfo.linePos);
 				}
 			}
 			if (sb.length() > 0) {
@@ -886,8 +914,9 @@ public class CsvProcessor<T> {
 		return headerColumns.toArray(new String[headerColumns.size()]);
 	}
 
-	private T processRow(String line, ParseError parseError, int lineNumber) throws ParseException {
-		T entity = processRowInner(line, parseError, lineNumber);
+	private T processRow(String line, BufferedReader bufferedReader, ParseError parseError, int lineNumber)
+			throws ParseException, IOException {
+		T entity = processRowInner(line, bufferedReader, parseError, lineNumber);
 		if (entity != null && rowValidator != null) {
 			ParseError localParseError = parseError;
 			if (localParseError == null) {
@@ -919,14 +948,15 @@ public class CsvProcessor<T> {
 		return entity;
 	}
 
-	private T processRowInner(String line, ParseError parseError, int lineNumber) throws ParseException {
+	private T processRowInner(String line, BufferedReader bufferedReader, ParseError parseError, int lineNumber)
+			throws ParseException, IOException {
 		T target = constructEntity();
-		int linePos = 0;
 		ParseError localParseError = parseError;
 		if (localParseError == null) {
 			localParseError = new ParseError();
 		}
 		int columnCount = 0;
+		LineInfo lineInfo = new LineInfo(line);
 		while (true) {
 			ColumnInfo<Object> columnInfo = columnPositionInfoMap.get(columnCount);
 			if (columnInfo == null && !ignoreUnknownColumns) {
@@ -934,22 +964,21 @@ public class CsvProcessor<T> {
 			}
 
 			// we have to do this because a blank column may be ok
-			boolean atEnd = (linePos == line.length());
+			boolean atEnd = lineInfo.isAtEnd();
 			localParseError.reset();
-			if (linePos < line.length() && line.charAt(linePos) == columnQuote) {
-				linePos = processQuotedColumn(line, lineNumber, linePos, columnInfo, target, null, localParseError);
+			if (lineInfo.isAtQuote()) {
+				processQuotedColumn(lineInfo, bufferedReader, lineNumber, columnInfo, target, null, localParseError);
 			} else {
-				linePos = processUnquotedColumn(line, lineNumber, linePos, columnInfo, target, null, localParseError);
+				processUnquotedColumn(lineInfo, lineNumber, columnInfo, target, null, localParseError);
 			}
 			if (localParseError.isError()) {
 				if (localParseError == parseError) {
 					// parseError has the error information
 					return null;
 				} else {
-					throw new ParseException(
-							"Problems parsing line at position " + linePos + " for type "
-									+ columnInfo.getType().getSimpleName() + " (" + localParseError + "): " + line,
-							linePos);
+					throw new ParseException("Problems parsing line at position " + lineInfo.linePos + " for type "
+							+ columnInfo.getType().getSimpleName() + " (" + localParseError + "): " + lineInfo.line,
+							lineInfo.linePos);
 				}
 			}
 			columnCount++;
@@ -960,23 +989,24 @@ public class CsvProcessor<T> {
 		}
 		if (columnCount < columnPositionInfoMap.size() && !allowPartialLines) {
 			if (parseError == null) {
-				throw new ParseException("Line does not have " + columnPositionInfoMap.size() + " columns: " + line,
-						linePos);
+				throw new ParseException(
+						"Line does not have " + columnPositionInfoMap.size() + " columns: " + lineInfo.line,
+						lineInfo.linePos);
 			} else {
 				parseError.setErrorType(ErrorType.TRUNCATED_LINE);
 				parseError.setMessage("Line does not have " + columnPositionInfoMap.size() + " columns");
-				parseError.setLinePos(linePos);
+				parseError.setLinePos(lineInfo.linePos);
 				return null;
 			}
 		}
-		if (linePos < line.length() && !ignoreUnknownColumns) {
+		if (!lineInfo.isAtEnd() && !ignoreUnknownColumns) {
 			if (parseError == null) {
-				throw new ParseException(
-						"Line has extra information past last column at position " + linePos + ": " + line, linePos);
+				throw new ParseException("Line has extra information past last column at position " + lineInfo.linePos
+						+ ": " + lineInfo.line, lineInfo.linePos);
 			} else {
 				parseError.setErrorType(ErrorType.TOO_MANY_COLUMNS);
-				parseError.setMessage("Line has extra information past last column at position " + linePos);
-				parseError.setLinePos(linePos);
+				parseError.setMessage("Line has extra information past last column at position " + lineInfo.linePos);
+				parseError.setLinePos(lineInfo.linePos);
 				return null;
 			}
 		}
@@ -1048,6 +1078,7 @@ public class CsvProcessor<T> {
 				}
 
 				if (fieldNameMap.containsKey(fieldName)) {
+					// if we already have the field mapped then ignore it now
 					continue;
 				}
 
@@ -1204,9 +1235,12 @@ public class CsvProcessor<T> {
 		this.columnPositionInfoMap = columnPositionInfoMap;
 	}
 
-	private int processQuotedColumn(String line, int lineNumber, int linePos, ColumnInfo<Object> columnInfo,
-			Object target, StringBuilder headerSb, ParseError parseError) {
+	private void processQuotedColumn(LineInfo lineInfo, BufferedReader bufferedReader, int lineNumber,
+			ColumnInfo<Object> columnInfo, Object target, StringBuilder headerSb, ParseError parseError)
+			throws IOException {
 
+		String line = lineInfo.line;
+		int linePos = lineInfo.linePos;
 		// linePos is pointing at the first quote, move past it
 		linePos++;
 		int columnStart = linePos;
@@ -1219,11 +1253,33 @@ public class CsvProcessor<T> {
 			// look for the next quote
 			sectionEnd = line.indexOf(columnQuote, linePos);
 			if (sectionEnd < 0) {
+				// see if we can read another line to see if the termination character is inside of a column
+				if (allowLineTerminationInColumns && bufferedReader != null) {
+					String nextLine = bufferedReader.readLine();
+					if (nextLine == null) {
+						// hit eof while trying to find the end of the line
+					} else {
+						if (sb == null) {
+							sb = new StringBuilder(32);
+						}
+						// add the end of the line
+						sb.append(line, sectionStart, line.length());
+						// is this right if the line termination of the file doesn't match the system?
+						sb.append(lineTermination);
+						// restart from the next line read
+						line = nextLine;
+						linePos = 0;
+						sectionStart = 0;
+						continue;
+					}
+				}
 				parseError.setErrorType(ErrorType.TRUNCATED_COLUMN);
 				parseError.setMessage("Column not terminated with quote '" + columnQuote + "'");
 				assignParseErrorFields(parseError, columnInfo, null);
 				parseError.setLinePos(linePos);
-				return line.length();
+				lineInfo.line = line;
+				lineInfo.linePos = line.length();
+				return;
 			}
 
 			linePos = sectionEnd + 1;
@@ -1241,7 +1297,9 @@ public class CsvProcessor<T> {
 						"quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
 				assignParseErrorFields(parseError, columnInfo, null);
 				parseError.setLinePos(linePos);
-				return linePos;
+				lineInfo.line = line;
+				lineInfo.linePos = linePos;
+				return;
 			}
 
 			sectionEnd = linePos;
@@ -1286,11 +1344,14 @@ public class CsvProcessor<T> {
 				headerSb.append(str);
 			}
 		}
-		return linePos;
+		lineInfo.line = line;
+		lineInfo.linePos = linePos;
 	}
 
-	private int processUnquotedColumn(String line, int lineNumber, int linePos, ColumnInfo<Object> columnInfo,
-			Object target, StringBuilder headerSb, ParseError parseError) {
+	private void processUnquotedColumn(LineInfo lineInfo, int lineNumber, ColumnInfo<Object> columnInfo, Object target,
+			StringBuilder headerSb, ParseError parseError) {
+		String line = lineInfo.line;
+		int linePos = lineInfo.linePos;
 		int columnStart = linePos;
 		linePos = line.indexOf(columnSeparator, columnStart);
 		if (linePos < 0) {
@@ -1310,7 +1371,7 @@ public class CsvProcessor<T> {
 			// skip over the separator
 			linePos++;
 		}
-		return linePos;
+		lineInfo.linePos = linePos;
 	}
 
 	private void writeQuoted(StringBuilder sb, String str) {
@@ -1405,6 +1466,26 @@ public class CsvProcessor<T> {
 			return ((BufferedReaderLineCounter) bufferedReader).getLineCount();
 		} else {
 			return 1;
+		}
+	}
+
+	/**
+	 * Holder for a corresponding line and line-pos.
+	 */
+	private class LineInfo {
+		String line;
+		int linePos;
+
+		public LineInfo(String line) {
+			this.line = line;
+		}
+
+		public boolean isAtEnd() {
+			return (linePos >= line.length());
+		}
+
+		public boolean isAtQuote() {
+			return (linePos < line.length() && line.charAt(linePos) == columnQuote);
 		}
 	}
 }
