@@ -6,7 +6,7 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 2.5
+@set simplecsv_version 2.6
 @set simplecsv_year 2019
 @set simplecsv_date February @value{simplecsv_year}
 @set package SimpleCSV
