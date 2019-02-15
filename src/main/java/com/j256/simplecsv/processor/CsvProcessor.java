@@ -1286,13 +1286,12 @@ public class CsvProcessor<T> {
 				// see if we can read another line to see if the termination character is inside of a column
 				if (allowLineTerminationInColumns && bufferedReader != null) {
 					String nextLine = bufferedReader.readLine();
-					if (nextLine == null) {
-						// hit eof while trying to find the end of the line
-					} else {
+					// if we've not hit eof while trying to find the end of the line
+					if (nextLine != null) {
 						if (sb == null) {
 							sb = new StringBuilder(32);
 						}
-						// add the end of the line
+						// add the end of the line partial line
 						sb.append(line, sectionStart, line.length());
 						// add the line-termination in the middle of this column which will _hopefully_ match the file
 						sb.append(lineTermination);
@@ -1314,17 +1313,18 @@ public class CsvProcessor<T> {
 
 			linePos = sectionEnd + 1;
 			if (linePos == line.length()) {
+				// eol means end of column
 				break;
 			} else if (line.charAt(linePos) == columnSeparator) {
 				linePos++;
 				break;
 			}
 
-			// must have a quote following a quote if there wasn't a columnSeparator
+			// if there wasn't a columnSeparator must have a quote following a quote
 			if (line.charAt(linePos) != columnQuote) {
 				parseError.setErrorType(ErrorType.INVALID_FORMAT);
 				parseError.setMessage(
-						"quote '" + columnQuote + "' is not followed up separator '" + columnSeparator + "'");
+						"quote '" + columnQuote + "' is not followed by separator '" + columnSeparator + "'");
 				assignParseErrorFields(parseError, columnInfo, null);
 				parseError.setLinePos(linePos);
 				lineInfo.line = line;
@@ -1332,25 +1332,14 @@ public class CsvProcessor<T> {
 				return;
 			}
 
-			sectionEnd = linePos;
-			// move past possibly end quote
-			linePos++;
-			if (linePos == line.length()) {
-				break;
-			}
-			if (line.charAt(linePos) == columnSeparator) {
-				// move past the comma
-				linePos++;
-				break;
-			}
-
-			// need to build the string dynamically now
+			// we need to record the portion of the line up to and including the first quote
 			if (sb == null) {
 				sb = new StringBuilder(32);
 			}
-			// add to the string-builder the column + 1 quote
-			sb.append(line, sectionStart, sectionEnd);
-			// line-pos is pointing past 2nd (maybe 3rd) quote
+			// add to the string-builder the column-so-far + 1 of the quotes
+			sb.append(line, sectionStart, linePos);
+			// move past the escaped quote and restart the section
+			linePos++;
 			sectionStart = linePos;
 		}
 

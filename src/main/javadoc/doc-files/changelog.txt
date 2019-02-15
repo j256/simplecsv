@@ -1,5 +1,8 @@
+2.6: 2/15/2019
+	* Fixed another problem with line-termination in a field.  Refactored that code and added better random tests.
+
 2.5: 2/15/2019
-	* Fixed an immediate bug that I found when line-termination character an a blank line are inside a column. 
+	* Fixed an bug that I found when line-termination character an a blank line are inside a column. 
 
 2.4: 2/15/2019
 	* Added handling of line-termination characters inside of columns if enabled.

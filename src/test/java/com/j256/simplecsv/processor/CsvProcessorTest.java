@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class CsvProcessorTest {
 		String str = "\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		String line = intValue + ",\"\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		assertEquals(str, basic.getStringValue());
@@ -55,17 +56,43 @@ public class CsvProcessorTest {
 	}
 
 	@Test
+	public void testRandomStr() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
+		Random random = new Random();
+		int MAX_STR_LEN = 100;
+		for (int i = 0; i < 10000; i++) {
+			String str = randomString(random, MAX_STR_LEN);
+			Basic basic = new Basic(random.nextInt(), str, random.nextLong(), "ok", random.nextBoolean());
+			testReadWriteBasic(processor, basic);
+		}
+	}
+
+	private String randomString(Random random, int maxLength) {
+		int len = random.nextInt(maxLength) + 1;
+		byte[] bytes = new byte[len];
+		for (int j = 0; j < len;) {
+			byte b = (byte) (random.nextInt(256));
+			// overwrite \r because it was seen as line termination but would be replaced with \n
+			if (b != '\r') {
+				j++;
+			}
+		}
+		return new String(bytes);
+	}
+
+	@Test
 	public void testTwoQuotes() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 1;
-		String str = "\"\"";
+		String str = "\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		// added a prefix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
-		assertEquals("\"", basic.getStringValue());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
 		testReadWriteBasic(processor, basic);
@@ -75,14 +102,15 @@ public class CsvProcessorTest {
 	public void testTwoQuotesPlus() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class);
 		int intValue = 1;
-		String str = "\"\"wow\"\"";
+		String str = "\"wow\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		// added a prefix and suffix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
-		assertEquals("\"wow\"", basic.getStringValue());
+		assertEquals(str, basic.getStringValue());
 		assertEquals(longValue, basic.getLongValue());
 		assertEquals(unquoted, basic.getUnquotedValue());
 		testReadWriteBasic(processor, basic);
@@ -94,7 +122,8 @@ public class CsvProcessorTest {
 		processor.setAllowPartialLines(true);
 		int intValue = 1;
 		String str = "\"";
-		String line = intValue + ",\"" + str + "\"";
+		// added a prefix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"";
 		Basic basic = processor.processRow(line, null);
 		assertEquals(intValue, basic.getIntValue());
 		// NOTE: this seems to be right
@@ -374,7 +403,8 @@ public class CsvProcessorTest {
 		String str = "\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		// added a prefix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"," + longValue + "," + unquoted;
 		BasicSubclass basicSub = processor.processRow(line, null);
 		assertEquals(intValue, basicSub.getIntValue());
 		assertEquals(str, basicSub.getStringValue());
@@ -390,7 +420,8 @@ public class CsvProcessorTest {
 		String str = "\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		// added a prefix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"," + longValue + "," + unquoted;
 		BasicSubclassDupField basicSub = processor.processRow(line, null);
 		assertEquals(0, basicSub.getIntValue());
 		assertEquals(intValue, basicSub.intValue);
@@ -407,7 +438,8 @@ public class CsvProcessorTest {
 		String str = "\"";
 		long longValue = 2L;
 		String unquoted = "u";
-		String line = intValue + ",\"" + str + "\"," + longValue + "," + unquoted;
+		// added a prefix quote to handle escaping
+		String line = intValue + ",\"\"" + str + "\"," + longValue + "," + unquoted;
 		Basic basic = processor.processRow(line, null);
 		// int value gets +1 in the [weird] converter
 		assertEquals(intValue + 1, basic.getIntValue());
@@ -850,10 +882,23 @@ public class CsvProcessorTest {
 		str = "short\n" + "loooooooooooong\n" + "short";
 		basic = new Basic(0, str, 0, "foo", false);
 		testReadWriteBasic(processor, basic);
+	}
 
+	@Test
+	public void testNewlineInColumnWithBlankLine() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
 		// blank line in the middle
-		str = "short\n\n" + "loooooooooooong\n" + "short";
-		basic = new Basic(0, str, 0, "foo", false);
+		String str = "short\n\n" + "loooooooooooong\n" + "short";
+		Basic basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+	}
+
+	@Test
+	public void testNewlineInColumnAndDoubleQuoteEscapeAtEol() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
+		// blank line in the middle
+		String str = "short \"\"escaped\"\"\n" + "short";
+		Basic basic = new Basic(0, str, 0, "foo", false);
 		testReadWriteBasic(processor, basic);
 	}
 
@@ -917,6 +962,7 @@ public class CsvProcessorTest {
 		Basic result = processor.readRow(bufferedReader, null);
 		assertNotNull(result);
 		assertEquals(basic.intValue, result.intValue);
+		assertEquals(basic.string.length(), result.string.length());
 		assertEquals(basic.string, result.string);
 		assertEquals(basic.longValue, result.longValue);
 		assertEquals(basic.unquoted, result.unquoted);
