@@ -1278,7 +1278,7 @@ public class CsvProcessor<T> {
 		int sectionEnd = linePos;
 
 		StringBuilder sb = null;
-		while (linePos < line.length()) {
+		while (true) {
 
 			// look for the next quote
 			sectionEnd = line.indexOf(columnQuote, linePos);
@@ -1294,7 +1294,7 @@ public class CsvProcessor<T> {
 						}
 						// add the end of the line
 						sb.append(line, sectionStart, line.length());
-						// is this right if the line termination of the file doesn't match the system?
+						// add the line-termination in the middle of this column which will _hopefully_ match the file
 						sb.append(lineTermination);
 						// restart from the next line read
 						line = nextLine;

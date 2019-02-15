@@ -850,6 +850,11 @@ public class CsvProcessorTest {
 		str = "short\n" + "loooooooooooong\n" + "short";
 		basic = new Basic(0, str, 0, "foo", false);
 		testReadWriteBasic(processor, basic);
+
+		// blank line in the middle
+		str = "short\n\n" + "loooooooooooong\n" + "short";
+		basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
 	}
 
 	@Test(expected = ParseException.class)
