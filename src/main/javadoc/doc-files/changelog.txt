@@ -1,5 +1,6 @@
-2.4: 2/14/2019
+2.4: 2/15/2019
 	* Added handling of line-termination characters inside of columns if enabled.
+	* Added a setting to load the fields from any super-classes _before_ the subclasses.
 
 2.3: 2/23/2018
 	* Added better parse error information, especially with enums.  Thanks to @iamareebjamal.

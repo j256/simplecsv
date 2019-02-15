@@ -859,6 +859,30 @@ public class CsvProcessorTest {
 		processor.readRow(new BufferedReader(new StringReader(line)), null);
 	}
 
+	@Test
+	public void testSuperClassMethodsFirst() throws Exception {
+		// default is withSuperClassColumnsFirst(false)
+		CsvProcessor<ExtraSubclass> processor = new CsvProcessor<ExtraSubclass>(ExtraSubclass.class);
+		testFieldOrder(processor, ExtraSubclass.VALUE2_FIELD, ExtraSubclass.INT_VALUE_FIELD);
+		processor = new CsvProcessor<ExtraSubclass>(ExtraSubclass.class).withSuperClassColumnsFirst(false);
+		testFieldOrder(processor, ExtraSubclass.VALUE2_FIELD, ExtraSubclass.INT_VALUE_FIELD);
+		processor = new CsvProcessor<ExtraSubclass>(ExtraSubclass.class).withSuperClassColumnsFirst(true);
+		testFieldOrder(processor, ExtraSubclass.INT_VALUE_FIELD, ExtraSubclass.VALUE2_FIELD);
+	}
+
+	private void testFieldOrder(CsvProcessor<?> processor, String field1, String field2) throws IOException {
+		StringWriter writer = new StringWriter();
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		processor.writeHeader(bufferedWriter, false);
+		bufferedWriter.flush();
+		String headers = writer.toString();
+		int field1Index = headers.indexOf(field1);
+		assertTrue(field1Index >= 0);
+		int field2Index = headers.indexOf(field2);
+		assertTrue(field2Index >= 0);
+		assertTrue(field1Index < field2Index);
+	}
+
 	/* ================================================================================================= */
 
 	private void testReadLine(CsvProcessor<Basic> processor, int intValue, String str, long longValue, String unquoted)
@@ -897,7 +921,10 @@ public class CsvProcessorTest {
 	/* ================================================================================================= */
 
 	private static class Basic {
-		@CsvColumn
+
+		public static final String INT_VALUE_FIELD = "intValue";
+
+		@CsvColumn(columnName = INT_VALUE_FIELD)
 		private int intValue;
 		@CsvColumn(mustNotBeBlank = true)
 		private String string;
@@ -1064,6 +1091,12 @@ public class CsvProcessorTest {
 		private int value2;
 		@CsvColumn(afterColumn = "value2")
 		private int value3;
+	}
+
+	public static class ExtraSubclass extends Basic {
+		public static final String VALUE2_FIELD = "value2";
+		@CsvColumn(columnName = VALUE2_FIELD)
+		private int value2;
 	}
 
 	/* ================================================================================================= */

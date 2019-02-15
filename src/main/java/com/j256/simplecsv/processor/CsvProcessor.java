@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -80,6 +81,7 @@ public class CsvProcessor<T> {
 	private boolean flexibleOrder;
 	private boolean ignoreUnknownColumns;
 	private boolean allowLineTerminationInColumns;
+	private boolean superClassColumnsFirst;
 	private RowValidator<T> rowValidator;
 	private ColumnNameMatcher columnNameMatcher = stringEqualsColumnNameMatcher;
 
@@ -791,6 +793,21 @@ public class CsvProcessor<T> {
 	}
 
 	/**
+	 * Set to true to mean that the fields discovered in the superclass come _before_ the sub-classes. Default is false.
+	 */
+	public CsvProcessor<T> withSuperClassColumnsFirst(boolean superClassColumnsFirst) {
+		this.superClassColumnsFirst = superClassColumnsFirst;
+		return this;
+	}
+
+	/**
+	 * Set to true to mean that the fields discovered in the superclass come _before_ the sub-classes. Default is false.
+	 */
+	public void setSuperClassColumnsFirst(boolean superClassColumnsFirst) {
+		this.superClassColumnsFirst = superClassColumnsFirst;
+	}
+
+	/**
 	 * Set the validator which will validate each entity after it has been parsed.
 	 */
 	public CsvProcessor<T> withRowValidator(RowValidator<T> rowValidator) {
@@ -1038,7 +1055,8 @@ public class CsvProcessor<T> {
 			throw new IllegalStateException("Entity class not configured for CSV processor");
 		}
 		Map<String, ColumnInfo<Object>> fieldNameMap = new LinkedHashMap<String, ColumnInfo<Object>>();
-		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+		List<Class<?>> classes = discoverClasses();
+		for (Class<?> clazz : classes) {
 			for (Field field : clazz.getDeclaredFields()) {
 				if (fieldNameMap.containsKey(field.getName())) {
 					continue;
@@ -1056,7 +1074,7 @@ public class CsvProcessor<T> {
 
 		// now process the get/set methods
 		Map<String, Method> otherMethodMap = new HashMap<String, Method>();
-		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+		for (Class<?> clazz : classes) {
 			for (Method method : clazz.getMethods()) {
 				CsvColumn csvColumn = method.getAnnotation(CsvColumn.class);
 				if (csvColumn == null) {
@@ -1132,6 +1150,18 @@ public class CsvProcessor<T> {
 						"No callable configured or could not find public no-arg constructor for: " + entityClass);
 			}
 		}
+	}
+
+	private List<Class<?>> discoverClasses() {
+		List<Class<?>> classes = new ArrayList<Class<?>>();
+		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+			classes.add(clazz);
+		}
+		if (superClassColumnsFirst) {
+			// default is add the subclass and then the super but this reverses it
+			Collections.reverse(classes);
+		}
+		return classes;
 	}
 
 	private List<ColumnInfo<Object>> assignColumnPositions(Map<String, ColumnInfo<Object>> fieldNameMap) {
