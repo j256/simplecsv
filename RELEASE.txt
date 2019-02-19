@@ -43,7 +43,7 @@ To release:
 
 8) Update the website:
 
-	- cd /var/www/256.com/sources/simplecsv/releases
+	- cd /var/www/256stuff.com/sources/simplecsv/releases
 	- sh get_release.sh  [enter release number]
 	- cd ..
 	- sh explode_javadocs.sh
