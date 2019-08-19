@@ -414,6 +414,8 @@ public class CsvProcessor<T> {
 	/**
 	 * Write a header and then the collection of entities to the writer.
 	 * 
+	 * NOTE: it is up to the caller to close the writer.
+	 * 
 	 * @param writer
 	 *            Where to write the header and entities. It will be closed before this method returns.
 	 * @param entities
@@ -434,7 +436,8 @@ public class CsvProcessor<T> {
 				writeRow(bufferedWriter, entity, true);
 			}
 		} finally {
-			bufferedWriter.close();
+			// NOTE: we should close it here because we didn't open it.
+			bufferedWriter.flush();
 		}
 	}
 

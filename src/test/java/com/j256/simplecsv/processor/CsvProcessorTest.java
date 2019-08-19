@@ -894,6 +894,22 @@ public class CsvProcessorTest {
 	}
 
 	@Test
+	public void testNewlineInColumnTake1373() throws Exception {
+		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
+		// blank line in the middle
+		String str = "GPL \"viral\" license, \"made\"\n" //
+				+ "the \"work\" our\n" //
+				+ "\n" //
+				+ "and\"\n" //
+				+ "\n" //
+				+ "-- how\n" //
+				+ "\n" //
+				+ "avaiposes].";
+		Basic basic = new Basic(0, str, 0, "foo", false);
+		testReadWriteBasic(processor, basic);
+	}
+
+	@Test
 	public void testNewlineInColumnAndDoubleQuoteEscapeAtEol() throws Exception {
 		CsvProcessor<Basic> processor = new CsvProcessor<Basic>(Basic.class).withAllowLineTerminationInColumns(true);
 		// blank line in the middle

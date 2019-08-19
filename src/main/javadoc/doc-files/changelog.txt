@@ -1,3 +1,6 @@
+2.7: ?/??/2019
+	* Changed CsvProcessor.writeAll() to not close the writer since it didn't open it.
+
 2.6: 2/15/2019
 	* Fixed another problem with line-termination in a field.  Refactored that code and added better random tests.
 
