@@ -4,10 +4,11 @@ Simple Java CSV Reader / Writer
 This package provides some Java classes to help with the reading and writing of CSV files using Java annotations.
 
 * For more information, visit the [home page](http://256stuff.com/sources/simplecsv/).	
-* In the sourcecode thre is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
+* In the sourcecode there is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
 * Online documentation can be found off the home page including [full Javadocs](http://256stuff.com/sources/simplecsv/javadoc/simplecsv/).
 * The source is available from the [git repository](https://github.com/j256/simplecsv).	 [![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=svg)](https://circleci.com/gh/j256/simplecsv) [![CodeCov](https://img.shields.io/codecov/c/github/j256/simplecsv.svg)](https://codecov.io/github/j256/simplecsv/)
-* Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/) [![javadoc](https://javadoc.io/badge2/com.j256.simplecsv/simplecsv/javadoc.svg)](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
+* Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/)
+* Javadocs: [![javadoc](https://javadoc.io/badge2/com.j256.simplecsv/simplecsv/javadoc.svg)](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
 
 Enjoy, Gray Watson
 
