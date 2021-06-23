@@ -10,7 +10,7 @@ This package provides some Java classes to help with the reading and writing of 
 * Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/)
 * Javadocs: [![javadoc](https://javadoc.io/badge2/com.j256.simplecsv/simplecsv/javadoc.svg)](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
 
-Enjoy, Gray Watson
+Enjoy.  Gray Watson
 
 ## Quick Example:
 
