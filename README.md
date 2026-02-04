@@ -1,14 +1,23 @@
 Simple Java CSV Reader / Writer
 ===============================
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.j256.simplecsv/simplecsv?style=flat-square
+)](https://mvnrepository.com/artifact/com.j256.simplecsv/simplecsv/latest)
+[![javadoc](https://javadoc.io/badge2/com.j256.simplecsv/simplecsv/javadoc.svg)](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
+[![ChangeLog](https://img.shields.io/github/v/release/j256/simplecsv?label=changelog&display_name=release)](https://github.com/j256/simplecsv/blob/master/src/main/javadoc/doc-files/changelog.txt)
+[![Documentation](https://img.shields.io/github/v/release/j256/simplecsv?label=documentation&display_name=release)](https://htmlpreview.github.io/?https://github.com/j256/simplecsv/blob/master/src/main/javadoc/doc-files/simplecsv.html)
+[![CodeCov](https://img.shields.io/codecov/c/github/j256/simplecsv.svg)](https://codecov.io/github/j256/simplecsv/)
+[![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=shield)](https://circleci.com/gh/j256/simplecsv)
+[![GitHub License](https://img.shields.io/github/license/j256/simplecsv)](https://github.com/j256/simplecsv/blob/master/LICENSE.txt)
+
 This package provides some Java classes to help with the reading and writing of CSV files using Java annotations.
 
 * For more information, visit the [home page](http://256stuff.com/sources/simplecsv/).	
 * In the sourcecode there is a [simple working example program](http://256stuff.com/sources/simplecsv/docs/example-simple).
 * Online documentation can be found off the home page including [full Javadocs](http://256stuff.com/sources/simplecsv/javadoc/simplecsv/).
-* The source is available from the [git repository](https://github.com/j256/simplecsv).	 [![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=svg)](https://circleci.com/gh/j256/simplecsv) [![CodeCov](https://img.shields.io/codecov/c/github/j256/simplecsv.svg)](https://codecov.io/github/j256/simplecsv/)
-* Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/)
-* Javadocs: [![javadoc](https://javadoc.io/badge2/com.j256.simplecsv/simplecsv/javadoc.svg)](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
+* The source is available from the [git repository](https://github.com/j256/simplecsv).
+* Maven packages are published via [Maven Central](https://mvnrepository.com/artifact/com.j256.simplecsv/simplecsv/latest)
+* You can also view the [online javadocs](https://javadoc.io/doc/com.j256.simplecsv/simplecsv)
 
 Enjoy.  Gray Watson
 
@@ -46,7 +55,7 @@ Now read those accounts back in with an optional error handler:
 
 # Maven Configuration
 
-* Maven packages are published via [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.j256.simplecsv/simplecsv/)
+Maven packages are published via [Maven Central](https://mvnrepository.com/artifact/com.j256.simplecsv/simplecsv/latest)
 
 ``` xml
 <dependency>
