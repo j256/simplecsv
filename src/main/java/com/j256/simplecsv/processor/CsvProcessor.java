@@ -202,7 +202,11 @@ public class CsvProcessor<T> {
 		checkEntityConfig();
 		BufferedReader bufferedReader = new BufferedReaderLineCounter(reader);
 		if (firstLineHeader) {
-			ParseError parseError = new ParseError();
+			ParseError parseError = null;
+			// we do this to reuse the parse error objects if we can
+			if (parseErrors != null) {
+				parseError = new ParseError();
+			}
 			if (readHeader(bufferedReader, parseError) == null) {
 				if (parseError != null && parseError.isError()) {
 					parseErrors.add(parseError);
@@ -288,7 +292,7 @@ public class CsvProcessor<T> {
 			T result = readRow(bufferedReader, parseError);
 			if (result != null) {
 				results.add(result);
-			} else if (parseError != null && parseError.isError()) {
+			} else if (parseErrors != null && parseError != null && parseError.isError()) {
 				// if there was an error then add it to the list
 				parseErrors.add(parseError);
 				// once we use it, we need to create another one
@@ -978,11 +982,11 @@ public class CsvProcessor<T> {
 			try {
 				rowValidator.validateRow(line, lineNumber, entity, localParseError);
 			} catch (ParseException pe) {
-				if (localParseError != parseError) {
+				if (parseError == null) {
 					throw pe;
 				}
-				localParseError.setErrorType(ErrorType.INVALID_ENTITY);
-				localParseError.setMessage(pe.getMessage());
+				parseError.setErrorType(ErrorType.INVALID_ENTITY);
+				parseError.setMessage(pe.getMessage());
 			}
 		}
 		if (parseError != null && parseError.isError()) {
