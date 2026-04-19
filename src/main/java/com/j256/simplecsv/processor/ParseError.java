@@ -196,6 +196,8 @@ public class ParseError implements Serializable {
 		TOO_MANY_COLUMNS("too many columns"),
 		/** entity validation failed */
 		INVALID_ENTITY("entity validation failed"),
+		/** unknown entity value */
+		UNKNOWN_VALUE("unknown field value"),
 		// end
 		;
 

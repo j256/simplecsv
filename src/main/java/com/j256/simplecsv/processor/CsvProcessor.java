@@ -140,8 +140,8 @@ public class CsvProcessor<T> {
 	/**
 	 * Read in all of the entities in the file passed in.
 	 * 
-	 * @param file
-	 *            Where to read the header and entities from. It will be closed when the method returns.
+	 * @param filePath
+	 *            Where to read the header and entities from.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
 	 *            is true and the header does not match then no additional lines will be returned. If this is null then
@@ -153,16 +153,40 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public List<T> readAll(File file, Collection<ParseError> parseErrors) throws IOException, ParseException {
+	public List<T> readAll(String filePath, Collection<ParseError> parseErrors) throws ParseException, IOException {
 		checkEntityConfig();
-		return readAll(new FileReader(file), parseErrors);
+		return readAll(new File(filePath), parseErrors);
 	}
 
 	/**
-	 * Read in all of the entities in the reader passed in. It will use an internal buffered reader.
+	 * Read in all of the entities in the file passed in.
+	 * 
+	 * @param file
+	 *            Where to read the header and entities from.
+	 * @param parseErrors
+	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
+	 *            is true and the header does not match then no additional lines will be returned. If this is null then
+	 *            a ParseException will be thrown on parsing problems.
+	 * @return A list of entities read in or null if validateHeader is true and the first-line header was not valid.
+	 * @throws ParseException
+	 *             Thrown on any parsing problems. If parseErrors is not null then parse errors will be added there and
+	 *             an exception should not be thrown.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when reading.
+	 */
+	public List<T> readAll(File file, Collection<ParseError> parseErrors) throws ParseException, IOException {
+		checkEntityConfig();
+		try (FileReader reader = new FileReader(file);) {
+			return readAll(reader, parseErrors);
+		}
+	}
+
+	/**
+	 * Read in all of the entities in the reader passed in. It will use an internal buffered reader that tracks line
+	 * numbers.
 	 * 
 	 * @param reader
-	 *            Where to read the header and entities from. It will be closed when the method returns.
+	 *            Where to read the header and entities from. NOTE: It must be closed by the caller.
 	 * @param parseErrors
 	 *            If not null, any errors will be added to the collection and null will be returned. If validateHeader
 	 *            is true and the header does not match then no additional lines will be returned. If this is null then
@@ -174,27 +198,19 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when reading.
 	 */
-	public List<T> readAll(Reader reader, Collection<ParseError> parseErrors) throws IOException, ParseException {
+	public List<T> readAll(Reader reader, Collection<ParseError> parseErrors) throws ParseException, IOException {
 		checkEntityConfig();
 		BufferedReader bufferedReader = new BufferedReaderLineCounter(reader);
-		try {
-			ParseError parseError = null;
-			// we do this to reuse the parse error objects if we can
-			if (parseErrors != null) {
-				parseError = new ParseError();
-			}
-			if (firstLineHeader) {
-				if (readHeader(bufferedReader, parseError) == null) {
-					if (parseError != null && parseError.isError()) {
-						parseErrors.add(parseError);
-					}
-					return null;
+		if (firstLineHeader) {
+			ParseError parseError = new ParseError();
+			if (readHeader(bufferedReader, parseError) == null) {
+				if (parseError != null && parseError.isError()) {
+					parseErrors.add(parseError);
 				}
+				return null;
 			}
-			return readRows(bufferedReader, parseErrors);
-		} finally {
-			bufferedReader.close();
 		}
+		return readRows(bufferedReader, parseErrors);
 	}
 
 	/**
@@ -257,7 +273,7 @@ public class CsvProcessor<T> {
 	 *             If there are any IO exceptions thrown when reading.
 	 */
 	public List<T> readRows(BufferedReader bufferedReader, Collection<ParseError> parseErrors)
-			throws IOException, ParseException {
+			throws ParseException, IOException {
 		checkEntityConfig();
 		ParseError parseError = null;
 		// we do this to reuse the parse error objects if we can
@@ -398,6 +414,22 @@ public class CsvProcessor<T> {
 	/**
 	 * Write a collection of entities to the writer.
 	 * 
+	 * @param filePath
+	 *            Where to write the header and entities.
+	 * @param entities
+	 *            Collection of entities to write to the writer.
+	 * @param writeHeader
+	 *            Set to true to write header at the start of the output file.
+	 * @throws IOException
+	 *             If there are any IO exceptions thrown when writing.
+	 */
+	public void writeAll(String filePath, Collection<T> entities, boolean writeHeader) throws IOException {
+		writeAll(new File(filePath), entities, writeHeader);
+	}
+
+	/**
+	 * Write a collection of entities to the writer.
+	 * 
 	 * @param file
 	 *            Where to write the header and entities.
 	 * @param entities
@@ -408,16 +440,18 @@ public class CsvProcessor<T> {
 	 *             If there are any IO exceptions thrown when writing.
 	 */
 	public void writeAll(File file, Collection<T> entities, boolean writeHeader) throws IOException {
-		writeAll(new FileWriter(file), entities, writeHeader);
+		try (Writer writer = new BufferedWriter(new FileWriter(file));) {
+			writeAll(writer, entities, writeHeader);
+		}
 	}
 
 	/**
-	 * Write a header and then the collection of entities to the writer.
+	 * Write an optional header and then the collection of entities to the writer.
 	 * 
 	 * NOTE: it is up to the caller to close the writer.
 	 * 
 	 * @param writer
-	 *            Where to write the header and entities. It will be closed before this method returns.
+	 *            Where to write the header and entities. NOTE: It must be closed by the caller.
 	 * @param entities
 	 *            Collection of entities to write to the writer.
 	 * @param writeHeader
@@ -427,40 +461,39 @@ public class CsvProcessor<T> {
 	 */
 	public void writeAll(Writer writer, Collection<T> entities, boolean writeHeader) throws IOException {
 		checkEntityConfig();
-		BufferedWriter bufferedWriter = new BufferedWriter(writer);
 		try {
 			if (writeHeader) {
-				writeHeader(bufferedWriter, true);
+				writeHeader(writer, true);
 			}
 			for (T entity : entities) {
-				writeRow(bufferedWriter, entity, true);
+				writeRow(writer, entity, true);
 			}
 		} finally {
-			// NOTE: we should close it here because we didn't open it.
-			bufferedWriter.flush();
+			// NOTE: we should not close it here because we didn't open it.
+			writer.flush();
 		}
 	}
 
 	/**
 	 * Write the header line to the writer.
 	 * 
-	 * @param bufferedWriter
+	 * @param Writer
 	 *            Where to write our header information.
 	 * @param appendLineTermination
 	 *            Set to true to add the newline to the end of the line.
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when writing.
 	 */
-	public void writeHeader(BufferedWriter bufferedWriter, boolean appendLineTermination) throws IOException {
+	public void writeHeader(Writer writer, boolean appendLineTermination) throws IOException {
 		checkEntityConfig();
-		bufferedWriter.write(buildHeaderLine(appendLineTermination));
+		writer.write(buildHeaderLine(appendLineTermination));
 	}
 
 	/**
 	 * Write an entity row to the writer.
 	 * 
-	 * @param bufferedWriter
-	 *            Where to write our header information.
+	 * @param Writer
+	 *            Where to write the row.
 	 * @param entity
 	 *            The entity we are writing to the buffered writer.
 	 * @param appendLineTermination
@@ -468,10 +501,10 @@ public class CsvProcessor<T> {
 	 * @throws IOException
 	 *             If there are any IO exceptions thrown when writing.
 	 */
-	public void writeRow(BufferedWriter bufferedWriter, T entity, boolean appendLineTermination) throws IOException {
+	public void writeRow(Writer writer, T entity, boolean appendLineTermination) throws IOException {
 		checkEntityConfig();
 		String line = buildLine(entity, appendLineTermination);
-		bufferedWriter.write(line);
+		writer.write(line);
 	}
 
 	/**
