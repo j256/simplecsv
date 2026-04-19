@@ -176,8 +176,14 @@ public class CsvProcessor<T> {
 	 */
 	public List<T> readAll(File file, Collection<ParseError> parseErrors) throws ParseException, IOException {
 		checkEntityConfig();
-		try (FileReader reader = new FileReader(file);) {
+		FileReader reader = null;
+		try {
+			reader = new FileReader(file);
 			return readAll(reader, parseErrors);
+		} finally {
+			if (reader != null) {
+				reader.close();
+			}
 		}
 	}
 
@@ -444,8 +450,14 @@ public class CsvProcessor<T> {
 	 *             If there are any IO exceptions thrown when writing.
 	 */
 	public void writeAll(File file, Collection<T> entities, boolean writeHeader) throws IOException {
-		try (Writer writer = new BufferedWriter(new FileWriter(file));) {
+		Writer writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(file));
 			writeAll(writer, entities, writeHeader);
+		} finally {
+			if (writer != null) {
+				writer.close();
+			}
 		}
 	}
 
