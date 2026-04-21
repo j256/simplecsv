@@ -64,8 +64,17 @@
 				<artifactId>maven-release-plugin</artifactId>
 				<configuration>
 					<mavenExecutorId>forked-path</mavenExecutorId>
-					<useReleaseProfile>false</useReleaseProfile>
-					<arguments>-Psonatype-oss-release</arguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.9.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>sonatype-nexus-staging</publishingServerId>
+					<!-- <autoPublish>true</autoPublish>
+					<waitUntil>published</waitUntil> -->
 				</configuration>
 			</plugin>
 			<plugin>
