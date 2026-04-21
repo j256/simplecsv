@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.j256.simplecsv</groupId>
 	<artifactId>simplecsv</artifactId>
-	<version>2.7-SNAPSHOT</version>
+	<version>2.7</version>
 	<packaging>jar</packaging>
 	<name>Simple CSV</name>
 	<url>https://256stuff.com/sources/simplecsv/</url>
@@ -28,7 +28,8 @@
 		<url>https://github.com/j256/simplecsv</url>
 		<connection>scm:git:ssh://git@github.com/j256/simplecsv.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/j256/simplecsv.git</developerConnection>
-	</scm>
+	  <tag>simplecsv-2.7</tag>
+  </scm>
 	<developers>
 		<developer>
 			<id>gray</id>
