@@ -1,5 +1,7 @@
-2.7: ?/??/2019
-	* Changed CsvProcessor.writeAll() to not close the writer since it didn't open it.
+2.7: 4/19/2026
+	* Changed CsvProcessor.writeAll() and readAll() to not close their reader/writer since it didn't open it.
+	* Added writeAll() and readAll() with a string filePath argument.
+	* Added a UNKNOWN_VALUE ParseError type for invalid values.
 
 2.6: 2/15/2019
 	* Fixed another problem with line-termination in a field.  Refactored that code and added better random tests.

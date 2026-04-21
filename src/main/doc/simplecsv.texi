@@ -6,9 +6,9 @@
 @c %**end of header
 
 @c ----------------------------------------------------------------
-@set simplecsv_version 2.6
-@set simplecsv_year 2019
-@set simplecsv_date February @value{simplecsv_year}
+@set simplecsv_version 2.7
+@set simplecsv_year 2026
+@set simplecsv_date April @value{simplecsv_year}
 @set package SimpleCSV
 @c ----------------------------------------------------------------
 
@@ -48,13 +48,13 @@ This package provides some Java classes to help with the reading and writing of 
 To get started quickly using SimpleCSV, @pxref{Quick Start}.  You can also take a look at the examples section of the
 document which has various working code packages. @xref{Examples}.
 @ifhtml
-There is also a @uref{http://256stuff.com/sources/simplecsv/docs/simplecsv.pdf, PDF version of this documentation}.
+There is also a @uref{https://256stuff.com/sources/simplecsv/docs/simplecsv.pdf, PDF version of this documentation}.
 @end ifhtml
 @iftex
-There is also a @uref{http://256stuff.com/sources/simplecsv/docs/simplecsv.html, HTML version of this documentation}.
+There is also a @uref{https://256stuff.com/sources/simplecsv/docs/simplecsv.html, HTML version of this documentation}.
 @end iftex
 
-Gray Watson @uref{http://256stuff.com/gray/}
+Gray Watson @uref{https://256stuff.com/gray/}
 
 @menu
 * Quick Start::                Start using SimpleCSV quickly.
@@ -75,7 +75,7 @@ To use SimpleCSV you need to do the following steps.  For more information, @pxr
 
 @enumerate
 
-@item Download SimpleCSV from the @uref{http://256stuff.com/sources/simplecsv/releases/, SimpleCSV release page}.  @xref{Downloading}.
+@item Download SimpleCSV from the @uref{https://256stuff.com/sources/simplecsv/releases/, SimpleCSV release page}.  @xref{Downloading}.
 
 @item Add @code{@@CsvColumn} annotation to each of the fields or get/set method that you want to write and read to/from
 CSV files.  @xref{CsvColumn Annotation}.
@@ -149,11 +149,11 @@ For more extensive instructions, @pxref{Using}.
 @cindex how to download the jars
 @cindex downloading the jars
 @cindex where to get new jars
-To get started with SimpleCSV, you will need to download the jar file.  The @uref{http://256stuff.com/sources/simplecsv/releases/, SimpleCSV
-release page} is the default repository but the jars are also available from the @uref{http://repo1.maven.org/maven2/com/j256/simplecsv/,
+To get started with SimpleCSV, you will need to download the jar file.  The @uref{https://256stuff.com/sources/simplecsv/releases/, SimpleCSV
+release page} is the default repository but the jars are also available from the @uref{https://repo1.maven.org/maven2/com/j256/simplecsv/simplecsv/,
 central maven repository}.
 
-The code works with Java 6 or later.
+The code works with Java 8 or later.
 
 @c ----------------------------------------------------------------
 @node Maven, CsvColumn Annotation, Using, Using
@@ -299,7 +299,7 @@ are welcome as long as you don't get piqued if we don't chose your's.
 @item Simple, basic
 
 This is a simple application which publishes a single object.  See the
-@uref{http://256stuff.com/sources/simplecsv/docs/example-simple, source code on github}.
+@uref{https://256stuff.com/sources/simplecsv/docs/example-simple, source code on github}.
 
 @end table
 
@@ -321,8 +321,6 @@ ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUT
 DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
 WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
 USE OR PERFORMANCE OF THIS SOFTWARE.
-
-The author may be contacted via the @uref{http://256stuff.com/sources/simplecsv/, SimpleCSV home page}.
 
 @c ----------------------------------------------------------------
 @node Index of Concepts,, License, Top
