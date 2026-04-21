@@ -61,7 +61,7 @@ Maven packages are published via [Maven Central](https://mvnrepository.com/artif
 <dependency>
 	<groupId>com.j256.simplecsv</groupId>
 	<artifactId>simplecsv</artifactId>
-	<version>2.6</version>
+	<version>2.7</version>
 </dependency>
 ```
 
