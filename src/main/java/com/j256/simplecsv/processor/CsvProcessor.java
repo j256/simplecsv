@@ -493,7 +493,7 @@ public class CsvProcessor<T> {
 	/**
 	 * Write the header line to the writer.
 	 * 
-	 * @param Writer
+	 * @param writer
 	 *            Where to write our header information.
 	 * @param appendLineTermination
 	 *            Set to true to add the newline to the end of the line.
@@ -508,7 +508,7 @@ public class CsvProcessor<T> {
 	/**
 	 * Write an entity row to the writer.
 	 * 
-	 * @param Writer
+	 * @param writer
 	 *            Where to write the row.
 	 * @param entity
 	 *            The entity we are writing to the buffered writer.
