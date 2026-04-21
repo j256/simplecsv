@@ -7,7 +7,7 @@ Simple Java CSV Reader / Writer
 [![ChangeLog](https://img.shields.io/github/v/release/j256/simplecsv?label=changelog&display_name=release)](https://github.com/j256/simplecsv/blob/master/src/main/javadoc/doc-files/changelog.txt)
 [![Documentation](https://img.shields.io/github/v/release/j256/simplecsv?label=documentation&display_name=release)](https://htmlpreview.github.io/?https://github.com/j256/simplecsv/blob/master/src/main/javadoc/doc-files/simplecsv.html)
 [![CodeCov](https://img.shields.io/codecov/c/github/j256/simplecsv.svg)](https://codecov.io/github/j256/simplecsv/)
-[![CircleCI](https://circleci.com/gh/j256/simplecsv.svg?style=shield)](https://circleci.com/gh/j256/simplecsv)
+[![CI](https://github.com/j256/simplecsv/actions/workflows/maven.yml/badge.svg)](https://github.com/j256/simplecsv/actions/workflows/maven.yml)
 [![GitHub License](https://img.shields.io/github/license/j256/simplecsv)](https://github.com/j256/simplecsv/blob/master/LICENSE.txt)
 
 This package provides some Java classes to help with the reading and writing of CSV files using Java annotations.
