@@ -34,6 +34,7 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./target/site/jacoco/jacoco.xml
     - name: Test checks publishing to github
       run: mvn -X com.j256.testcheckpublisher:test-check-publisher-maven-plugin:publish
       env:
