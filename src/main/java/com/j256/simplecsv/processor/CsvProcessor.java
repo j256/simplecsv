@@ -973,7 +973,8 @@ public class CsvProcessor<T> {
 							+ localParseError + "): " + lineInfo.line, lineInfo.linePos);
 				}
 			}
-			if (sb.length() > 0) {
+			if (!atEnd || (lineInfo.line.length() > 0
+					&& lineInfo.line.charAt(lineInfo.line.length() - 1) == columnSeparator)) {
 				headerColumns.add(sb.toString());
 			}
 			if (atEnd) {
